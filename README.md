@@ -39,6 +39,27 @@ Open [http://localhost:4317](http://localhost:4317)
 
 Or open `index.html` directly in a browser (CDN requires network for Tailwind/JSZip).
 
+## Deploy on GitHub Pages
+
+Your repo is ready — `index.html` is at the root and `.nojekyll` is included.
+
+1. **Push to GitHub** (if not already there):
+   - In Cursor: use **Publish to GitHub** or create a repo at [github.com/new](https://github.com/new)
+   - Then in terminal:
+   ```bash
+   git remote add github https://github.com/YOUR_USERNAME/friel-cycle-plan.git
+   git push -u github main
+   ```
+
+2. **Enable Pages** on the GitHub repo:
+   - **Settings → Pages**
+   - Build from: **main** branch, **/ (root)** folder
+   - Save
+
+3. Live at: `https://YOUR_USERNAME.github.io/REPO_NAME/`
+
+No build step needed. Every `git push` updates the site within ~1 minute.
+
 ## Zwift import
 
 1. Generate a plan and click **Zwift**
