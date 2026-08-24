@@ -38,6 +38,15 @@
     .day-skipped { background: rgba(255, 149, 0, 0.06); opacity: 0.75; }
     .day-skipped .day-title { text-decoration: line-through; }
     input[type="range"] { accent-color: #007AFF; }
+    .workout-row-clickable { cursor: pointer; }
+    .workout-row-clickable:hover .day-title { color: #007AFF; }
+    #workoutModal { transition: opacity 0.2s ease; }
+    #workoutModal.open { display: flex; }
+    .modal-panel { animation: modalIn 0.28s cubic-bezier(0.32, 0.72, 0, 1); }
+    @keyframes modalIn { from { opacity: 0; transform: scale(0.96) translateY(8px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+    .step-block { border-radius: 14px; padding: 14px 16px; font-size: 14px; font-weight: 500; line-height: 1.35; }
+    .graph-bar { border-radius: 6px 6px 2px 2px; min-width: 2px; transition: height 0.2s ease; }
+    .zone-bar { border-radius: 4px; min-height: 4px; }
     @media (prefers-color-scheme: dark) {
       .glass { background: rgba(44,44,46,0.72); }
       .segment-btn.active { background: #3A3A3C; color: #F5F5F7; }
@@ -150,6 +159,24 @@
 
   <input type="file" id="fileImport" accept=".json" class="hidden" />
 
+  <!-- Workout detail modal -->
+  <div id="workoutModal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 sm:p-6" role="dialog" aria-modal="true" aria-labelledby="modalWorkoutTitle">
+    <div class="absolute inset-0 bg-black/30 backdrop-blur-sm" data-action="close-modal"></div>
+    <div class="modal-panel relative w-full max-w-3xl max-h-[90vh] overflow-y-auto glass rounded-3xl shadow-apple-lg border border-white/80 bg-white/95">
+      <div class="sticky top-0 z-10 flex items-center justify-between px-5 sm:px-6 py-4 border-b border-apple-gray-100 bg-white/90 backdrop-blur-xl rounded-t-3xl">
+        <div class="flex items-center gap-3 min-w-0">
+          <div class="w-10 h-10 rounded-2xl bg-apple-blue/10 flex items-center justify-center text-lg shrink-0">🚴</div>
+          <div class="min-w-0">
+            <h2 id="modalWorkoutTitle" class="font-semibold text-base sm:text-lg truncate"></h2>
+            <p id="modalWorkoutMeta" class="text-xs text-apple-gray-400 truncate"></p>
+          </div>
+        </div>
+        <button type="button" data-action="close-modal" class="w-8 h-8 rounded-full bg-apple-gray-100 hover:bg-apple-gray-200 flex items-center justify-center text-apple-gray-500 text-lg leading-none transition shrink-0" aria-label="Close">×</button>
+      </div>
+      <div id="modalBody" class="p-5 sm:p-6"></div>
+    </div>
+  </div>
+
   <script>
     const STORAGE_KEY = 'friel-cycle-plan-v2';
 
@@ -165,6 +192,15 @@
     const STRUCTURED_DAYS = ['Tue', 'Thu', 'Sat'];
     const REST_DAYS = ['Mon', 'Wed', 'Fri'];
 
+    const ZWIFT_ZONES = {
+      1: { label: 'Z1', name: 'Recovery', color: '#A3A3A3', min: 0, max: 0.55 },
+      2: { label: 'Z2', name: 'Endurance', color: '#3B9FE8', min: 0.55, max: 0.75 },
+      3: { label: 'Z3', name: 'Tempo', color: '#3BD16F', min: 0.75, max: 0.90 },
+      4: { label: 'Z4', name: 'Threshold', color: '#F5C542', min: 0.90, max: 1.05 },
+      5: { label: 'Z5', name: 'VO₂ Max', color: '#F07A2E', min: 1.05, max: 1.20 },
+      6: { label: 'Z6', name: 'Anaerobic', color: '#E84C4C', min: 1.20, max: 9 },
+    };
+
     let state = {
       focus: 'allround',
       startDate: formatDate(new Date()),
@@ -173,6 +209,230 @@
       completions: {},
       plan: null,
     };
+
+    function formatDurationSec(sec) {
+      const m = Math.round(sec / 60);
+      if (m < 60) return `${m}min`;
+      const h = Math.floor(m / 60);
+      const rm = m % 60;
+      return rm ? `${h}h ${rm}m` : `${h}h`;
+    }
+
+    function powerToZone(power) {
+      const p = Math.max(0, power);
+      if (p < 0.55) return 1;
+      if (p < 0.75) return 2;
+      if (p < 0.90) return 3;
+      if (p < 1.05) return 4;
+      if (p < 1.20) return 5;
+      return 6;
+    }
+
+    function pctPower(p) { return Math.round(p * 100); }
+    function wattsAt(p, ftp) { return Math.round(p * ftp); }
+
+    function expandSegments(segments) {
+      const blocks = [];
+      if (!segments) return blocks;
+      segments.forEach(seg => {
+        if (seg.tag === 'Warmup') {
+          blocks.push({ kind: 'warmup', duration: seg.Duration, powerLow: seg.PowerLow, powerHigh: seg.PowerHigh, avgPower: (seg.PowerLow + seg.PowerHigh) / 2 });
+        } else if (seg.tag === 'Cooldown') {
+          blocks.push({ kind: 'cooldown', duration: seg.Duration, powerLow: seg.PowerHigh, powerHigh: seg.PowerLow, avgPower: (seg.PowerLow + seg.PowerHigh) / 2 });
+        } else if (seg.tag === 'SteadyState') {
+          blocks.push({ kind: 'steady', duration: seg.Duration, powerLow: seg.Power, powerHigh: seg.Power, avgPower: seg.Power });
+        } else if (seg.tag === 'IntervalsT') {
+          for (let i = 0; i < seg.Repeat; i++) {
+            blocks.push({ kind: 'on', duration: seg.OnDuration, powerLow: seg.OnPower, powerHigh: seg.OnPower, avgPower: seg.OnPower });
+            blocks.push({ kind: 'off', duration: seg.OffDuration, powerLow: seg.OffPower, powerHigh: seg.OffPower, avgPower: seg.OffPower });
+          }
+        }
+      });
+      return blocks;
+    }
+
+    function segmentInstruction(seg, ftp) {
+      const w = p => wattsAt(p, ftp);
+      if (seg.tag === 'Warmup') {
+        return `${formatDurationSec(seg.Duration)} from ${pctPower(seg.PowerLow)} to ${pctPower(seg.PowerHigh)}% FTP`;
+      }
+      if (seg.tag === 'Cooldown') {
+        return `${formatDurationSec(seg.Duration)} from ${pctPower(seg.PowerHigh)} to ${pctPower(seg.PowerLow)}% FTP`;
+      }
+      if (seg.tag === 'SteadyState') {
+        return `${formatDurationSec(seg.Duration)} @ ${pctPower(seg.Power)}% FTP · ${w(seg.Power)}W`;
+      }
+      if (seg.tag === 'IntervalsT') {
+        return `${seg.Repeat}× ${formatDurationSec(seg.OnDuration)} @ ${pctPower(seg.OnPower)}% FTP, ${formatDurationSec(seg.OffDuration)} @ ${pctPower(seg.OffPower)}% FTP`;
+      }
+      return '';
+    }
+
+    function stepBlockStyle(seg) {
+      if (seg.tag === 'Warmup') {
+        return 'background: linear-gradient(135deg, #E8E8ED 0%, #3B9FE8 100%); color: #1C1C1E;';
+      }
+      if (seg.tag === 'Cooldown') {
+        return 'background: linear-gradient(135deg, #3B9FE8 0%, #E8E8ED 100%); color: #1C1C1E;';
+      }
+      if (seg.tag === 'SteadyState' || seg.tag === 'IntervalsT') {
+        const p = seg.tag === 'SteadyState' ? seg.Power : seg.OnPower;
+        const z = powerToZone(p);
+        const dark = z >= 4;
+        return `background: ${ZWIFT_ZONES[z].color}; color: ${dark ? '#fff' : '#1C1C1E'};`;
+      }
+      return 'background: #E8E8ED; color: #1C1C1E;';
+    }
+
+    function computeWorkoutStats(segments, ftp) {
+      const blocks = expandSegments(segments);
+      const zoneSeconds = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
+      let totalSec = 0;
+      let tss = 0;
+
+      blocks.forEach(b => {
+        totalSec += b.duration;
+        const zone = powerToZone(b.avgPower);
+        zoneSeconds[zone] += b.duration;
+        const ifactor = b.avgPower;
+        tss += (b.duration / 3600) * ifactor * ifactor * 100;
+      });
+
+      return { blocks, totalSec, tss: Math.round(tss), zoneSeconds, ftp };
+    }
+
+    function renderZoneChart(zoneSeconds, totalSec) {
+      const zones = [1, 2, 3, 4, 5, 6];
+      const maxPct = Math.max(...zones.map(z => totalSec ? (zoneSeconds[z] / totalSec) * 100 : 0), 1);
+
+      return `
+        <div class="flex items-end gap-1 h-16 w-20 shrink-0">
+          ${zones.map(z => {
+            const pct = totalSec ? Math.round((zoneSeconds[z] / totalSec) * 100) : 0;
+            const h = maxPct ? Math.max(4, (pct / maxPct) * 100) : 4;
+            return `<div class="flex-1 flex flex-col items-center justify-end gap-0.5 h-full">
+              <div class="zone-bar w-full" style="height:${h}%; background:${ZWIFT_ZONES[z].color}; opacity:${pct ? 1 : 0.2}"></div>
+            </div>`;
+          }).join('')}
+        </div>`;
+    }
+
+    function renderWorkoutGraph(blocks, totalSec) {
+      const maxPower = Math.max(...blocks.map(b => Math.max(b.powerLow, b.powerHigh)), 1.0);
+      const graphH = 120;
+
+      return `
+        <div class="rounded-2xl bg-apple-gray-50 border border-apple-gray-100 p-4">
+          <div class="flex items-end gap-px" style="height:${graphH}px">
+            ${blocks.map(b => {
+              const h = Math.max(10, (b.avgPower / maxPower) * 100);
+              const z = powerToZone(b.avgPower);
+              const isRamp = b.kind === 'warmup' || b.kind === 'cooldown';
+              const bg = isRamp
+                ? `linear-gradient(to top, ${ZWIFT_ZONES[powerToZone(b.powerLow)].color}, ${ZWIFT_ZONES[powerToZone(b.powerHigh)].color})`
+                : ZWIFT_ZONES[z].color;
+              return `<div class="graph-bar" style="flex:${b.duration} 1 0; height:${h}%; background:${bg};" title="${formatDurationSec(b.duration)} @ ${pctPower(b.avgPower)}%"></div>`;
+            }).join('')}
+          </div>
+        </div>`;
+    }
+
+    function renderWorkoutModalContent(day, week) {
+      const ftp = state.predictedFtp || state.ftp;
+      const expected = day.expectedRpe ?? getExpectedRpe(day, week);
+
+      if (!day.segments || day.type === 'ftp-test') {
+        return `
+          <div class="space-y-4">
+            <p class="text-sm text-apple-gray-600 leading-relaxed">${day.desc}</p>
+            ${day.zwiftBuiltin ? `
+              <div class="p-4 rounded-2xl bg-orange-50 border border-orange-100 text-sm">
+                <strong class="text-orange-800">Zwift:</strong> Workouts → Tests → <em>${day.zwiftBuiltin}</em>
+              </div>` : ''}
+            <div class="grid grid-cols-2 gap-3 text-sm">
+              <div class="p-3 rounded-xl bg-apple-gray-50"><span class="text-apple-gray-400 block text-xs">Duration</span>${formatDuration(day.durationMin)}</div>
+              <div class="p-3 rounded-xl bg-apple-gray-50"><span class="text-apple-gray-400 block text-xs">Expected RPE</span>${expected}/10</div>
+            </div>
+          </div>`;
+      }
+
+      if (day.type === 'endurance') {
+        return `
+          <div class="space-y-4">
+            <div class="p-4 rounded-2xl step-block" style="background: linear-gradient(135deg, #E8E8ED, #3B9FE8); color:#1C1C1E">
+              ${formatDuration(day.durationMin)} steady endurance · mostly Z2
+            </div>
+            <p class="text-sm text-apple-gray-600 leading-relaxed">${day.desc}</p>
+            <div class="grid grid-cols-2 gap-3 text-sm">
+              <div class="p-3 rounded-xl bg-apple-gray-50"><span class="text-apple-gray-400 block text-xs">Duration</span>${formatDuration(day.durationMin)}</div>
+              <div class="p-3 rounded-xl bg-apple-gray-50"><span class="text-apple-gray-400 block text-xs">Expected RPE</span>${expected}/10</div>
+            </div>
+          </div>`;
+      }
+
+      const stats = computeWorkoutStats(day.segments, ftp);
+      const stepsHtml = day.segments.map(seg => `
+        <div class="step-block" style="${stepBlockStyle(seg)}">${segmentInstruction(seg, ftp)}</div>
+      `).join('');
+
+      const zoneRows = [1, 2, 3, 4, 5, 6].map(z => {
+        const sec = stats.zoneSeconds[z];
+        const label = sec ? formatDurationSec(sec) : '—';
+        return `<div class="flex justify-between text-xs py-0.5"><span style="color:${ZWIFT_ZONES[z].color}" class="font-semibold">${ZWIFT_ZONES[z].label}</span><span class="text-apple-gray-500">${label}</span></div>`;
+      }).join('');
+
+      return `
+        <div class="grid md:grid-cols-2 gap-6">
+          <div class="space-y-3">
+            <p class="text-xs font-medium text-apple-gray-400 uppercase tracking-wide">Instructions</p>
+            ${stepsHtml}
+            <p class="text-xs text-apple-gray-400 pt-1">${day.desc}</p>
+            <p class="text-xs text-apple-gray-300">FTP basis: ${ftp}W · Expected RPE ${expected}</p>
+          </div>
+          <div class="space-y-4">
+            <p class="text-xs font-medium text-apple-gray-400 uppercase tracking-wide">Profile</p>
+            ${renderWorkoutGraph(stats.blocks, stats.totalSec)}
+            <div class="rounded-2xl border border-apple-gray-100 bg-white p-4 space-y-3">
+              <div class="flex gap-4 text-sm">
+                <div class="flex items-center gap-2 text-apple-gray-600">
+                  <span class="text-base">⏱</span>
+                  <span><strong class="text-apple-gray-800">${formatDurationSec(stats.totalSec)}</strong></span>
+                </div>
+                <div class="flex items-center gap-2 text-apple-gray-600">
+                  <span class="text-base">🔥</span>
+                  <span>Stress <strong class="text-apple-gray-800">${stats.tss}</strong> TSS</span>
+                </div>
+              </div>
+              <div class="flex gap-4 items-end">
+                <div class="flex-1 space-y-0.5">${zoneRows}</div>
+                ${renderZoneChart(stats.zoneSeconds, stats.totalSec)}
+              </div>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    function openWorkoutModal(date) {
+      const found = findDayInPlan(date);
+      if (!found) return;
+      const { day, week } = found;
+
+      document.getElementById('modalWorkoutTitle').textContent = day.name;
+      document.getElementById('modalWorkoutMeta').textContent = `${day.dayName} · ${day.date}${week.weekNum ? ` · Week ${week.weekNum}` : ''}`;
+      document.getElementById('modalBody').innerHTML = renderWorkoutModalContent(day, week);
+
+      const modal = document.getElementById('workoutModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeWorkoutModal() {
+      const modal = document.getElementById('workoutModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('open');
+      document.body.style.overflow = '';
+    }
 
     // ─── Date helpers ───────────────────────────────────────────────
     function formatDate(d) {
@@ -1057,10 +1317,11 @@ ${plan.ftpTest ? `\nFTP Test (The Grade): ${plan.ftpTest.date} — use Zwift bui
     function renderDayRow(day, week) {
       const c = getCompletion(day.date);
       const rowClass = c?.status === 'completed' ? 'day-done' : c?.status === 'skipped' ? 'day-skipped' : '';
-      const isFtpTest = day.type === 'ftp-test';
+      const clickable = day.segments || day.type === 'endurance' || day.type === 'ftp-test';
+      const clickClass = clickable ? 'workout-row-clickable' : '';
 
       return `
-        <div class="px-6 py-4 flex flex-col lg:flex-row lg:items-start gap-3 lg:gap-4 hover:bg-apple-gray-50/50 transition ${rowClass}" data-day-row="${day.date}">
+        <div class="px-6 py-4 flex flex-col lg:flex-row lg:items-start gap-3 lg:gap-4 hover:bg-apple-gray-50/50 transition ${rowClass} ${clickClass}" data-day-row="${day.date}" ${clickable ? 'data-viewable="true"' : ''} title="${clickable ? 'View workout' : ''}">
           <div class="flex items-center gap-3 sm:w-36 shrink-0">
             <span class="text-sm font-semibold w-8">${day.dayName}</span>
             <span class="text-xs text-apple-gray-400">${day.date.slice(5)}</span>
@@ -1166,35 +1427,45 @@ ${plan.ftpTest ? `\nFTP Test (The Grade): ${plan.ftpTest.date} — use Zwift bui
     }
 
     function handlePlanClick(e) {
+      if (e.target.closest('[data-action="close-modal"]')) {
+        closeWorkoutModal();
+        return;
+      }
+
       const btn = e.target.closest('[data-action]');
-      if (!btn) return;
-      const action = btn.dataset.action;
-      const date = btn.dataset.date;
-      if (!date) return;
+      if (btn) {
+        const action = btn.dataset.action;
+        const date = btn.dataset.date;
+        if (!date) return;
 
-      const found = findDayInPlan(date);
-      if (!found) return;
-      const { day, week } = found;
-      const expected = day.expectedRpe ?? getExpectedRpe(day, week);
+        const found = findDayInPlan(date);
+        if (!found) return;
+        const { day, week } = found;
+        const expected = day.expectedRpe ?? getExpectedRpe(day, week);
 
-      if (action === 'skip') {
-        const label = day.type === 'rest' ? `Mark ${day.name} on ${date} as rest?` : `Skip ${day.name} on ${date}?`;
-        if (confirm(label)) setDayStatus(date, 'skipped');
-        return;
-      }
-      if (action === 'undo') {
-        undoDay(date);
-        return;
-      }
-      if (action === 'toggle') {
-        if (btn.checked) {
-          const rpeInput = document.querySelector(`input[data-action="rpe"][data-date="${date}"]`);
-          const rpe = rpeInput ? parseInt(rpeInput.value, 10) : Math.round(expected);
-          setDayStatus(date, 'completed', rpe);
-        } else {
-          undoDay(date);
+        if (action === 'skip') {
+          const label = day.type === 'rest' ? `Mark ${day.name} on ${date} as rest?` : `Skip ${day.name} on ${date}?`;
+          if (confirm(label)) setDayStatus(date, 'skipped');
+          return;
         }
+        if (action === 'undo') {
+          undoDay(date);
+          return;
+        }
+        if (action === 'toggle') {
+          if (btn.checked) {
+            const rpeInput = document.querySelector(`input[data-action="rpe"][data-date="${date}"]`);
+            const rpe = rpeInput ? parseInt(rpeInput.value, 10) : Math.round(expected);
+            setDayStatus(date, 'completed', rpe);
+          } else {
+            undoDay(date);
+          }
+        }
+        return;
       }
+
+      const row = e.target.closest('[data-viewable="true"]');
+      if (row) openWorkoutModal(row.dataset.dayRow);
     }
 
     function handlePlanInput(e) {
@@ -1257,6 +1528,10 @@ ${plan.ftpTest ? `\nFTP Test (The Grade): ${plan.ftpTest.date} — use Zwift bui
 
       document.getElementById('planContainer').addEventListener('click', handlePlanClick);
       document.getElementById('planContainer').addEventListener('input', handlePlanInput);
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeWorkoutModal();
+      });
 
       document.getElementById('btnExport').addEventListener('click', exportPlan);
 
