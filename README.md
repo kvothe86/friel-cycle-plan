@@ -15,6 +15,19 @@ A single-page cycling training plan generator based on **Joe Friel's** periodiza
 - **Session tracking** — mark complete with RPE (1–10), skip, or undo
 - **FTP prediction** — adjusts from expected vs actual RPE (conservative, ±8% cap for low volume)
 - **Post-plan FTP test** — The Grade in Zwift, scheduled 3 days after final training
+- **Workout detail modal** — click any session to view Zwift-style instructions, watt targets, intensity profile, and zone breakdown
+
+## Workout detail modal
+
+Click any **structured**, **endurance**, or **FTP test** row to open the workout viewer.
+
+| Panel | Contents |
+|-------|----------|
+| Instructions | Step blocks with Zwift zone colours; every step shows **% FTP and watts** (based on predicted/starting FTP) |
+| Profile | Time-proportional intensity chart on a shared baseline, solid zone colours |
+| Stats | Duration, estimated TSS, and Z1–Z6 time split |
+
+Close the modal with **×**, the backdrop, or **Escape**.
 
 ## Run locally
 
@@ -47,3 +60,10 @@ Plans follow Friel-style periodization across three phases:
 | 9–12  | Peak  | Race-ready sharpening |
 
 Each 4-week block ends with a recovery week (weeks 4, 8, 12).
+
+## Changelog
+
+### Workout modal fixes
+- **Close button** — modal dismiss now wired to the modal element (×, backdrop, Escape)
+- **Watt display** — warmup, cooldown, intervals, and steady blocks all show calculated watts alongside % FTP
+- **Profile chart** — rebuilt with pixel-height bars, shared baseline, solid Zwift zone colours, and stepped ramps (no floating/misaligned bars)

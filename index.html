@@ -45,7 +45,8 @@
     .modal-panel { animation: modalIn 0.28s cubic-bezier(0.32, 0.72, 0, 1); }
     @keyframes modalIn { from { opacity: 0; transform: scale(0.96) translateY(8px); } to { opacity: 1; transform: scale(1) translateY(0); } }
     .step-block { border-radius: 14px; padding: 14px 16px; font-size: 14px; font-weight: 500; line-height: 1.35; }
-    .graph-bar { border-radius: 6px 6px 2px 2px; min-width: 2px; transition: height 0.2s ease; }
+    .graph-bar { border-radius: 5px 5px 0 0; flex-shrink: 0; align-self: flex-end; min-width: 3px; }
+    .profile-chart { display: flex; align-items: flex-end; gap: 2px; height: 104px; padding-bottom: 0; border-bottom: 2px solid #E8E8ED; }
     .zone-bar { border-radius: 4px; min-height: 4px; }
     @media (prefers-color-scheme: dark) {
       .glass { background: rgba(44,44,46,0.72); }
@@ -253,17 +254,18 @@
 
     function segmentInstruction(seg, ftp) {
       const w = p => wattsAt(p, ftp);
+      const pctW = (p) => `${pctPower(p)}% (${w(p)}W)`;
       if (seg.tag === 'Warmup') {
-        return `${formatDurationSec(seg.Duration)} from ${pctPower(seg.PowerLow)} to ${pctPower(seg.PowerHigh)}% FTP`;
+        return `${formatDurationSec(seg.Duration)} from ${pctPower(seg.PowerLow)}–${pctPower(seg.PowerHigh)}% FTP (${w(seg.PowerLow)}–${w(seg.PowerHigh)}W)`;
       }
       if (seg.tag === 'Cooldown') {
-        return `${formatDurationSec(seg.Duration)} from ${pctPower(seg.PowerHigh)} to ${pctPower(seg.PowerLow)}% FTP`;
+        return `${formatDurationSec(seg.Duration)} from ${pctPower(seg.PowerHigh)}–${pctPower(seg.PowerLow)}% FTP (${w(seg.PowerHigh)}–${w(seg.PowerLow)}W)`;
       }
       if (seg.tag === 'SteadyState') {
         return `${formatDurationSec(seg.Duration)} @ ${pctPower(seg.Power)}% FTP · ${w(seg.Power)}W`;
       }
       if (seg.tag === 'IntervalsT') {
-        return `${seg.Repeat}× ${formatDurationSec(seg.OnDuration)} @ ${pctPower(seg.OnPower)}% FTP, ${formatDurationSec(seg.OffDuration)} @ ${pctPower(seg.OffPower)}% FTP`;
+        return `${seg.Repeat}× ${formatDurationSec(seg.OnDuration)} @ ${pctW(seg.OnPower)}, ${formatDurationSec(seg.OffDuration)} @ ${pctW(seg.OffPower)}`;
       }
       return '';
     }
@@ -317,21 +319,46 @@
         </div>`;
     }
 
-    function renderWorkoutGraph(blocks, totalSec) {
-      const maxPower = Math.max(...blocks.map(b => Math.max(b.powerLow, b.powerHigh)), 1.0);
-      const graphH = 120;
+    function graphSlicesFromSegments(segments) {
+      const slices = [];
+      if (!segments) return slices;
+      segments.forEach(seg => {
+        if (seg.tag === 'Warmup' || seg.tag === 'Cooldown') {
+          const steps = 8;
+          const low = seg.tag === 'Warmup' ? seg.PowerLow : seg.PowerHigh;
+          const high = seg.tag === 'Warmup' ? seg.PowerHigh : seg.PowerLow;
+          for (let i = 0; i < steps; i++) {
+            const p = low + (high - low) * (i + 0.5) / steps;
+            slices.push({ duration: seg.Duration / steps, avgPower: p, kind: seg.tag === 'Warmup' ? 'warmup' : 'cooldown' });
+          }
+        } else if (seg.tag === 'SteadyState') {
+          slices.push({ duration: seg.Duration, avgPower: seg.Power, kind: 'steady' });
+        } else if (seg.tag === 'IntervalsT') {
+          for (let i = 0; i < seg.Repeat; i++) {
+            slices.push({ duration: seg.OnDuration, avgPower: seg.OnPower, kind: 'on' });
+            slices.push({ duration: seg.OffDuration, avgPower: seg.OffPower, kind: 'off' });
+          }
+        }
+      });
+      return slices;
+    }
+
+    function barColor(power) {
+      return ZWIFT_ZONES[powerToZone(power)].color;
+    }
+
+    function renderWorkoutGraph(segments) {
+      const slices = graphSlicesFromSegments(segments);
+      const chartH = 100;
+      const maxPower = Math.max(...slices.map(s => s.avgPower), 1.0);
 
       return `
         <div class="rounded-2xl bg-apple-gray-50 border border-apple-gray-100 p-4">
-          <div class="flex items-end gap-px" style="height:${graphH}px">
-            ${blocks.map(b => {
-              const h = Math.max(10, (b.avgPower / maxPower) * 100);
-              const z = powerToZone(b.avgPower);
-              const isRamp = b.kind === 'warmup' || b.kind === 'cooldown';
-              const bg = isRamp
-                ? `linear-gradient(to top, ${ZWIFT_ZONES[powerToZone(b.powerLow)].color}, ${ZWIFT_ZONES[powerToZone(b.powerHigh)].color})`
-                : ZWIFT_ZONES[z].color;
-              return `<div class="graph-bar" style="flex:${b.duration} 1 0; height:${h}%; background:${bg};" title="${formatDurationSec(b.duration)} @ ${pctPower(b.avgPower)}%"></div>`;
+          <div class="profile-chart">
+            ${slices.map(s => {
+              const barH = Math.max(6, Math.round((s.avgPower / maxPower) * chartH));
+              const color = barColor(s.avgPower);
+              return `<div class="graph-bar" style="flex:${s.duration} 1 0; height:${barH}px; background:${color};" title="${formatDurationSec(s.duration)} @ ${pctPower(s.avgPower)}%"></div>`;
             }).join('')}
           </div>
         </div>`;
@@ -391,7 +418,7 @@
           </div>
           <div class="space-y-4">
             <p class="text-xs font-medium text-apple-gray-400 uppercase tracking-wide">Profile</p>
-            ${renderWorkoutGraph(stats.blocks, stats.totalSec)}
+            ${renderWorkoutGraph(day.segments)}
             <div class="rounded-2xl border border-apple-gray-100 bg-white p-4 space-y-3">
               <div class="flex gap-4 text-sm">
                 <div class="flex items-center gap-2 text-apple-gray-600">
@@ -1427,11 +1454,6 @@ ${plan.ftpTest ? `\nFTP Test (The Grade): ${plan.ftpTest.date} — use Zwift bui
     }
 
     function handlePlanClick(e) {
-      if (e.target.closest('[data-action="close-modal"]')) {
-        closeWorkoutModal();
-        return;
-      }
-
       const btn = e.target.closest('[data-action]');
       if (btn) {
         const action = btn.dataset.action;
@@ -1528,6 +1550,13 @@ ${plan.ftpTest ? `\nFTP Test (The Grade): ${plan.ftpTest.date} — use Zwift bui
 
       document.getElementById('planContainer').addEventListener('click', handlePlanClick);
       document.getElementById('planContainer').addEventListener('input', handlePlanInput);
+
+      document.getElementById('workoutModal').addEventListener('click', (e) => {
+        if (e.target.closest('[data-action="close-modal"]')) {
+          e.preventDefault();
+          closeWorkoutModal();
+        }
+      });
 
       document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') closeWorkoutModal();
