@@ -1126,6 +1126,19 @@
     }
 
     // ─── ZWO export ───────────────────────────────────────────────
+    function rampToSteadyStates(duration, startPower, endPower, steps = 6) {
+      const blocks = [];
+      const stepDur = Math.floor(duration / steps);
+      let remaining = duration;
+      for (let i = 0; i < steps; i++) {
+        const dur = i === steps - 1 ? remaining : stepDur;
+        remaining -= dur;
+        const power = startPower + (endPower - startPower) * ((i + 0.5) / steps);
+        blocks.push({ tag: 'SteadyState', Duration: dur, Power: power });
+      }
+      return blocks;
+    }
+
     function segmentToXml(seg) {
       const fmt = (v) => typeof v === 'number' ? (Number.isInteger(v) ? v : v.toFixed(2)) : v;
       const msg = seg.message ? `\n      <textevent timeoffset="0" message="${seg.message}"/>` : '';
@@ -1139,9 +1152,17 @@
       }
 
       if (seg.tag === 'Cooldown') {
-        // Zwift ramps PowerLow → PowerHigh (same as Warmup). Our data stores
-        // start (higher) in PowerHigh and end (lower) in PowerLow — swap for export.
-        return `    <Cooldown Duration="${seg.Duration}" PowerLow="${fmt(seg.PowerHigh)}" PowerHigh="${fmt(seg.PowerLow)}">${msg}\n    </Cooldown>`;
+        // Cooldown attribute order differs between Zwift and intervals.icu — use
+        // stepped SteadyState blocks so the ramp down is correct everywhere.
+        const start = seg.PowerHigh;
+        const end = seg.PowerLow;
+        const steps = Math.min(8, Math.max(4, Math.round(seg.Duration / 60)));
+        const blocks = rampToSteadyStates(seg.Duration, start, end, steps);
+        return blocks.map((b, i) => {
+          const attrs = `Duration="${b.Duration}" Power="${fmt(b.Power)}"`;
+          if (i === 0 && msg) return `    <SteadyState ${attrs}>${msg}\n    </SteadyState>`;
+          return `    <SteadyState ${attrs}/>`;
+        }).join('\n');
       }
 
       const attrs = Object.entries(seg)
