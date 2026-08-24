@@ -1127,14 +1127,27 @@
 
     // ─── ZWO export ───────────────────────────────────────────────
     function segmentToXml(seg) {
+      const fmt = (v) => typeof v === 'number' ? (Number.isInteger(v) ? v : v.toFixed(2)) : v;
+      const msg = seg.message ? `\n      <textevent timeoffset="0" message="${seg.message}"/>` : '';
+
+      if (seg.tag === 'Warmup') {
+        const attrs = Object.entries(seg)
+          .filter(([k]) => k !== 'tag' && k !== 'message')
+          .map(([k, v]) => `${k}="${fmt(v)}"`)
+          .join(' ');
+        return `    <Warmup ${attrs}>${msg}\n    </Warmup>`;
+      }
+
+      if (seg.tag === 'Cooldown') {
+        // Zwift ramps PowerLow → PowerHigh (same as Warmup). Our data stores
+        // start (higher) in PowerHigh and end (lower) in PowerLow — swap for export.
+        return `    <Cooldown Duration="${seg.Duration}" PowerLow="${fmt(seg.PowerHigh)}" PowerHigh="${fmt(seg.PowerLow)}">${msg}\n    </Cooldown>`;
+      }
+
       const attrs = Object.entries(seg)
         .filter(([k]) => k !== 'tag' && k !== 'message')
-        .map(([k, v]) => `${k}="${typeof v === 'number' ? (Number.isInteger(v) ? v : v.toFixed(2)) : v}"`)
+        .map(([k, v]) => `${k}="${fmt(v)}"`)
         .join(' ');
-      const msg = seg.message ? `\n      <textevent timeoffset="0" message="${seg.message}"/>` : '';
-      if (seg.tag === 'Warmup' || seg.tag === 'Cooldown') {
-        return `    <${seg.tag} ${attrs}>${msg}\n    </${seg.tag}>`;
-      }
       return `    <${seg.tag} ${attrs}/>`;
     }
 

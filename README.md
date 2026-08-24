@@ -92,3 +92,4 @@ Each 4-week block ends with a recovery week (weeks 4, 8, 12).
 ### Workout duration fixes
 - **Interval repeats preserved** — 3×12 and 3×15 threshold sessions no longer drop to 2 repeats
 - **~60 min sessions** — short workouts get Z2 filler; long ones trim cooldown/recovery first (never interval count)
+- **Zwift cooldown ramp** — cooldown now exports as ramp down (e.g. 65%→45%), not up
