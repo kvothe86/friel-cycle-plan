@@ -12,6 +12,9 @@ A single-page cycling training plan generator based on **Joe Friel's** periodiza
 - **Auto-save** to browser `localStorage`
 - **Export / import** full plan as JSON
 - **Zwift export** — downloads a ZIP of `.zwo` workout files for all structured sessions
+- **Session tracking** — mark complete with RPE (1–10), skip, or undo
+- **FTP prediction** — adjusts from expected vs actual RPE (conservative, ±8% cap for low volume)
+- **Post-plan FTP test** — The Grade in Zwift, scheduled 3 days after final training
 
 ## Run locally
 
