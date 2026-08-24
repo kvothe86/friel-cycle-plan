@@ -88,3 +88,7 @@ Each 4-week block ends with a recovery week (weeks 4, 8, 12).
 - **Close button** — modal dismiss now wired to the modal element (×, backdrop, Escape)
 - **Watt display** — warmup, cooldown, intervals, and steady blocks all show calculated watts alongside % FTP
 - **Profile chart** — rebuilt with pixel-height bars, shared baseline, solid Zwift zone colours, and stepped ramps (no floating/misaligned bars)
+
+### Workout duration fixes
+- **Interval repeats preserved** — 3×12 and 3×15 threshold sessions no longer drop to 2 repeats
+- **~60 min sessions** — short workouts get Z2 filler; long ones trim cooldown/recovery first (never interval count)

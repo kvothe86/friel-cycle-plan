@@ -523,9 +523,9 @@
               { tag: 'Cooldown', Duration: 600, PowerHigh: 0.65, PowerLow: 0.45 },
             ]},
             { name: 'Threshold Progression', type: 'structured', desc: '3×12 min at threshold', segments: [
-              { tag: 'Warmup', Duration: 600, PowerLow: 0.5, PowerHigh: 0.78 },
-              { tag: 'IntervalsT', Repeat: 3, OnDuration: 720, OffDuration: 240, OnPower: 0.95 * intensity, OffPower: 0.55 },
-              { tag: 'Cooldown', Duration: 480, PowerHigh: 0.65, PowerLow: 0.45 },
+              { tag: 'Warmup', Duration: 540, PowerLow: 0.5, PowerHigh: 0.78 },
+              { tag: 'IntervalsT', Repeat: 3, OnDuration: 720, OffDuration: 180, OnPower: 0.95 * intensity, OffPower: 0.55 },
+              { tag: 'Cooldown', Duration: 300, PowerHigh: 0.65, PowerLow: 0.45 },
             ]},
             { name: 'Over-Unders', type: 'structured', desc: 'Friel over-under sets', segments: [
               { tag: 'Warmup', Duration: 600, PowerLow: 0.5, PowerHigh: 0.75 },
@@ -637,9 +637,9 @@
               { tag: 'Cooldown', Duration: 600, PowerHigh: 0.65, PowerLow: 0.45 },
             ]},
             { name: '3×15 Threshold', type: 'structured', desc: 'Sustained TT efforts', segments: [
-              { tag: 'Warmup', Duration: 600, PowerLow: 0.5, PowerHigh: 0.78 },
-              { tag: 'IntervalsT', Repeat: 3, OnDuration: 900, OffDuration: 240, OnPower: 0.97 * intensity, OffPower: 0.55 },
-              { tag: 'Cooldown', Duration: 480, PowerHigh: 0.65, PowerLow: 0.45 },
+              { tag: 'Warmup', Duration: 480, PowerLow: 0.5, PowerHigh: 0.78 },
+              { tag: 'IntervalsT', Repeat: 3, OnDuration: 900, OffDuration: 180, OnPower: 0.97 * intensity, OffPower: 0.55 },
+              { tag: 'Cooldown', Duration: 300, PowerHigh: 0.65, PowerLow: 0.45 },
             ]},
             { name: 'Over-Under TT', type: 'structured', desc: 'Variable threshold', segments: [
               { tag: 'Warmup', Duration: 600, PowerLow: 0.5, PowerHigh: 0.75 },
@@ -831,23 +831,58 @@
       }, 0);
     }
 
-    function capWorkoutSegments(segments, maxSec = 3600) {
+    function normalizeWorkoutSegments(segments, targetSec = 3600, minSec = 3540) {
       const copy = JSON.parse(JSON.stringify(segments));
-      while (segmentDuration(copy) > maxSec) {
-        const steady = copy.filter(s => s.tag === 'SteadyState').sort((a, b) => b.Duration - a.Duration)[0];
-        if (steady && steady.Duration > 300) {
-          steady.Duration -= 60;
-          continue;
+
+      function trimOnce() {
+        const cooldown = copy.find(s => s.tag === 'Cooldown');
+        if (cooldown && cooldown.Duration > 180) {
+          cooldown.Duration = Math.max(180, cooldown.Duration - 60);
+          return true;
         }
-        const interval = copy.find(s => s.tag === 'IntervalsT' && s.Repeat > 2);
-        if (interval) {
-          interval.Repeat -= 1;
-          continue;
+        const warmup = copy.find(s => s.tag === 'Warmup');
+        if (warmup && warmup.Duration > 480) {
+          warmup.Duration = Math.max(480, warmup.Duration - 60);
+          return true;
         }
-        const warmup = copy.find(s => s.tag === 'Warmup' && s.Duration > 480);
-        if (warmup) { warmup.Duration -= 60; continue; }
-        break;
+        const steadies = copy.filter(s => s.tag === 'SteadyState').sort((a, b) => b.Duration - a.Duration);
+        for (const steady of steadies) {
+          if (steady.Duration > 300) {
+            steady.Duration -= 60;
+            return true;
+          }
+        }
+        const interval = copy.find(s => s.tag === 'IntervalsT');
+        if (interval && interval.OffDuration > 90) {
+          interval.OffDuration = Math.max(90, interval.OffDuration - 30);
+          return true;
+        }
+        return false;
       }
+
+      // Trim over 60 min — never reduce interval repeats
+      let guard = 40;
+      while (segmentDuration(copy) > targetSec && guard-- > 0) {
+        if (!trimOnce()) break;
+      }
+
+      // Pad under ~59 min with Z2 aerobic filler before cooldown
+      guard = 20;
+      while (segmentDuration(copy) < minSec && guard-- > 0) {
+        const deficit = minSec - segmentDuration(copy);
+        const addSec = Math.min(deficit, 600);
+        const filler = { tag: 'SteadyState', Duration: addSec, Power: 0.65 };
+        const cooldownIdx = copy.findIndex(s => s.tag === 'Cooldown');
+        if (cooldownIdx >= 0) copy.splice(cooldownIdx, 0, filler);
+        else copy.push(filler);
+      }
+
+      // Final trim if padding overshot
+      guard = 20;
+      while (segmentDuration(copy) > targetSec && guard-- > 0) {
+        if (!trimOnce()) break;
+      }
+
       return copy;
     }
 
@@ -1012,14 +1047,14 @@
           if (STRUCTURED_DAYS.includes(dayName)) {
             const idx = STRUCTURED_DAYS.indexOf(dayName);
             const template = templates[idx % templates.length];
-            const segments = capWorkoutSegments(template.segments);
+            const segments = normalizeWorkoutSegments(template.segments);
             const dur = segmentDuration(segments);
             days.push({
               date, dayName,
               type: 'structured',
               name: template.name,
               desc: template.desc,
-              durationMin: Math.min(60, Math.round(dur / 60)),
+              durationMin: Math.round(dur / 60),
               segments,
               zwift: true,
               expectedRpe: null,
