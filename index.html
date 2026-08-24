@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Friel Cycle Plan</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['-apple-system', 'BlinkMacSystemFont', 'SF Pro Display', 'SF Pro Text', 'Segoe UI', 'Helvetica Neue', 'Arial', 'sans-serif'],
+          },
+          colors: {
+            apple: {
+              blue: '#007AFF',
+              gray: { 50: '#F5F5F7', 100: '#E8E8ED', 200: '#D2D2D7', 300: '#AEAEB2', 400: '#8E8E93', 500: '#636366', 600: '#48484A', 700: '#3A3A3C', 800: '#2C2C2E', 900: '#1C1C1E' },
+            },
+          },
+          boxShadow: {
+            apple: '0 4px 24px rgba(0,0,0,0.08)',
+            'apple-lg': '0 8px 40px rgba(0,0,0,0.12)',
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+    .glass { background: rgba(255,255,255,0.72); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
+    .segment-btn { transition: all 0.2s ease; }
+    .segment-btn.active { background: white; box-shadow: 0 1px 4px rgba(0,0,0,0.12); color: #1C1C1E; }
+    .week-card:hover { transform: translateY(-1px); }
+    .week-card { transition: transform 0.15s ease, box-shadow 0.15s ease; }
+    @media (prefers-color-scheme: dark) {
+      .glass { background: rgba(44,44,46,0.72); }
+      .segment-btn.active { background: #3A3A3C; color: #F5F5F7; }
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-gradient-to-b from-apple-gray-50 to-white text-apple-gray-900 font-sans">
+
+  <header class="sticky top-0 z-50 glass border-b border-apple-gray-200/60">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
+      <div>
+        <h1 class="text-xl sm:text-2xl font-semibold tracking-tight">Friel Cycle Plan</h1>
+        <p class="text-xs sm:text-sm text-apple-gray-400 mt-0.5">3-month · 3/1 periodization · Joe Friel methodology</p>
+      </div>
+      <div class="flex gap-2">
+        <button id="btnImport" class="px-3 py-1.5 text-sm font-medium rounded-full bg-apple-gray-100 hover:bg-apple-gray-200 transition">Import</button>
+        <button id="btnExport" class="px-3 py-1.5 text-sm font-medium rounded-full bg-apple-gray-100 hover:bg-apple-gray-200 transition">Export</button>
+        <button id="btnZwift" class="px-3 py-1.5 text-sm font-medium rounded-full bg-apple-blue text-white hover:opacity-90 transition">Zwift</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-8">
+
+    <!-- Config -->
+    <section class="glass rounded-3xl shadow-apple p-6 sm:p-8 border border-white/60">
+      <h2 class="text-lg font-semibold mb-6">Plan Settings</h2>
+
+      <div class="space-y-6">
+        <div>
+          <label class="block text-sm font-medium text-apple-gray-500 mb-2">Training Focus</label>
+          <div id="focusSelector" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 p-1 bg-apple-gray-100 rounded-2xl">
+            <!-- filled by JS -->
+          </div>
+        </div>
+
+        <div class="grid sm:grid-cols-2 gap-4">
+          <div>
+            <label for="startDate" class="block text-sm font-medium text-apple-gray-500 mb-2">Start Date</label>
+            <input type="date" id="startDate" class="w-full px-4 py-3 rounded-xl bg-white border border-apple-gray-200 focus:outline-none focus:ring-2 focus:ring-apple-blue/40 text-base" />
+          </div>
+          <div>
+            <label for="ftp" class="block text-sm font-medium text-apple-gray-500 mb-2">FTP (watts) <span class="text-apple-gray-300">for Zwift export</span></label>
+            <input type="number" id="ftp" min="100" max="500" value="250" class="w-full px-4 py-3 rounded-xl bg-white border border-apple-gray-200 focus:outline-none focus:ring-2 focus:ring-apple-blue/40 text-base" />
+          </div>
+        </div>
+
+        <div class="flex flex-wrap gap-3 pt-2">
+          <button id="btnGenerate" class="px-6 py-3 rounded-full bg-apple-blue text-white font-medium hover:opacity-90 transition shadow-sm">Generate 12-Week Plan</button>
+          <button id="btnClear" class="px-6 py-3 rounded-full bg-apple-gray-100 text-apple-gray-700 font-medium hover:bg-apple-gray-200 transition">Clear Saved Plan</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Summary -->
+    <section id="summarySection" class="hidden">
+      <div class="glass rounded-3xl shadow-apple p-6 sm:p-8 border border-white/60">
+        <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-6">
+          <div>
+            <h2 id="planTitle" class="text-2xl font-semibold tracking-tight"></h2>
+            <p id="planSubtitle" class="text-apple-gray-400 mt-1"></p>
+          </div>
+          <div class="flex gap-4 text-center">
+            <div class="px-4 py-2 rounded-2xl bg-apple-gray-50">
+              <div class="text-2xl font-semibold text-apple-blue" id="statWeeks">12</div>
+              <div class="text-xs text-apple-gray-400">Weeks</div>
+            </div>
+            <div class="px-4 py-2 rounded-2xl bg-apple-gray-50">
+              <div class="text-2xl font-semibold text-apple-blue" id="statSessions">36</div>
+              <div class="text-xs text-apple-gray-400">Structured</div>
+            </div>
+            <div class="px-4 py-2 rounded-2xl bg-apple-gray-50">
+              <div class="text-2xl font-semibold text-apple-blue" id="statBlocks">3</div>
+              <div class="text-xs text-apple-gray-400">3/1 Blocks</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-4 rounded-2xl bg-apple-blue/5 border border-apple-blue/10 text-sm text-apple-gray-600 leading-relaxed">
+          <strong class="text-apple-gray-800">Schedule:</strong> Tue · Thu · Sat — structured sessions (≤60 min).
+          Sunday — endurance ride (duration only). Mon · Wed · Fri — rest or optional recovery spin (≤90 min).
+          <span class="block mt-1 text-apple-gray-400">Based on Joe Friel's periodization: 3 weeks progressive load, 1 week recovery.</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Plan -->
+    <section id="planSection" class="hidden space-y-4">
+      <div id="planContainer"></div>
+    </section>
+
+    <!-- Empty state -->
+    <section id="emptyState" class="text-center py-16">
+      <div class="text-6xl mb-4 opacity-30">🚴</div>
+      <h2 class="text-xl font-semibold text-apple-gray-600">No plan yet</h2>
+      <p class="text-apple-gray-400 mt-2 max-w-md mx-auto">Choose your focus and start date, then generate a 12-week plan. Your plan auto-saves locally.</p>
+    </section>
+
+  </main>
+
+  <input type="file" id="fileImport" accept=".json" class="hidden" />
+
+  <script>
+    const STORAGE_KEY = 'friel-cycle-plan-v1';
+
+    const FOCUSES = {
+      endurance: { label: 'Endurance', sub: 'Fondo', icon: '🏔️', desc: 'Long efforts & aerobic base for fondo events' },
+      sprint:    { label: 'Sprint', sub: 'Power', icon: '⚡', desc: 'Neuromuscular power & anaerobic capacity' },
+      tt:        { label: 'TT', sub: 'Threshold', icon: '⏱️', desc: 'Time trial & sustained threshold work' },
+      hill:      { label: 'Hills', sub: 'Climbs', icon: '⛰️', desc: 'Climbing strength & VO₂ on hills' },
+      allround:  { label: 'All-Round', sub: 'FTP', icon: '🎯', desc: 'Balanced FTP development plan' },
+    };
+
+    const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    const STRUCTURED_DAYS = ['Tue', 'Thu', 'Sat'];
+    const REST_DAYS = ['Mon', 'Wed', 'Fri'];
+
+    let state = {
+      focus: 'allround',
+      startDate: formatDate(new Date()),
+      ftp: 250,
+      plan: null,
+    };
+
+    // ─── Date helpers ───────────────────────────────────────────────
+    function formatDate(d) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    }
+
+    function addDays(dateStr, n) {
+      const d = new Date(dateStr + 'T12:00:00');
+      d.setDate(d.getDate() + n);
+      return formatDate(d);
+    }
+
+    function getDayName(dateStr) {
+      const jsDay = new Date(dateStr + 'T12:00:00').getDay();
+      return DAYS[jsDay === 0 ? 6 : jsDay - 1];
+    }
+
+    function alignToMonday(dateStr) {
+      const d = new Date(dateStr + 'T12:00:00');
+      const day = d.getDay();
+      const diff = day === 0 ? -6 : 1 - day;
+      d.setDate(d.getDate() + diff);
+      return formatDate(d);
+    }
+
+    // ─── Workout templates (max 60 min structured) ────────────────
+    function workoutLibrary(focus, weekNum, isRecovery) {
+      const phase = weekNum <= 4 ? 'base' : weekNum <= 8 ? 'build' : 'peak';
+      const intensity = isRecovery ? 0.85 : 1;
+      const vol = isRecovery ? 0.8 : 1;
+
+      const lib = {
+        endurance: {
+          base: [
+            { name: 'Aerobic Endurance', type: 'structured', desc: 'Steady Z2 with tempo touches', segments: [
+              { tag: 'Warmup', Duration: 600, PowerLow: 0.5, PowerHigh: 0.7 },
+              { tag: 'SteadyState', Duration: 1800, Power: 0.68 * intensity },
+              { tag: 'IntervalsT', Repeat: 4, OnDuration: 180, OffDuration: 120, OnPower: 0.82 * intensity, OffPower: 0.55 },
+              { tag: 'Cooldown', Duration: 600, PowerHigh: 0.6, PowerLow: 0.45 },
+            ]},
+            { name: 'Sweet Spot Intro', type: 'structured', desc: '2×15 min sweet spot', segments: [
+              { tag: 'Warmup', Duration: 600, PowerLow: 0.5, PowerHigh: 0.75 },
+              { tag: 'IntervalsT', Repeat: 2, OnDuration: 900, OffDuration: 300, OnPower: 0.88 * intensity, OffPower: 0.55 },
+              { tag: 'SteadyState', Duration: 600, Power: 0.65 },
+              { tag: 'Cooldown', Duration: 300, PowerHigh: 0.6, PowerLow: 0.45 },
+            ]},
+            { name: 'Tempo Blocks', type: 'structured', desc: '3×10 min tempo', segments: [
+              { tag: 'Warmup', Duration: 600, PowerLow: 0.5, PowerHigh: 0.72 },
+              { tag: 'IntervalsT', Repeat: 3, OnDuration: 600, OffDuration: 180, OnPower: 0.78 * intensity, OffPower: 0.55 },
+              { tag: 'SteadyState', Duration: 720, Power: 0.62 },
+              { tag: 'Cooldown', Duration: 300, PowerHigh: 0.6, PowerLow: 0.45 },
+            ]},
+          ],
+          build: [
+            { name: 'Sweet Spot 2×20', type: 'structured', desc: 'Classic Friel sweet spot', segments: [
+              { tag: 'Warmup', Duration: 600, PowerLow: 0.5, PowerHigh: 0.75 },
+              { tag: 'IntervalsT', Repeat: 2, OnDuration: 1200, OffDuration: 300, OnPower: 0.9 * intensity, OffPower: 0.55 },
+              { tag: 'Cooldown', Duration: 600, PowerHigh: 0.65, PowerLow: 0.45 },
+            ]},
+            { name: 'Threshold Progression', type: 'structured', desc: '3×12 min at threshold', segments: [
+              { tag: 'Warmup', Duration: 600, PowerLow: 0.5, PowerHigh: 0.78 },
+              { tag: 'IntervalsT', Repeat: 3, OnDuration: 720, OffDuration: 240, OnPower: 0.95 * intensity, OffPower: 0.55 },
+              { tag: 'Cooldown', Duration: 480, PowerHigh: 0.65, PowerLow: 0.45 },
+            ]},
+            { name: 'Over-Unders', type: 'structured', desc: 'Friel over-under sets', segments: [
+              { tag: 'Warmup', Duration: 600, PowerLow: 0.5, PowerHigh: 0.75 },
+              { tag: 'IntervalsT', Repeat: 4, OnDuration: 120, OffDuration: 120, OnPower: 1.05 * intensity, OffPower: 0.88 * intensity },
+              { tag: 'SteadyState', Duration: 600, Power: 0.7 },
+              { tag: 'Cooldown', Duration: 300, PowerHigh: 0.6, PowerLow: 0.45 },
+            ]},
+          ],
+          peak: [
+            { name: 'Race Pace Tempo', type: 'structured', desc: '2×20 min race pace', segments: [
+              { tag: 'Warmup', Duration: 600, PowerLow: 0.5, PowerHigh: 0.78 },
+              { tag: 'IntervalsT', Repeat: 2, OnDuration: 1200, OffDuration: 360, OnPower: 0.92 * intensity, OffPower: 0.55 },
+              { tag: 'Cooldown', Duration: 480, PowerHigh: 0.65, PowerLow: 0.45 },
+            ]},
+            { name: 'Fondo Simulation', type: 'structured', desc: 'Long sweet spot block', segments: [
+              { tag: 'Warmup', Duration: 600, PowerLow: 0.5, PowerHigh: 0.75 },
+              { tag: 'SteadyState', Duration: 2400, Power: 0.85 * intensity },
+              { tag: 'Cooldown', Duration: 600, PowerHigh: 0.65, PowerLow: 0.45 },
+            ]},
+            { name: 'Openers', type: 'structured', desc: 'Pre-event openers', segments: [
+              { tag: 'Warmup', Duration: 900, PowerLow: 0.5, PowerHigh: 0.75 },
+              { tag: 'IntervalsT', Repeat: 3, OnDuration: 60, OffDuration: 180, OnPower: 1.1 * intensity, OffPower: 0.55 },
+              { tag: 'SteadyState', Duration: 600, Power: 0.7 },
+              { tag: 'Cooldown', Duration: 300, PowerHigh: 0.6, PowerLow: 0.45 },
+            ]},
+          ],
+        },
+        sprint: {
+          base: [
+            { name: 'Neuromuscular Sprints', type: 'structured', desc: '8×15s max sprints', segments: [
+              { tag: 'Warmup', Duration: 900, PowerLow: 0.5, PowerHigh: 0.75 },
+              { tag: 'IntervalsT', Repeat: 8, OnDuration: 15, OffDuration: 165, OnPower: 1.5, OffPower: 0.5 },
+              { tag: 'SteadyState', Duration: 600, Power: 0.6 },
+              { tag: 'Cooldown', Duration: 300, PowerHigh: 0.55, PowerLow: 0.4 },
+            ]},
+            { name: 'Anaerobic Capacity', type: 'structured', desc: '6×1 min hard', segments: [
+              { tag: 'Warmup', Duration: 600, PowerLow: 0.5, PowerHigh: 0.75 },
+              { tag: 'IntervalsT', Repeat: 6, OnDuration: 60, OffDuration: 180, OnPower: 1.25 * intensity, OffPower: 0.5 },
+              { tag: 'Cooldown', Duration: 600, PowerHigh: 0.6, PowerLow: 0.45 },
+            ]},
+            { name: 'Sprint + Endurance', type: 'structured', desc: 'Sprints after aerobic base', segments: [
+              { tag: 'Warmup', Duration: 600, PowerLow: 0.5, PowerHigh: 0.72 },
+              { tag: 'SteadyState', Duration: 1200, Power: 0.68 },
+              { tag: 'IntervalsT', Repeat: 5, OnDuration: 20, OffDuration: 160, OnPower: 1.4, OffPower: 0.5 },
+              { tag: 'Cooldown', Duration: 300, PowerHigh: 0.55, PowerLow: 0.4 },
+            ]},
+          ],
+          build: [
+            { name: 'Power Sprints', type: 'structured', desc: '10×20s all-out', segments: [
+              { tag: 'Warmup', Duration: 900, PowerLow: 0.5, PowerHigh: 0.78 },
+              { tag: 'IntervalsT', Repeat: 10, OnDuration: 20, OffDuration: 160, OnPower: 1.6, OffPower: 0.45 },
+              { tag: 'Cooldown', Duration: 480, PowerHigh: 0.55, PowerLow: 0.4 },
+            ]},
+            { name: 'Micro Bursts', type: 'structured', desc: 'Friel micro-intervals', segments: [
+              { tag: 'Warmup', Duration: 600, PowerLow: 0.5, PowerHigh: 0.75 },
+              { tag: 'IntervalsT', Repeat: 12, OnDuration: 30, OffDuration: 30, OnPower: 1.3 * intensity, OffPower: 0.55 },
+              { tag: 'SteadyState', Duration: 600, Power: 0.65 },
+              { tag: 'Cooldown', Duration: 300, PowerHigh: 0.55, PowerLow: 0.4 },
+            ]},
+            { name: 'Sprint Endurance', type: 'structured', desc: 'Repeated sprint efforts', segments: [
+              { tag: 'Warmup', Duration: 600, PowerLow: 0.5, PowerHigh: 0.75 },
+              { tag: 'IntervalsT', Repeat: 6, OnDuration: 45, OffDuration: 135, OnPower: 1.35 * intensity, OffPower: 0.5 },
+              { tag: 'SteadyState', Duration: 900, Power: 0.7 },
+              { tag: 'Cooldown', Duration: 300, PowerHigh: 0.55, PowerLow: 0.4 },
+            ]},
+          ],
+          peak: [
+            { name: 'Race Sprints', type: 'structured', desc: 'Match sprint simulation', segments: [
+              { tag: 'Warmup', Duration: 900, PowerLow: 0.5, PowerHigh: 0.78 },
+              { tag: 'IntervalsT', Repeat: 6, OnDuration: 30, OffDuration: 150, OnPower: 1.5, OffPower: 0.45 },
+              { tag: 'Cooldown', Duration: 480, PowerHigh: 0.55, PowerLow: 0.4 },
+            ]},
+            { name: 'Peak Power', type: 'structured', desc: 'Short max efforts', segments: [
+              { tag: 'Warmup', Duration: 600, PowerLow: 0.5, PowerHigh: 0.75 },
+              { tag: 'IntervalsT', Repeat: 8, OnDuration: 12, OffDuration: 168, OnPower: 1.7, OffPower: 0.45 },
+              { tag: 'SteadyState', Duration: 600, Power: 0.65 },
+              { tag: 'Cooldown', Duration: 300, PowerHigh: 0.55, PowerLow: 0.4 },
+            ]},
+            { name: 'Sprint Openers', type: 'structured', desc: 'Pre-race activation', segments: [
+              { tag: 'Warmup', Duration: 900, PowerLow: 0.5, PowerHigh: 0.75 },
+              { tag: 'IntervalsT', Repeat: 4, OnDuration: 15, OffDuration: 225, OnPower: 1.4, OffPower: 0.5 },
+              { tag: 'Cooldown', Duration: 300, PowerHigh: 0.55, PowerLow: 0.4 },
+            ]},
+          ],
+        },
+        tt: {
+          base: [
+            { name: 'FTP Foundation', type: 'structured', desc: '2×12 min threshold', segments: [
+              { tag: 'Warmup', Duration: 600, PowerLow: 0.5, PowerHigh: 0.75 },
+              { tag: 'IntervalsT', Repeat: 2, OnDuration: 720, OffDuration: 300, OnPower: 0.93 * intensity, OffPower: 0.55 },
+              { tag: 'Cooldown', Duration: 600, PowerHigh: 0.65, PowerLow: 0.45 },
+            ]},
+            { name: 'Tempo Endurance', type: 'structured', desc: '30 min tempo block', segments: [
+              { tag: 'Warmup', Duration: 600, PowerLow: 0.5, PowerHigh: 0.72 },
+              { tag: 'SteadyState', Duration: 1800, Power: 0.8 * intensity },
+              { tag: 'Cooldown', Duration: 600, PowerHigh: 0.6, PowerLow: 0.45 },
+            ]},
+            { name: 'Cadence Drills', type: 'structured', desc: 'TT cadence work', segments: [
+              { tag: 'Warmup', Duration: 600, PowerLow: 0.5, PowerHigh: 0.75 },
+              { tag: 'IntervalsT', Repeat: 4, OnDuration: 300, OffDuration: 120, OnPower: 0.85 * intensity, OffPower: 0.55 },
+              { tag: 'SteadyState', Duration: 900, Power: 0.75 },
+              { tag: 'Cooldown', Duration: 300, PowerHigh: 0.6, PowerLow: 0.45 },
+            ]},
+          ],
+          build: [
+            { name: '2×20 FTP', type: 'structured', desc: 'Classic Friel FTP test prep', segments: [
+              { tag: 'Warmup', Duration: 600, PowerLow: 0.5, PowerHigh: 0.78 },
+              { tag: 'IntervalsT', Repeat: 2, OnDuration: 1200, OffDuration: 300, OnPower: 0.98 * intensity, OffPower: 0.55 },
+              { tag: 'Cooldown', Duration: 600, PowerHigh: 0.65, PowerLow: 0.45 },
+            ]},
+            { name: '3×15 Threshold', type: 'structured', desc: 'Sustained TT efforts', segments: [
+              { tag: 'Warmup', Duration: 600, PowerLow: 0.5, PowerHigh: 0.78 },
+              { tag: 'IntervalsT', Repeat: 3, OnDuration: 900, OffDuration: 240, OnPower: 0.97 * intensity, OffPower: 0.55 },
+              { tag: 'Cooldown', Duration: 480, PowerHigh: 0.65, PowerLow: 0.45 },
+            ]},
+            { name: 'Over-Under TT', type: 'structured', desc: 'Variable threshold', segments: [
+              { tag: 'Warmup', Duration: 600, PowerLow: 0.5, PowerHigh: 0.75 },
+              { tag: 'IntervalsT', Repeat: 5, OnDuration: 180, OffDuration: 120, OnPower: 1.02 * intensity, OffPower: 0.9 * intensity },
+              { tag: 'SteadyState', Duration: 600, Power: 0.7 },
+              { tag: 'Cooldown', Duration: 300, PowerHigh: 0.6, PowerLow: 0.45 },
+            ]},
+          ],
+          peak: [
+            { name: 'TT Simulation', type: 'structured', desc: '40 min race pace', segments: [
+              { tag: 'Warmup', Duration: 600, PowerLow: 0.5, PowerHigh: 0.78 },
+              { tag: 'SteadyState', Duration: 2400, Power: 0.95 * intensity },
+              { tag: 'Cooldown', Duration: 600, PowerHigh: 0.65, PowerLow: 0.45 },
+            ]},
+            { name: 'FTP Test Prep', type: 'structured', desc: '20 min all-out simulation', segments: [
+              { tag: 'Warmup', Duration: 900, PowerLow: 0.5, PowerHigh: 0.78 },
+              { tag: 'SteadyState', Duration: 1200, Power: 1.0 * intensity },
+              { tag: 'Cooldown', Duration: 600, PowerHigh: 0.65, PowerLow: 0.45 },
+            ]},
+            { name: 'TT Openers', type: 'structured', desc: 'Pre-event primers', segments: [
+              { tag: 'Warmup', Duration: 900, PowerLow: 0.5, PowerHigh: 0.75 },
+              { tag: 'IntervalsT', Repeat: 3, OnDuration: 180, OffDuration: 180, OnPower: 1.0 * intensity, OffPower: 0.55 },
+              { tag: 'Cooldown', Duration: 300, PowerHigh: 0.6, PowerLow: 0.45 },
+            ]},
+          ],
+        },
+        hill: {
+          base: [
+            { name: 'Hill Repeats', type: 'structured', desc: '6×3 min climb simulation', segments: [
+              { tag: 'Warmup', Duration: 600, PowerLow: 0.5, PowerHigh: 0.75 },
+              { tag: 'IntervalsT', Repeat: 6, OnDuration: 180, OffDuration: 180, OnPower: 1.05 * intensity, OffPower: 0.5 },
+              { tag: 'Cooldown', Duration: 600, PowerHigh: 0.6, PowerLow: 0.45 },
+            ]},
+            { name: 'Strength Endurance', type: 'structured', desc: 'Low cadence power', segments: [
+              { tag: 'Warmup', Duration: 600, PowerLow: 0.5, PowerHigh: 0.72 },
+              { tag: 'IntervalsT', Repeat: 4, OnDuration: 300, OffDuration: 180, OnPower: 0.85 * intensity, OffPower: 0.55 },
+              { tag: 'SteadyState', Duration: 600, Power: 0.68 },
+              { tag: 'Cooldown', Duration: 300, PowerHigh: 0.6, PowerLow: 0.45 },
+            ]},
+            { name: 'Climbing Tempo', type: 'structured', desc: 'Sustained climbing pace', segments: [
+              { tag: 'Warmup', Duration: 600, PowerLow: 0.5, PowerHigh: 0.75 },
+              { tag: 'SteadyState', Duration: 1800, Power: 0.82 * intensity },
+              { tag: 'Cooldown', Duration: 600, PowerHigh: 0.6, PowerLow: 0.45 },
+            ]},
+          ],
+          build: [
+            { name: 'VO₂ Hill Repeats', type: 'structured', desc: '5×4 min VO₂', segments: [
+              { tag: 'Warmup', Duration: 600, PowerLow: 0.5, PowerHigh: 0.78 },
+              { tag: 'IntervalsT', Repeat: 5, OnDuration: 240, OffDuration: 240, OnPower: 1.12 * intensity, OffPower: 0.5 },
+              { tag: 'Cooldown', Duration: 480, PowerHigh: 0.65, PowerLow: 0.45 },
+            ]},
+            { name: 'Long Climbs', type: 'structured', desc: '3×8 min sustained', segments: [
+              { tag: 'Warmup', Duration: 600, PowerLow: 0.5, PowerHigh: 0.75 },
+              { tag: 'IntervalsT', Repeat: 3, OnDuration: 480, OffDuration: 240, OnPower: 1.0 * intensity, OffPower: 0.55 },
+              { tag: 'Cooldown', Duration: 480, PowerHigh: 0.65, PowerLow: 0.45 },
+            ]},
+            { name: 'Over-Under Climbs', type: 'structured', desc: 'Variable climb intensity', segments: [
+              { tag: 'Warmup', Duration: 600, PowerLow: 0.5, PowerHigh: 0.75 },
+              { tag: 'IntervalsT', Repeat: 4, OnDuration: 120, OffDuration: 120, OnPower: 1.1 * intensity, OffPower: 0.88 * intensity },
+              { tag: 'SteadyState', Duration: 900, Power: 0.75 },
+              { tag: 'Cooldown', Duration: 300, PowerHigh: 0.6, PowerLow: 0.45 },
+            ]},
+          ],
+          peak: [
+            { name: 'Alp Simulation', type: 'structured', desc: 'Extended climb effort', segments: [
+              { tag: 'Warmup', Duration: 600, PowerLow: 0.5, PowerHigh: 0.78 },
+              { tag: 'SteadyState', Duration: 2400, Power: 0.92 * intensity },
+              { tag: 'Cooldown', Duration: 600, PowerHigh: 0.65, PowerLow: 0.45 },
+            ]},
+            { name: 'Peak Climb Repeats', type: 'structured', desc: '4×5 min at limit', segments: [
+              { tag: 'Warmup', Duration: 600, PowerLow: 0.5, PowerHigh: 0.78 },
+              { tag: 'IntervalsT', Repeat: 4, OnDuration: 300, OffDuration: 300, OnPower: 1.08 * intensity, OffPower: 0.5 },
+              { tag: 'Cooldown', Duration: 480, PowerHigh: 0.65, PowerLow: 0.45 },
+            ]},
+            { name: 'Climb Openers', type: 'structured', desc: 'Pre-event hill primers', segments: [
+              { tag: 'Warmup', Duration: 900, PowerLow: 0.5, PowerHigh: 0.75 },
+              { tag: 'IntervalsT', Repeat: 3, OnDuration: 180, OffDuration: 180, OnPower: 1.05 * intensity, OffPower: 0.55 },
+              { tag: 'Cooldown', Duration: 300, PowerHigh: 0.6, PowerLow: 0.45 },
+            ]},
+          ],
+        },
+        allround: {
+          base: [
+            { name: 'Endurance Base', type: 'structured', desc: 'Aerobic foundation', segments: [
+              { tag: 'Warmup', Duration: 600, PowerLow: 0.5, PowerHigh: 0.72 },
+              { tag: 'SteadyState', Duration: 2100, Power: 0.7 * intensity },
+              { tag: 'Cooldown', Duration: 600, PowerHigh: 0.6, PowerLow: 0.45 },
+            ]},
+            { name: 'Sweet Spot', type: 'structured', desc: '2×12 min sweet spot', segments: [
+              { tag: 'Warmup', Duration: 600, PowerLow: 0.5, PowerHigh: 0.75 },
+              { tag: 'IntervalsT', Repeat: 2, OnDuration: 720, OffDuration: 300, OnPower: 0.88 * intensity, OffPower: 0.55 },
+              { tag: 'Cooldown', Duration: 600, PowerHigh: 0.65, PowerLow: 0.45 },
+            ]},
+            { name: 'Tempo Intervals', type: 'structured', desc: '3×8 min tempo', segments: [
+              { tag: 'Warmup', Duration: 600, PowerLow: 0.5, PowerHigh: 0.72 },
+              { tag: 'IntervalsT', Repeat: 3, OnDuration: 480, OffDuration: 180, OnPower: 0.8 * intensity, OffPower: 0.55 },
+              { tag: 'Cooldown', Duration: 480, PowerHigh: 0.6, PowerLow: 0.45 },
+            ]},
+          ],
+          build: [
+            { name: 'FTP Intervals', type: 'structured', desc: '2×15 min at FTP', segments: [
+              { tag: 'Warmup', Duration: 600, PowerLow: 0.5, PowerHigh: 0.78 },
+              { tag: 'IntervalsT', Repeat: 2, OnDuration: 900, OffDuration: 300, OnPower: 0.97 * intensity, OffPower: 0.55 },
+              { tag: 'Cooldown', Duration: 600, PowerHigh: 0.65, PowerLow: 0.45 },
+            ]},
+            { name: 'VO₂ Max', type: 'structured', desc: '5×3 min VO₂', segments: [
+              { tag: 'Warmup', Duration: 600, PowerLow: 0.5, PowerHigh: 0.78 },
+              { tag: 'IntervalsT', Repeat: 5, OnDuration: 180, OffDuration: 180, OnPower: 1.15 * intensity, OffPower: 0.5 },
+              { tag: 'Cooldown', Duration: 480, PowerHigh: 0.65, PowerLow: 0.45 },
+            ]},
+            { name: 'Mixed Intervals', type: 'structured', desc: 'Friel mixed workout', segments: [
+              { tag: 'Warmup', Duration: 600, PowerLow: 0.5, PowerHigh: 0.75 },
+              { tag: 'SteadyState', Duration: 600, Power: 0.85 * intensity },
+              { tag: 'IntervalsT', Repeat: 4, OnDuration: 120, OffDuration: 120, OnPower: 1.05 * intensity, OffPower: 0.55 },
+              { tag: 'SteadyState', Duration: 600, Power: 0.75 },
+              { tag: 'Cooldown', Duration: 300, PowerHigh: 0.6, PowerLow: 0.45 },
+            ]},
+          ],
+          peak: [
+            { name: 'Race Simulation', type: 'structured', desc: 'Full race effort blocks', segments: [
+              { tag: 'Warmup', Duration: 600, PowerLow: 0.5, PowerHigh: 0.78 },
+              { tag: 'SteadyState', Duration: 1200, Power: 0.9 * intensity },
+              { tag: 'IntervalsT', Repeat: 3, OnDuration: 180, OffDuration: 120, OnPower: 1.1 * intensity, OffPower: 0.55 },
+              { tag: 'Cooldown', Duration: 480, PowerHigh: 0.65, PowerLow: 0.45 },
+            ]},
+            { name: 'Peak FTP', type: 'structured', desc: '20 min best effort', segments: [
+              { tag: 'Warmup', Duration: 900, PowerLow: 0.5, PowerHigh: 0.78 },
+              { tag: 'SteadyState', Duration: 1200, Power: 1.0 * intensity },
+              { tag: 'Cooldown', Duration: 600, PowerHigh: 0.65, PowerLow: 0.45 },
+            ]},
+            { name: 'Openers', type: 'structured', desc: 'Pre-event activation', segments: [
+              { tag: 'Warmup', Duration: 900, PowerLow: 0.5, PowerHigh: 0.75 },
+              { tag: 'IntervalsT', Repeat: 3, OnDuration: 60, OffDuration: 180, OnPower: 1.1 * intensity, OffPower: 0.55 },
+              { tag: 'Cooldown', Duration: 300, PowerHigh: 0.6, PowerLow: 0.45 },
+            ]},
+          ],
+        },
+      };
+
+      return lib[focus][phase];
+    }
+
+    function sundayDuration(focus, weekNum, isRecovery) {
+      const phase = weekNum <= 4 ? 'base' : weekNum <= 8 ? 'build' : 'peak';
+      const progress = isRecovery ? 0.7 : 1;
+
+      const durations = {
+        endurance: { base: [150, 165, 180], build: [195, 210, 240], peak: [210, 180, 150] },
+        sprint:    { base: [120, 135, 150], build: [150, 165, 150], peak: [135, 120, 90] },
+        tt:        { base: [135, 150, 165], build: [180, 195, 180], peak: [150, 135, 120] },
+        hill:      { base: [150, 165, 180], build: [195, 210, 195], peak: [180, 150, 120] },
+        allround:  { base: [135, 150, 165], build: [180, 195, 210], peak: [165, 150, 120] },
+      };
+
+      const weekInBlock = ((weekNum - 1) % 3);
+      const mins = durations[focus][phase][weekInBlock] * progress;
+      return Math.round(mins);
+    }
+
+    function sundayDescription(focus, mins, weekNum) {
+      const phase = weekNum <= 4 ? 'base' : weekNum <= 8 ? 'build' : 'peak';
+      const styles = {
+        endurance: `Long endurance ride — steady Z2 with occasional tempo surges. Build aerobic durability for fondo.`,
+        sprint: `Moderate endurance — keep it easy Z2. Optional 3×10s sprints in last hour if fresh.`,
+        tt: `Steady endurance with 2×20 min tempo blocks at race pace. Practice aero position.`,
+        hill: `Hilly endurance ride — seek elevation. Climb at steady tempo, recover on descents.`,
+        allround: `Mixed endurance — mostly Z2 with 2×15 min sweet spot mid-ride.`,
+      };
+      return `${styles[focus]} Target: ${formatDuration(mins)}.`;
+    }
+
+    function recoveryDayDesc(weekNum, isRecovery) {
+      if (isRecovery) return 'Recovery week — rest or very easy spin ≤45 min at Z1.';
+      return 'Rest day or optional recovery ride ≤90 min at Z1–Z2.';
+    }
+
+    function formatDuration(mins) {
+      const h = Math.floor(mins / 60);
+      const m = mins % 60;
+      if (h === 0) return `${m} min`;
+      if (m === 0) return `${h}h`;
+      return `${h}h ${m}m`;
+    }
+
+    function segmentDuration(segments) {
+      return segments.reduce((total, s) => {
+        if (s.tag === 'IntervalsT') return total + s.Repeat * (s.OnDuration + s.OffDuration);
+        return total + (s.Duration || 0);
+      }, 0);
+    }
+
+    function capWorkoutSegments(segments, maxSec = 3600) {
+      const copy = JSON.parse(JSON.stringify(segments));
+      while (segmentDuration(copy) > maxSec) {
+        const steady = copy.filter(s => s.tag === 'SteadyState').sort((a, b) => b.Duration - a.Duration)[0];
+        if (steady && steady.Duration > 300) {
+          steady.Duration -= 60;
+          continue;
+        }
+        const interval = copy.find(s => s.tag === 'IntervalsT' && s.Repeat > 2);
+        if (interval) {
+          interval.Repeat -= 1;
+          continue;
+        }
+        const warmup = copy.find(s => s.tag === 'Warmup' && s.Duration > 480);
+        if (warmup) { warmup.Duration -= 60; continue; }
+        break;
+      }
+      return copy;
+    }
+
+    // ─── Plan generation ──────────────────────────────────────────
+    function generatePlan(focus, startDate) {
+      const monday = alignToMonday(startDate);
+      const weeks = [];
+
+      for (let w = 1; w <= 12; w++) {
+        const isRecovery = w % 4 === 0;
+        const blockNum = Math.ceil(w / 4);
+        const weekInBlock = ((w - 1) % 4) + 1;
+        const phase = w <= 4 ? 'Base' : w <= 8 ? 'Build' : 'Peak';
+        const templates = workoutLibrary(focus, w, isRecovery);
+        const weekStart = addDays(monday, (w - 1) * 7);
+        const days = [];
+
+        for (let d = 0; d < 7; d++) {
+          const date = addDays(weekStart, d);
+          const dayName = getDayName(date);
+
+          if (STRUCTURED_DAYS.includes(dayName)) {
+            const idx = STRUCTURED_DAYS.indexOf(dayName);
+            const template = templates[idx % templates.length];
+            const segments = capWorkoutSegments(template.segments);
+            const dur = segmentDuration(segments);
+            days.push({
+              date, dayName,
+              type: 'structured',
+              name: template.name,
+              desc: template.desc,
+              durationMin: Math.min(60, Math.round(dur / 60)),
+              segments,
+              zwift: true,
+            });
+          } else if (dayName === 'Sun') {
+            const mins = sundayDuration(focus, w, isRecovery);
+            days.push({
+              date, dayName,
+              type: 'endurance',
+              name: 'Sunday Endurance Ride',
+              desc: sundayDescription(focus, mins, w),
+              durationMin: mins,
+              zwift: false,
+            });
+          } else {
+            days.push({
+              date, dayName,
+              type: 'rest',
+              name: isRecovery ? 'Recovery / Rest' : 'Rest or Recovery Spin',
+              desc: recoveryDayDesc(w, isRecovery),
+              durationMin: isRecovery ? 45 : 90,
+              optional: true,
+              zwift: false,
+            });
+          }
+        }
+
+        weeks.push({
+          weekNum: w,
+          blockNum,
+          weekInBlock,
+          phase,
+          isRecovery,
+          label: isRecovery ? `Recovery Week` : `${phase} — Week ${weekInBlock}/3`,
+          startDate: weekStart,
+          endDate: addDays(weekStart, 6),
+          days,
+        });
+      }
+
+      return {
+        version: 1,
+        createdAt: new Date().toISOString(),
+        focus,
+        focusLabel: FOCUSES[focus].label,
+        startDate: monday,
+        endDate: addDays(monday, 83),
+        weeks,
+        methodology: 'Joe Friel 3/1 periodization',
+      };
+    }
+
+    // ─── ZWO export ───────────────────────────────────────────────
+    function segmentToXml(seg) {
+      const attrs = Object.entries(seg)
+        .filter(([k]) => k !== 'tag' && k !== 'message')
+        .map(([k, v]) => `${k}="${typeof v === 'number' ? (Number.isInteger(v) ? v : v.toFixed(2)) : v}"`)
+        .join(' ');
+      const msg = seg.message ? `\n      <textevent timeoffset="0" message="${seg.message}"/>` : '';
+      if (seg.tag === 'Warmup' || seg.tag === 'Cooldown') {
+        return `    <${seg.tag} ${attrs}>${msg}\n    </${seg.tag}>`;
+      }
+      return `    <${seg.tag} ${attrs}/>`;
+    }
+
+    function workoutToZwo(workout, meta) {
+      const segs = workout.segments.map(segmentToXml).join('\n');
+      return `<?xml version="1.0" encoding="UTF-8"?>
+<workout_file>
+  <author>Friel Cycle Plan</author>
+  <name>${escapeXml(meta.name)}</name>
+  <description>${escapeXml(meta.desc)} — Week ${meta.weekNum}, ${meta.dayName} ${meta.date}. Set Zwift FTP to ${meta.ftp}W.</description>
+  <sportType>bike</sportType>
+  <workout>
+${segs}
+  </workout>
+</workout_file>`;
+    }
+
+    function escapeXml(s) {
+      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function slugify(s) {
+      return s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    }
+
+    async function exportZwift(plan, ftp) {
+      const zip = new JSZip();
+      const folder = zip.folder('friel-plan-zwift');
+
+      plan.weeks.forEach(week => {
+        week.days.forEach(day => {
+          if (day.type === 'structured' && day.segments) {
+            const filename = `W${String(week.weekNum).padStart(2, '0')}_${day.dayName}_${slugify(day.name)}.zwo`;
+            const zwo = workoutToZwo(day, {
+              name: `W${week.weekNum} ${day.dayName}: ${day.name}`,
+              desc: day.desc,
+              weekNum: week.weekNum,
+              dayName: day.dayName,
+              date: day.date,
+              ftp,
+            });
+            folder.file(filename, zwo);
+          }
+        });
+      });
+
+      // README for Zwift import
+      folder.file('README.txt', `Friel Cycle Plan — Zwift Workout Export
+========================================
+
+1. Unzip this folder
+2. Copy all .zwo files to:
+   Windows: Documents\\Zwift\\Workouts\\<your-zwift-id>\\
+   Mac: Documents/Zwift/Workouts/<your-zwift-id>/
+3. Restart Zwift
+4. Find workouts under Custom Workouts
+
+Set your Zwift FTP to ${ftp}W to match power targets.
+Sunday endurance rides are outdoor/free rides — no .zwo file included.
+
+Plan: ${plan.focusLabel} | ${plan.startDate} to ${plan.endDate}
+`);
+
+      const blob = await zip.generateAsync({ type: 'blob' });
+      downloadBlob(blob, `friel-plan-zwift-${plan.focus}.zip`);
+    }
+
+    function downloadBlob(blob, filename) {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }
+
+    // ─── Storage ──────────────────────────────────────────────────
+    function saveState() {
+      const data = { ...state, savedAt: new Date().toISOString() };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return false;
+        const data = JSON.parse(raw);
+        state.focus = data.focus || 'allround';
+        state.startDate = data.startDate || formatDate(new Date());
+        state.ftp = data.ftp || 250;
+        state.plan = data.plan || null;
+        return true;
+      } catch { return false; }
+    }
+
+    function exportPlan() {
+      if (!state.plan) { alert('Generate a plan first.'); return; }
+      const data = { ...state, exportedAt: new Date().toISOString() };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      downloadBlob(blob, `friel-cycle-plan-${state.focus}-${state.plan.startDate}.json`);
+    }
+
+    function importPlan(file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data = JSON.parse(e.target.result);
+          state.focus = data.focus || 'allround';
+          state.startDate = data.startDate || formatDate(new Date());
+          state.ftp = data.ftp || 250;
+          state.plan = data.plan || null;
+          saveState();
+          syncUI();
+          renderPlan();
+        } catch {
+          alert('Invalid plan file.');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    // ─── UI ───────────────────────────────────────────────────────
+    function initFocusSelector() {
+      const el = document.getElementById('focusSelector');
+      el.innerHTML = Object.entries(FOCUSES).map(([key, f]) => `
+        <button data-focus="${key}" class="segment-btn rounded-xl px-3 py-3 text-center ${state.focus === key ? 'active' : 'text-apple-gray-500'}">
+          <div class="text-lg">${f.icon}</div>
+          <div class="text-sm font-medium">${f.label}</div>
+          <div class="text-xs text-apple-gray-400">${f.sub}</div>
+        </button>
+      `).join('');
+
+      el.querySelectorAll('[data-focus]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          state.focus = btn.dataset.focus;
+          el.querySelectorAll('[data-focus]').forEach(b => {
+            b.classList.toggle('active', b.dataset.focus === state.focus);
+            b.classList.toggle('text-apple-gray-500', b.dataset.focus !== state.focus);
+          });
+          saveState();
+        });
+      });
+    }
+
+    function syncUI() {
+      document.getElementById('startDate').value = state.startDate;
+      document.getElementById('ftp').value = state.ftp;
+      document.querySelectorAll('[data-focus]').forEach(b => {
+        b.classList.toggle('active', b.dataset.focus === state.focus);
+        b.classList.toggle('text-apple-gray-500', b.dataset.focus !== state.focus);
+      });
+    }
+
+    function dayBadge(day) {
+      const styles = {
+        structured: 'bg-apple-blue/10 text-apple-blue',
+        endurance: 'bg-emerald-500/10 text-emerald-600',
+        rest: 'bg-apple-gray-100 text-apple-gray-500',
+      };
+      const labels = { structured: 'Structured', endurance: 'Endurance', rest: 'Rest' };
+      return `<span class="text-xs font-medium px-2 py-0.5 rounded-full ${styles[day.type]}">${labels[day.type]}</span>`;
+    }
+
+    function renderPlan() {
+      const plan = state.plan;
+      const empty = document.getElementById('emptyState');
+      const summary = document.getElementById('summarySection');
+      const section = document.getElementById('planSection');
+      const container = document.getElementById('planContainer');
+
+      if (!plan) {
+        empty.classList.remove('hidden');
+        summary.classList.add('hidden');
+        section.classList.add('hidden');
+        return;
+      }
+
+      empty.classList.add('hidden');
+      summary.classList.remove('hidden');
+      section.classList.remove('hidden');
+
+      const f = FOCUSES[plan.focus];
+      document.getElementById('planTitle').textContent = `${f.label} Training Plan`;
+      document.getElementById('planSubtitle').textContent = `${plan.startDate} → ${plan.endDate} · ${plan.methodology}`;
+      document.getElementById('statWeeks').textContent = '12';
+      document.getElementById('statSessions').textContent = plan.weeks.reduce((n, w) => n + w.days.filter(d => d.type === 'structured').length, 0);
+      document.getElementById('statBlocks').textContent = '3';
+
+      container.innerHTML = plan.weeks.map(week => `
+        <div class="week-card glass rounded-3xl shadow-apple border border-white/60 overflow-hidden mb-4">
+          <div class="px-6 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-apple-gray-100 ${week.isRecovery ? 'bg-amber-50/50' : ''}">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-2xl ${week.isRecovery ? 'bg-amber-100 text-amber-700' : 'bg-apple-blue/10 text-apple-blue'} flex items-center justify-center font-semibold text-sm">
+                ${week.weekNum}
+              </div>
+              <div>
+                <h3 class="font-semibold">Week ${week.weekNum} — ${week.label}</h3>
+                <p class="text-xs text-apple-gray-400">${week.startDate} → ${week.endDate} · Block ${week.blockNum}</p>
+              </div>
+            </div>
+            ${week.isRecovery ? '<span class="text-xs font-medium text-amber-600 bg-amber-100 px-3 py-1 rounded-full self-start">↓ Recovery</span>' : ''}
+          </div>
+          <div class="divide-y divide-apple-gray-100">
+            ${week.days.map(day => `
+              <div class="px-6 py-4 flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-4 hover:bg-apple-gray-50/50 transition">
+                <div class="flex items-center gap-3 sm:w-36 shrink-0">
+                  <span class="text-sm font-semibold w-8">${day.dayName}</span>
+                  <span class="text-xs text-apple-gray-400">${day.date.slice(5)}</span>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <span class="font-medium text-sm">${day.name}</span>
+                    ${dayBadge(day)}
+                    ${day.zwift ? '<span class="text-xs text-orange-500 font-medium">Zwift</span>' : ''}
+                  </div>
+                  <p class="text-sm text-apple-gray-400 mt-0.5 leading-relaxed">${day.desc}</p>
+                </div>
+                <div class="text-sm font-medium text-apple-gray-600 sm:text-right shrink-0">
+                  ${day.type === 'rest' && day.optional ? '≤' : ''}${formatDuration(day.durationMin)}
+                  ${day.type === 'rest' ? '<div class="text-xs text-apple-gray-300 font-normal">optional</div>' : ''}
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // ─── Events ───────────────────────────────────────────────────
+    function init() {
+      initFocusSelector();
+      loadState();
+      syncUI();
+      renderPlan();
+
+      document.getElementById('startDate').addEventListener('change', (e) => {
+        state.startDate = e.target.value;
+        saveState();
+      });
+
+      document.getElementById('ftp').addEventListener('change', (e) => {
+        state.ftp = parseInt(e.target.value, 10) || 250;
+        saveState();
+      });
+
+      document.getElementById('btnGenerate').addEventListener('click', () => {
+        state.plan = generatePlan(state.focus, state.startDate);
+        saveState();
+        renderPlan();
+        document.getElementById('planSection').scrollIntoView({ behavior: 'smooth' });
+      });
+
+      document.getElementById('btnClear').addEventListener('click', () => {
+        if (confirm('Clear saved plan from this device?')) {
+          state.plan = null;
+          localStorage.removeItem(STORAGE_KEY);
+          renderPlan();
+        }
+      });
+
+      document.getElementById('btnExport').addEventListener('click', exportPlan);
+
+      document.getElementById('btnImport').addEventListener('click', () => {
+        document.getElementById('fileImport').click();
+      });
+
+      document.getElementById('fileImport').addEventListener('change', (e) => {
+        if (e.target.files[0]) importPlan(e.target.files[0]);
+        e.target.value = '';
+      });
+
+      document.getElementById('btnZwift').addEventListener('click', () => {
+        if (!state.plan) { alert('Generate a plan first.'); return; }
+        exportZwift(state.plan, state.ftp);
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>
