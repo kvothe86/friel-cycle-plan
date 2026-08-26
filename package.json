@@ -1,7 +1,7 @@
 {
-  "name": "friel-cycle-plan",
-  "version": "1.0.0",
-  "description": "Joe Friel-based 12-week cycling training plan generator with Zwift export",
+  "name": "veloplanner",
+  "version": "2.0.0",
+  "description": "Joe Friel 12-week cycling plan generator with calendar, dashboard, Zwift export, and training-load tracking",
   "scripts": {
     "dev": "npx --yes serve -l 4317 .",
     "start": "npm run dev"
