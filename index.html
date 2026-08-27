@@ -174,6 +174,16 @@
     .readiness-bar-mid { background: #F59E0B; }
     .readiness-bar-low { background: #EF4444; }
     .readiness-bar-na { background: #E5E7EB; width: 0 !important; }
+    .guide-table { width: 100%; border-collapse: collapse; font-size: 0.8125rem; }
+    .guide-table th, .guide-table td { padding: 0.5rem 0.625rem; text-align: left; border-bottom: 1px solid #F3F4F6; vertical-align: top; }
+    .guide-table th { font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: #6B7280; }
+    .guide-table tr:last-child td { border-bottom: 0; }
+    .zone-swatch { display: inline-block; width: 0.875rem; height: 0.875rem; border-radius: 0.2rem; flex-shrink: 0; border: 1px solid rgba(0,0,0,0.06); }
+    .zone-label { display: inline-flex; align-items: center; gap: 0.375rem; font-weight: 600; }
+    .form-band { padding: 0.625rem 0.75rem; border-radius: 0.5rem; font-size: 0.8125rem; border: 1px solid #F3F4F6; }
+    .form-band + .form-band { margin-top: 0.5rem; }
+    .guide-pmc-metric { display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; font-weight: 600; }
+    .guide-pmc-dot { width: 0.625rem; height: 0.625rem; border-radius: 9999px; flex-shrink: 0; }
     .day-adjusted-badge { font-size: 0.625rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: #7C3AED; background: rgba(124,58,237,0.1); padding: 0.15rem 0.45rem; border-radius: 9999px; }
     .sunday-weather { margin-top: 0.75rem; padding: 0.75rem 0.875rem; border-radius: 8px; background: linear-gradient(135deg, rgba(59,130,246,0.08), rgba(16,185,129,0.08)); border: 1px solid rgba(59,130,246,0.15); }
     .sunday-weather-title { font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: #3B82F6; margin-bottom: 0.35rem; }
@@ -229,6 +239,7 @@
         <button type="button" data-nav="list" class="nav-btn active px-3 py-1.5 text-sm font-medium rounded-full bg-gray-100 hover:bg-gray-200 transition">List</button>
         <button type="button" data-nav="calendar" class="nav-btn px-3 py-1.5 text-sm font-medium rounded-full bg-gray-100 hover:bg-gray-200 transition">Calendar</button>
         <button type="button" data-nav="dashboard" class="nav-btn px-3 py-1.5 text-sm font-medium rounded-full bg-gray-100 hover:bg-gray-200 transition">Dashboard</button>
+        <button type="button" data-nav="guide" class="nav-btn px-3 py-1.5 text-sm font-medium rounded-full bg-gray-100 hover:bg-gray-200 transition">Guide</button>
         <button type="button" data-nav="settings" class="nav-btn px-3 py-1.5 text-sm font-medium rounded-full bg-gray-100 hover:bg-gray-200 transition">Settings</button>
         <button id="btnImport" class="px-3 py-1.5 text-sm font-medium rounded-full bg-gray-100 hover:bg-gray-200 transition">Import</button>
         <button id="btnExport" class="px-3 py-1.5 text-sm font-medium rounded-full bg-gray-100 hover:bg-gray-200 transition">Export</button>
@@ -512,6 +523,11 @@
       </section>
     </div>
 
+    <!-- Training guide -->
+    <div id="view-guide" class="view-panel hidden space-y-6">
+      <div id="methodologyContent"></div>
+    </div>
+
   </main>
 
   <input type="file" id="fileImport" accept=".json" class="hidden" />
@@ -559,7 +575,7 @@
       allround:  { label: 'All-Round', sub: 'FTP', icon: '🎯' },
     };
 
-    const VIEWS = ['list', 'calendar', 'dashboard', 'settings'];
+    const VIEWS = ['list', 'calendar', 'dashboard', 'guide', 'settings'];
     const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     const STRUCTURED_DAYS = ['Tue', 'Thu', 'Sat'];
     const SUNDAY_OUTDOOR_IF = 0.68;
@@ -580,7 +596,18 @@
       4: { label: 'Z4', color: '#F5C542' },
       5: { label: 'Z5', color: '#F07A2E' },
       6: { label: 'Z6', color: '#E84C4C' },
+      7: { label: 'Z7', color: '#9D4EDD' },
     };
+
+    const TRAINING_ZONES = [
+      { z: 1, name: 'Active recovery', ftp: '< 55%', purpose: 'Recovery spins, flush the legs' },
+      { z: 2, name: 'Aerobic endurance', ftp: '56–75%', purpose: 'Base miles, fat oxidation, durability' },
+      { z: 3, name: 'Tempo', ftp: '76–90%', purpose: 'Muscular endurance, steady race-like efforts' },
+      { z: 4, name: 'Threshold', ftp: '91–105%', purpose: 'FTP, time trial, sustained climb pace' },
+      { z: 5, name: 'VO₂max', ftp: '106–120%', purpose: 'Short hard intervals, aerobic ceiling' },
+      { z: 6, name: 'Anaerobic', ftp: '121–150%', purpose: 'Sprint repeats, neuromuscular power' },
+      { z: 7, name: 'Neuromuscular', ftp: 'Max', purpose: 'Very short sprints and starts' },
+    ];
 
     let state = {
       focus: 'allround',
@@ -4011,8 +4038,128 @@ ${segs}
       list: 'Your personal 12-week cycling plan',
       calendar: 'Calendar view · 4-week grid',
       dashboard: 'Training load & progress',
+      guide: 'Training methodology & metrics',
       settings: 'Plan & training load settings',
     };
+
+    function renderMethodologyView() {
+      const el = document.getElementById('methodologyContent');
+      if (!el) return;
+
+      const zoneRows = TRAINING_ZONES.map(row => `
+        <tr>
+          <td><span class="zone-label"><span class="zone-swatch" style="background:${ZWIFT_ZONES[row.z].color}"></span>${ZWIFT_ZONES[row.z].label}</span></td>
+          <td class="text-gray-700">${row.name}</td>
+          <td class="text-gray-500 whitespace-nowrap">${row.ftp}</td>
+          <td class="text-gray-500">${row.purpose}</td>
+        </tr>
+      `).join('');
+
+      const rpeRows = [
+        ['1–2', 'Very easy — conversation effortless'],
+        ['3–4', 'Easy aerobic'],
+        ['5–6', 'Moderate — breathing deeper, still controlled'],
+        ['7–8', 'Hard — threshold / VO₂ territory'],
+        ['9–10', 'Very hard — short efforts only'],
+      ].map(([range, desc]) => `<tr><td class="font-medium text-gray-700 whitespace-nowrap">${range}</td><td class="text-gray-500">${desc}</td></tr>`).join('');
+
+      const formBands = [
+        { range: '< −30', feel: 'Very tired', bias: 'Rest or Z1 only', bg: 'rgba(239,68,68,0.08)', border: 'rgba(239,68,68,0.2)' },
+        { range: '−30 to −10', feel: 'Load absorbed', bias: 'Normal training — protect key sessions', bg: 'rgba(245,158,11,0.08)', border: 'rgba(245,158,11,0.2)' },
+        { range: '−10 to +5', feel: 'Productive zone', bias: 'Good window for quality work', bg: 'rgba(16,185,129,0.08)', border: 'rgba(16,185,129,0.2)' },
+        { range: '+5 to +25', feel: 'Fresh', bias: 'Race or hard intervals when planned', bg: 'rgba(59,130,246,0.08)', border: 'rgba(59,130,246,0.2)' },
+        { range: '> +25', feel: 'Possibly flat', bias: 'May lack race sharpness if sustained', bg: 'rgba(156,163,175,0.12)', border: 'rgba(156,163,175,0.25)' },
+      ].map(b => `
+        <div class="form-band" style="background:${b.bg}; border-color:${b.border}">
+          <div class="flex flex-wrap items-baseline justify-between gap-2">
+            <span class="font-semibold text-gray-800">${b.range}</span>
+            <span class="text-gray-500 text-xs">${b.feel}</span>
+          </div>
+          <p class="text-gray-600 mt-1">${b.bias}</p>
+        </div>
+      `).join('');
+
+      el.innerHTML = `
+        <section class="panel p-6 sm:p-8">
+          <h2 class="text-lg font-bold mb-2">How VeloPlanner trains</h2>
+          <p class="text-sm text-gray-500 leading-relaxed max-w-3xl">
+            Plans follow classic periodization: build aerobic fitness, add race-specific intensity, then sharpen for events.
+            Each 12-week block uses <strong class="text-gray-700">3 progressive weeks + 1 recovery week</strong>, repeated three times (base → build → peak).
+            Workouts are prescribed by power zones relative to your FTP. The dashboard tracks load and readiness so you train hard when fresh and back off when fatigued.
+          </p>
+        </section>
+
+        <section class="panel p-6 sm:p-8">
+          <h2 class="text-lg font-bold mb-2">Power zones</h2>
+          <p class="text-sm text-gray-400 mb-4">Percentages of FTP. Colors match Zwift power bars in workout previews.</p>
+          <div class="overflow-x-auto -mx-1 px-1">
+            <table class="guide-table min-w-[520px]">
+              <thead>
+                <tr><th>Zone</th><th>Name</th><th>% FTP</th><th>Purpose</th></tr>
+              </thead>
+              <tbody>${zoneRows}</tbody>
+            </table>
+          </div>
+          <p class="text-xs text-gray-400 mt-4">Sweet spot — upper Z3 / low Z4 (~88–94% FTP) — is a common prescription for muscular endurance without full threshold fatigue.</p>
+        </section>
+
+        <section class="panel p-6 sm:p-8">
+          <h2 class="text-lg font-bold mb-2">Performance Management Chart</h2>
+          <p class="text-sm text-gray-400 mb-5">Training load over time. Shown on the Dashboard fitness chart and used for auto-adjustments.</p>
+          <div class="grid sm:grid-cols-3 gap-4 mb-5">
+            <div class="p-4 rounded-lg bg-blue-50 border border-blue-100">
+              <div class="guide-pmc-metric text-blue-600"><span class="guide-pmc-dot bg-blue-500"></span> CTL · Fitness</div>
+              <p class="text-xs text-gray-500 mt-2 leading-relaxed">Chronic training load — roughly a 42-day weighted average of daily TSS. Rises slowly when you train consistently.</p>
+            </div>
+            <div class="p-4 rounded-lg bg-amber-50 border border-amber-100">
+              <div class="guide-pmc-metric text-amber-600"><span class="guide-pmc-dot bg-amber-500"></span> ATL · Fatigue</div>
+              <p class="text-xs text-gray-500 mt-2 leading-relaxed">Acute load — roughly a 7-day weighted average. Spikes after hard blocks; drops quickly with rest.</p>
+            </div>
+            <div class="p-4 rounded-lg bg-emerald-50 border border-emerald-100">
+              <div class="guide-pmc-metric text-emerald-600"><span class="guide-pmc-dot bg-emerald-500"></span> Form</div>
+              <p class="text-xs text-gray-500 mt-2 leading-relaxed"><strong class="text-gray-600">Form = CTL − ATL</strong> (also called TSB). Positive means fresher than your fitness trend; negative means carrying fatigue.</p>
+            </div>
+          </div>
+          <p class="text-xs text-gray-400">Rising CTL with manageable ATL means fitness is building. CTL flat while ATL stays high suggests stagnation or overreaching risk.</p>
+        </section>
+
+        <section class="panel p-6 sm:p-8">
+          <h2 class="text-lg font-bold mb-2">Form guidelines</h2>
+          <p class="text-sm text-gray-400 mb-4">Approximate — individual variance is large. Use with readiness and how you feel, not as rigid rules.</p>
+          ${formBands}
+        </section>
+
+        <section class="panel p-6 sm:p-8">
+          <h2 class="text-lg font-bold mb-2">RPE scale</h2>
+          <p class="text-sm text-gray-400 mb-4">Rate of Perceived Exertion (1–10). Log after sessions on the calendar — VeloPlanner compares it to the expected RPE for that workout.</p>
+          <table class="guide-table max-w-xl">
+            <thead><tr><th>RPE</th><th>Description</th></tr></thead>
+            <tbody>${rpeRows}</tbody>
+          </table>
+          <p class="text-xs text-gray-400 mt-4">Structured sessions should land near the planned RPE. Consistently higher than expected often means fatigue or intensity set too high.</p>
+        </section>
+
+        <section class="panel p-6 sm:p-8">
+          <h2 class="text-lg font-bold mb-2">Readiness inputs</h2>
+          <p class="text-sm text-gray-400 mb-4">The Dashboard readiness score blends wellness signals from intervals.icu (Garmin sync). When signals conflict, weight them in this order:</p>
+          <ol class="space-y-3 text-sm text-gray-600 list-decimal list-inside marker:text-gray-400 marker:font-semibold">
+            <li><strong class="text-gray-700">Illness, injury, or pain</strong> — always overrides numbers. Rest or see a professional.</li>
+            <li><strong class="text-gray-700">Sleep</strong> — duration and recency. Stale sleep data (not logged today) lowers confidence; 2+ days without sleep triggers a penalty.</li>
+            <li><strong class="text-gray-700">HRV</strong> — compared to your 21-day baseline, not a single reading. Trend matters more than one day.</li>
+            <li><strong class="text-gray-700">Resting HR</strong> — elevated vs baseline suggests incomplete recovery.</li>
+            <li><strong class="text-gray-700">Sleep score</strong> — device sleep quality when available.</li>
+            <li><strong class="text-gray-700">Fatigue, soreness, stress</strong> — subjective wellness fields (lower is better).</li>
+            <li><strong class="text-gray-700">Form (TSB)</strong> — training load balance from CTL/ATL.</li>
+          </ol>
+          <div class="mt-5 p-4 rounded-lg bg-gray-50 text-xs text-gray-500 leading-relaxed">
+            <strong class="text-gray-700">Auto-adjust thresholds:</strong>
+            readiness &lt; 35 or form &lt; −25 → rest or easy spin ≤45 min Z1;
+            readiness &lt; 55 or form &lt; −15 → reduce intensity ~15% or shorten endurance ~30%;
+            readiness ≥ 67 and form ≥ −10 → proceed as planned.
+          </div>
+        </section>
+      `;
+    }
 
     function showView(view) {
       if (!VIEWS.includes(view)) view = 'list';
@@ -4022,8 +4169,11 @@ ${segs}
       document.getElementById('view-list').classList.toggle('hidden', view !== 'list');
       document.getElementById('view-calendar').classList.toggle('hidden', view !== 'calendar');
       document.getElementById('view-dashboard').classList.toggle('hidden', view !== 'dashboard');
+      document.getElementById('view-guide').classList.toggle('hidden', view !== 'guide');
       document.getElementById('view-settings').classList.toggle('hidden', view !== 'settings');
       document.getElementById('headerSubtitle').textContent = VIEW_SUBTITLES[view];
+
+      if (view === 'guide') renderMethodologyView();
 
       document.querySelectorAll('[data-nav]').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.nav === view);
@@ -4639,16 +4789,16 @@ ${segs}
       const view = state.activeView || 'list';
       if (!plan) {
         summary.classList.add('hidden');
-        document.getElementById('emptyState').classList.remove('hidden');
+        document.getElementById('emptyState').classList.toggle('hidden', view !== 'list');
         document.getElementById('planSection').classList.add('hidden');
         document.getElementById('weekNav').classList.add('hidden');
-        document.getElementById('calendarEmpty').classList.remove('hidden');
+        document.getElementById('calendarEmpty').classList.toggle('hidden', view !== 'calendar');
         document.getElementById('calendarWrap').classList.add('hidden');
-        document.getElementById('dashboardEmpty').classList.remove('hidden');
+        document.getElementById('dashboardEmpty').classList.toggle('hidden', view !== 'dashboard');
         document.getElementById('dashboardContent').classList.add('hidden');
         return;
       }
-      summary.classList.toggle('hidden', view === 'dashboard' || view === 'settings');
+      summary.classList.toggle('hidden', view === 'dashboard' || view === 'settings' || view === 'guide');
       if (view !== 'dashboard') updateSummary(plan);
       document.getElementById('emptyState').classList.add('hidden');
       document.getElementById('calendarEmpty').classList.add('hidden');
