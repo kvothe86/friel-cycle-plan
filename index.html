@@ -4,7 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="color-scheme" content="light" />
-  <title>Friel Cycle Plan</title>
+  <title>VeloPlanner</title>
+  <link rel="icon" href="/favicon.ico" sizes="any" />
+  <link rel="icon" type="image/png" href="/favicon.png" sizes="32x32" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -169,10 +172,10 @@
   <header class="sticky top-0 z-50 bg-white border-b-2 border-gray-200">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-4">
       <div class="min-w-0 flex items-center gap-3">
-        <div class="art-logo" role="img" aria-label="Friel Cycle Plan"></div>
+        <div class="art-logo" role="img" aria-label="VeloPlanner"></div>
         <div class="min-w-0">
-        <h1 class="text-xl sm:text-2xl font-bold tracking-tight">Friel Cycle Plan</h1>
-        <p id="headerSubtitle" class="text-xs sm:text-sm text-gray-400 mt-0.5 truncate">3-month · 3/1 periodization · Joe Friel methodology</p>
+        <h1 class="text-xl sm:text-2xl font-bold tracking-tight">VeloPlanner</h1>
+        <p id="headerSubtitle" class="text-xs sm:text-sm text-gray-400 mt-0.5 truncate">Your personal 12-week cycling plan</p>
         </div>
       </div>
       <div class="flex gap-2 shrink-0 flex-wrap justify-end items-center">
@@ -229,7 +232,7 @@
         <div class="p-4 rounded-lg bg-blue-50 text-sm text-gray-600 leading-relaxed">
           <strong class="text-gray-800">Schedule:</strong> Tue · Thu · Sat — structured sessions (≤60 min).
           Sunday — endurance ride (duration only). Mon · Wed · Fri — rest or optional recovery spin (≤90 min).
-          <span class="block mt-1 text-gray-400">Based on Joe Friel's periodization: 3 weeks progressive load, 1 week recovery.</span>
+          <span class="block mt-1 text-gray-400">3 weeks progressive load, 1 week recovery — your personal 12-week block.</span>
         </div>
       </div>
     </section>
@@ -396,7 +399,8 @@
   </div>
 
   <script>
-    const STORAGE_KEY = 'friel-cycle-plan-v2';
+    const STORAGE_KEY = 'veloplanner-v2';
+    const LEGACY_STORAGE_KEY = 'friel-cycle-plan-v2';
 
     const FOCUSES = {
       endurance: { label: 'Endurance', sub: 'Fondo', icon: '🏔️' },
@@ -862,7 +866,7 @@
             ]},
           ],
           build: [
-            { name: 'Sweet Spot 2×20', type: 'structured', desc: 'Classic Friel sweet spot', segments: [
+            { name: 'Sweet Spot 2×20', type: 'structured', desc: 'Classic sweet spot blocks', segments: [
               { tag: 'Warmup', Duration: 600, PowerLow: 0.5, PowerHigh: 0.75 },
               { tag: 'IntervalsT', Repeat: 2, OnDuration: 1200, OffDuration: 300, OnPower: 0.9 * intensity, OffPower: 0.55 },
               { tag: 'Cooldown', Duration: 600, PowerHigh: 0.65, PowerLow: 0.45 },
@@ -872,7 +876,7 @@
               { tag: 'IntervalsT', Repeat: 3, OnDuration: 720, OffDuration: 180, OnPower: 0.95 * intensity, OffPower: 0.55 },
               { tag: 'Cooldown', Duration: 300, PowerHigh: 0.65, PowerLow: 0.45 },
             ]},
-            { name: 'Over-Unders', type: 'structured', desc: 'Friel over-under sets', segments: [
+            { name: 'Over-Unders', type: 'structured', desc: 'Over-under threshold sets', segments: [
               { tag: 'Warmup', Duration: 600, PowerLow: 0.5, PowerHigh: 0.75 },
               { tag: 'IntervalsT', Repeat: 4, OnDuration: 120, OffDuration: 120, OnPower: 1.05 * intensity, OffPower: 0.88 * intensity },
               { tag: 'SteadyState', Duration: 600, Power: 0.7 },
@@ -924,7 +928,7 @@
               { tag: 'IntervalsT', Repeat: 10, OnDuration: 20, OffDuration: 160, OnPower: 1.6, OffPower: 0.45 },
               { tag: 'Cooldown', Duration: 480, PowerHigh: 0.55, PowerLow: 0.4 },
             ]},
-            { name: 'Micro Bursts', type: 'structured', desc: 'Friel micro-intervals', segments: [
+            { name: 'Micro Bursts', type: 'structured', desc: 'Micro-interval bursts', segments: [
               { tag: 'Warmup', Duration: 600, PowerLow: 0.5, PowerHigh: 0.75 },
               { tag: 'IntervalsT', Repeat: 12, OnDuration: 30, OffDuration: 30, OnPower: 1.3 * intensity, OffPower: 0.55 },
               { tag: 'SteadyState', Duration: 600, Power: 0.65 },
@@ -976,7 +980,7 @@
             ]},
           ],
           build: [
-            { name: '2×20 FTP', type: 'structured', desc: 'Classic Friel FTP test prep', segments: [
+            { name: '2×20 FTP', type: 'structured', desc: 'Classic FTP test prep', segments: [
               { tag: 'Warmup', Duration: 600, PowerLow: 0.5, PowerHigh: 0.78 },
               { tag: 'IntervalsT', Repeat: 2, OnDuration: 1200, OffDuration: 300, OnPower: 0.98 * intensity, OffPower: 0.55 },
               { tag: 'Cooldown', Duration: 600, PowerHigh: 0.65, PowerLow: 0.45 },
@@ -1095,7 +1099,7 @@
               { tag: 'IntervalsT', Repeat: 5, OnDuration: 180, OffDuration: 180, OnPower: 1.15 * intensity, OffPower: 0.5 },
               { tag: 'Cooldown', Duration: 480, PowerHigh: 0.65, PowerLow: 0.45 },
             ]},
-            { name: 'Mixed Intervals', type: 'structured', desc: 'Friel mixed workout', segments: [
+            { name: 'Mixed Intervals', type: 'structured', desc: 'Mixed intensity blocks', segments: [
               { tag: 'Warmup', Duration: 600, PowerLow: 0.5, PowerHigh: 0.75 },
               { tag: 'SteadyState', Duration: 600, Power: 0.85 * intensity },
               { tag: 'IntervalsT', Repeat: 4, OnDuration: 120, OffDuration: 120, OnPower: 1.05 * intensity, OffPower: 0.55 },
@@ -1540,7 +1544,7 @@
       const segs = workout.segments.map(segmentToXml).join('\n');
       return `<?xml version="1.0" encoding="UTF-8"?>
 <workout_file>
-  <author>Friel Cycle Plan</author>
+  <author>VeloPlanner</author>
   <name>${escapeXml(meta.name)}</name>
   <description>${escapeXml(meta.desc)} — Week ${meta.weekNum}, ${meta.dayName} ${meta.date}. Set Zwift FTP to ${meta.ftp}W.</description>
   <sportType>bike</sportType>
@@ -1592,11 +1596,11 @@ ${segs}
       plan.weeks.forEach(week => week.days.forEach(day => {
         if (day.type === 'structured' && day.segments) {
           const slug = day.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-          files.push({ name: `friel-plan-zwift/W${String(week.weekNum).padStart(2, '0')}_${day.dayName}_${slug}.zwo`, text: workoutToZwo(day, { name: `W${week.weekNum} ${day.dayName}: ${day.name}`, desc: day.desc, weekNum: week.weekNum, dayName: day.dayName, date: day.date, ftp }) });
+          files.push({ name: `veloplanner-zwift/W${String(week.weekNum).padStart(2, '0')}_${day.dayName}_${slug}.zwo`, text: workoutToZwo(day, { name: `W${week.weekNum} ${day.dayName}: ${day.name}`, desc: day.desc, weekNum: week.weekNum, dayName: day.dayName, date: day.date, ftp }) });
         }
       }));
-      files.push({ name: 'friel-plan-zwift/README.txt', text: `Friel Cycle Plan — Zwift export. Copy .zwo files to Zwift Workouts folder. FTP ${ftp}W. Plan: ${plan.focusLabel} ${plan.startDate}–${plan.endDate}` });
-      downloadBlob(buildZip(files), `friel-plan-zwift-${plan.focus}.zip`);
+      files.push({ name: 'veloplanner-zwift/README.txt', text: `VeloPlanner — Zwift export. Copy .zwo files to Zwift Workouts folder. FTP ${ftp}W. Plan: ${plan.focusLabel} ${plan.startDate}–${plan.endDate}` });
+      downloadBlob(buildZip(files), `veloplanner-zwift-${plan.focus}.zip`);
     }
 
     function downloadBlob(blob, filename) {
@@ -1639,7 +1643,14 @@ ${segs}
 
     function loadState() {
       try {
-        const raw = localStorage.getItem(STORAGE_KEY);
+        let raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) {
+          raw = localStorage.getItem(LEGACY_STORAGE_KEY);
+          if (raw) {
+            localStorage.setItem(STORAGE_KEY, raw);
+            localStorage.removeItem(LEGACY_STORAGE_KEY);
+          }
+        }
         if (!raw) return false;
         const data = JSON.parse(raw);
         state.focus = data.focus || 'allround';
@@ -1671,7 +1682,7 @@ ${segs}
       if (!state.plan) { alert('Generate a plan first.'); return; }
       const data = { ...state, exportedAt: new Date().toISOString() };
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-      downloadBlob(blob, `friel-cycle-plan-${state.focus}-${state.plan.startDate}.json`);
+      downloadBlob(blob, `veloplanner-${state.focus}-${state.plan.startDate}.json`);
     }
 
     function importPlan(file) {
@@ -1793,7 +1804,7 @@ ${segs}
 
     // ─── View routing ─────────────────────────────────────────────
     const VIEW_SUBTITLES = {
-      list: '3-month · 3/1 periodization · Joe Friel methodology',
+      list: 'Your personal 12-week cycling plan',
       calendar: 'Calendar view · 4-week grid',
       dashboard: 'Training load & progress',
       settings: 'Plan & training load settings',
@@ -2356,7 +2367,7 @@ ${segs}
     function updateSummary(plan) {
       const f = FOCUSES[plan.focus];
       document.getElementById('planTitle').textContent = `${f.label} Training Plan`;
-      document.getElementById('planSubtitle').textContent = `${plan.startDate} → ${plan.endDate} · Joe Friel 3/1 periodization`;
+      document.getElementById('planSubtitle').textContent = `${plan.startDate} → ${plan.endDate} · 3/1 periodization · 12 weeks`;
       document.getElementById('statWeeks').textContent = '12';
       document.getElementById('statSessions').textContent = plan.weeks.reduce((n, w) => n + w.days.filter(d => d.type === 'structured').length, 0);
       document.getElementById('statBlocks').textContent = '3';
@@ -2507,6 +2518,7 @@ ${segs}
           state.calendarStart = null;
           state.predictedFtp = state.ftp;
           localStorage.removeItem(STORAGE_KEY);
+          localStorage.removeItem(LEGACY_STORAGE_KEY);
           renderPlan();
         }
       });

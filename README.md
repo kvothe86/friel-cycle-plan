@@ -1,6 +1,6 @@
-# Friel Cycle Plan (VeloPlanner)
+# VeloPlanner
 
-A single-page cycling training plan generator based on **Joe Friel's** periodization principles. Generates a fixed **12-week (3-month)** plan with **3/1 blocks** — three weeks of progressive load followed by one recovery week.
+Your personal **12-week** cycling plan generator. Fixed **3/1 blocks** — three weeks of progressive load followed by one recovery week.
 
 **Live app:** [veloplanner.netlify.app](https://veloplanner.netlify.app/)
 
@@ -24,7 +24,7 @@ Plan settings moved out of the main flow into **Settings**. Generate a plan ther
   - **Tue / Thu / Sat** — structured workouts (≤60 min)
   - **Sunday** — endurance ride (duration recommendation only)
   - **Mon / Wed / Fri** — rest or optional recovery spin (≤90 min)
-- **Auto-save** to browser `localStorage` (`friel-cycle-plan-v2`)
+- **Auto-save** to browser `localStorage` (`veloplanner-v2`)
 - **Export / import** full plan + progress as JSON (header buttons)
 - **Zwift export** — downloads a ZIP of `.zwo` workout files (built-in, no external library)
 - **Session tracking** — mark complete with RPE (1–10), skip, or undo (List rows and Calendar modal)
@@ -59,12 +59,13 @@ Seed the chart from your real fitness data in **Settings → Training load basel
 
 ## Tech stack
 
-Everything ships in a **single `index.html`** file:
+The app logic lives in a **single `index.html`** file, plus small static favicon assets at the repo root:
 
 - **Outfit** font (Google Fonts)
 - **Inlined Tailwind CSS** subset — no CDN or build step at runtime
 - **Self-contained ZIP builder** for Zwift export (no JSZip dependency)
 - **Embedded artwork** (logo and summary illustration as data URIs)
+- **Favicons** — `favicon.ico`, `favicon.png`, and `apple-touch-icon.png` (cyclist logo) for tab and bookmark icons
 
 Open `index.html` directly in a browser, or serve the folder locally. No `npm install` required.
 
@@ -93,7 +94,7 @@ Or open `index.html` directly in a browser (network needed only for the Google F
 
 ## Deploy
 
-No build step. Push `index.html` (and `.nojekyll` for GitHub Pages) to any static host.
+No build step. Push the repo root (`index.html`, favicon files, and `.nojekyll` for GitHub Pages) to any static host.
 
 ### Netlify
 
@@ -119,7 +120,7 @@ Sunday endurance rides are outdoor/free rides and are not exported as Zwift work
 
 ## Methodology
 
-Plans follow Friel-style periodization across three phases:
+Plans follow classic periodization across three phases:
 
 | Weeks | Phase | Focus |
 |-------|-------|-------|
