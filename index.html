@@ -2441,36 +2441,6 @@ ${segs}
       return `<span class="cal-weather" title="Weather forecast">${summary.icon}${wind}</span>`;
     }
 
-    function dayWeatherSnapshots(date) {
-      const timeline = dayWeatherTimeline(date);
-      if (!timeline.length) return null;
-
-      const targetHours = [7, 10, 13, 16, 19];
-      const out = [];
-      const used = new Set();
-      const slotRefs = timeline.map(s => ({ time: s.time }));
-      for (const hour of targetHours) {
-        const slot = pickClosestWeatherSlot(slotRefs, hour);
-        if (!slot) continue;
-        const snap = timeline.find(s => s.time === slot.time);
-        if (!snap || used.has(snap.timeLabel)) continue;
-        used.add(snap.timeLabel);
-        out.push(snap);
-      }
-
-      return out.length ? out : timeline.slice(0, 6);
-    }
-
-    function formatWeatherSnapshotLine(snapshot) {
-      const rain = snapshot.precip < 0.1 ? 'dry' : `${snapshot.precip.toFixed(1)} mm`;
-      const wind = snapshot.windKmh != null && snapshot.windDir
-        ? `${Math.round(snapshot.windKmh)} km/h ${snapshot.windDir}`
-        : snapshot.windKmh != null
-          ? `${Math.round(snapshot.windKmh)} km/h`
-          : '';
-      return `${snapshot.timeLabel} · ${rain}${wind ? ` · ${wind}` : ''}`;
-    }
-
     function renderDayWeatherTimeline(day) {
       const timeline = dayWeatherTimeline(day.date);
       if (!timeline.length) return '';
@@ -2599,11 +2569,6 @@ ${segs}
           ? `Start into the wind heading ${startDir} (~${Math.round(best.windKmh)} km/h), finish with tailwind from ${finishDir}.`
           : null,
       };
-    }
-
-    function adviseSundayRide(day) {
-      if (!isSundayEndurance(day) || isIndoorSunday(day.date) || !shouldShowDayWeather(day.date)) return null;
-      return adviseDayWeather(day.date, Math.min(day.durationMin || 120, 360));
     }
 
     function renderDayWeatherEmptyState(date, title = 'Weather forecast') {
