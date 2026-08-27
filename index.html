@@ -140,9 +140,56 @@
     .cal-workout-skipped { opacity: 0.55; text-decoration: line-through; }
     .cal-workout-title { font-weight: 600; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .cal-workout-meta { color: #6B7280; font-size: 0.625rem; margin-top: 1px; }
+    .cal-weather { display: block; font-size: 0.625rem; color: #6B7280; margin-top: 2px; line-height: 1.2; letter-spacing: 0.02em; }
+    .cal-weather-wind { font-weight: 600; margin-left: 0.2rem; }
+    .day-weather-timeline { display: flex; flex-direction: column; gap: 0.35rem; margin-top: 0.25rem; }
+    .day-weather-row { display: flex; align-items: baseline; gap: 0.5rem; font-size: 0.8125rem; color: #374151; line-height: 1.35; }
+    .day-weather-time { width: 2.75rem; flex-shrink: 0; font-variant-numeric: tabular-nums; color: #6B7280; font-size: 0.75rem; }
+    .day-weather-icon { width: 1rem; flex-shrink: 0; text-align: center; }
+    .day-weather-detail { min-width: 0; }
     .chart-line-ctl { stroke: #3B82F6; stroke-width: 2.5; fill: none; }
     .chart-line-atl { stroke: #F59E0B; stroke-width: 2; fill: none; opacity: 0.85; }
     .chart-line-tsb { stroke: #10B981; stroke-width: 2; fill: none; opacity: 0.9; }
+    .chart-line-planned { stroke-dasharray: 6 4; opacity: 0.55; }
+    .chart-line-actual-ctl { stroke: #3B82F6; stroke-width: 3; fill: none; }
+    .chart-line-actual-atl { stroke: #F59E0B; stroke-width: 2.5; fill: none; }
+    .chart-legend-dash { border-top: 2px dashed currentColor; width: 0.75rem; opacity: 0.55; }
+    .chart-legend-solid { width: 0.75rem; height: 2px; border-radius: 1px; }
+    .sync-status-ok { color: #059669; }
+    .sync-status-error { color: #DC2626; }
+    .sync-status-pending { color: #6B7280; }
+    .readiness-ring { width: 5.5rem; height: 5.5rem; border-radius: 9999px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 800; border: 4px solid currentColor; }
+    .readiness-low { color: #DC2626; background: rgba(220,38,38,0.08); }
+    .readiness-moderate { color: #D97706; background: rgba(217,119,6,0.08); }
+    .readiness-high { color: #059669; background: rgba(5,150,105,0.08); }
+    .readiness-metric { display: flex; flex-direction: column; gap: 0.2rem; font-size: 0.6875rem; padding: 0.4rem 0; border-bottom: 1px solid #F3F4F6; }
+    .readiness-metric:last-child { border-bottom: 0; }
+    .readiness-metric-head { display: flex; justify-content: space-between; gap: 0.75rem; align-items: baseline; }
+    .readiness-metric-label { color: #6B7280; font-weight: 500; }
+    .readiness-metric-value { color: #374151; text-align: right; }
+    .readiness-metric-trend { color: #9CA3AF; font-size: 0.625rem; }
+    .readiness-bar-track { height: 4px; background: #F3F4F6; border-radius: 9999px; overflow: hidden; }
+    .readiness-bar-fill { height: 100%; border-radius: 9999px; transition: width 0.2s ease; }
+    .readiness-bar-good { background: #10B981; }
+    .readiness-bar-mid { background: #F59E0B; }
+    .readiness-bar-low { background: #EF4444; }
+    .readiness-bar-na { background: #E5E7EB; width: 0 !important; }
+    .day-adjusted-badge { font-size: 0.625rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: #7C3AED; background: rgba(124,58,237,0.1); padding: 0.15rem 0.45rem; border-radius: 9999px; }
+    .sunday-weather { margin-top: 0.75rem; padding: 0.75rem 0.875rem; border-radius: 8px; background: linear-gradient(135deg, rgba(59,130,246,0.08), rgba(16,185,129,0.08)); border: 1px solid rgba(59,130,246,0.15); }
+    .sunday-weather-title { font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: #3B82F6; margin-bottom: 0.35rem; }
+    .sunday-weather p { font-size: 0.8125rem; color: #374151; line-height: 1.45; margin: 0; }
+    .sunday-weather .text-muted { font-size: 0.75rem; color: #6B7280; margin-top: 0.35rem; }
+    .day-weather-inline { font-size: 0.75rem; color: #2563EB; line-height: 1.4; margin-top: 0.35rem; }
+    .day-weather-snap { font-size: 0.8125rem; color: #374151; line-height: 1.5; }
+    .icu-sync-tag { font-size: 0.625rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; padding: 0.1rem 0.35rem; border-radius: 4px; }
+    .icu-sync-synced { background: rgba(16,185,129,0.12); color: #059669; }
+    .icu-sync-local { background: rgba(107,114,128,0.12); color: #6B7280; }
+    .icu-sync-moved { background: rgba(245,158,11,0.12); color: #D97706; }
+    .icu-sync-external { background: rgba(59,130,246,0.12); color: #2563EB; }
+    .week-ahead-row { display: flex; gap: 0.5rem; align-items: flex-start; padding: 0.5rem 0; border-bottom: 1px solid var(--border); }
+    .week-ahead-row:last-child { border-bottom: none; }
+    .missed-row { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid var(--border); }
+    .missed-row:last-child { border-bottom: none; }
     .chart-grid { stroke: #E5E7EB; stroke-width: 1; }
     .chart-today { stroke: #111827; stroke-width: 1.5; stroke-dasharray: 4 4; }
     .chart-area-past { fill: rgba(59,130,246,0.04); }
@@ -271,16 +318,40 @@
       </section>
       <div id="dashboardContent" class="hidden space-y-6">
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4" id="statCards"></div>
+        <div class="grid lg:grid-cols-2 gap-6">
+          <section class="panel p-5 sm:p-6" id="readinessPanel">
+            <h2 class="text-lg font-bold mb-1">Readiness</h2>
+            <p class="text-xs text-gray-400 mb-4">WHOOP-style score from HRV, resting HR, sleep &amp; subjective signals</p>
+            <div id="readinessContent"></div>
+          </section>
+          <section class="panel p-5 sm:p-6" id="todayAdaptPanel">
+            <h2 class="text-lg font-bold mb-1">Today's session</h2>
+            <p class="text-xs text-gray-400 mb-4">Adjust from health feedback · push to intervals.icu</p>
+            <div id="todayAdaptContent"></div>
+          </section>
+        </div>
+        <div class="grid lg:grid-cols-2 gap-6">
+          <section class="panel p-5 sm:p-6" id="weekAheadPanel">
+            <h2 class="text-lg font-bold mb-1">Week ahead</h2>
+            <p class="text-xs text-gray-400 mb-4">Readiness-based hints for the next 7 sessions · calendar sync status</p>
+            <div id="weekAheadContent"></div>
+          </section>
+          <section class="panel p-5 sm:p-6" id="missedSessionsPanel">
+            <h2 class="text-lg font-bold mb-1">Missed sessions</h2>
+            <p class="text-xs text-gray-400 mb-4">Planned workouts without a ride logged in intervals.icu</p>
+            <div id="missedSessionsContent"></div>
+          </section>
+        </div>
         <section class="panel p-5 sm:p-6">
           <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-4">
             <div>
               <h2 class="text-lg font-bold">Fitness & fatigue</h2>
-              <p class="text-xs text-gray-400 mt-0.5">Planned CTL / ATL / form · click or hover chart to inspect any day</p>
+              <p class="text-xs text-gray-400 mt-0.5" id="fitnessChartSubtitle">Planned CTL / ATL / form · click or hover chart to inspect any day</p>
             </div>
-            <div class="flex flex-wrap gap-3 text-xs text-gray-500">
-              <span class="flex items-center gap-1.5"><span class="w-3 h-0.5 bg-blue-500 rounded"></span> CTL</span>
-              <span class="flex items-center gap-1.5"><span class="w-3 h-0.5 bg-amber-500 rounded"></span> ATL</span>
-              <span class="flex items-center gap-1.5"><span class="w-3 h-0.5 bg-emerald-500 rounded"></span> Form</span>
+            <div class="flex flex-wrap gap-3 text-xs text-gray-500" id="fitnessChartLegend">
+              <span class="flex items-center gap-1.5"><span class="chart-legend-solid bg-blue-500"></span> CTL</span>
+              <span class="flex items-center gap-1.5"><span class="chart-legend-solid bg-amber-500"></span> ATL</span>
+              <span class="flex items-center gap-1.5"><span class="chart-legend-solid bg-emerald-500"></span> Form</span>
             </div>
           </div>
           <div class="overflow-x-auto -mx-1 px-1"><div id="fitnessChart" class="min-w-[320px]"></div></div>
@@ -289,7 +360,7 @@
         <div class="grid lg:grid-cols-2 gap-6">
           <section class="panel p-5 sm:p-6">
             <h2 class="text-lg font-bold mb-1">Weekly volume</h2>
-            <p class="text-xs text-gray-400 mb-4">Planned TSS per week · blue = completed</p>
+            <p class="text-xs text-gray-400 mb-4">Planned TSS per week · blue = actual (intervals.icu) or completed</p>
             <div id="weeklyBars" class="space-y-2"></div>
           </section>
           <section class="panel p-5 sm:p-6">
@@ -333,8 +404,86 @@
       </section>
 
       <section class="panel p-6 sm:p-8">
+        <h2 class="text-lg font-bold mb-2">Intervals.icu</h2>
+        <p class="text-sm text-gray-400 mb-6">Pull wellness and training load synced from Garmin. API key and athlete ID are in <span class="text-gray-500">intervals.icu → Settings → Developer</span>.</p>
+
+        <div class="space-y-4">
+          <form autocomplete="off" data-bwignore data-1p-ignore data-lpignore="true" onsubmit="return false">
+            <div class="grid sm:grid-cols-2 gap-4">
+              <div>
+                <label for="intervalsApiKey" class="block text-sm font-medium text-gray-500 mb-2">API key</label>
+                <input
+                  type="text"
+                  id="intervalsApiKey"
+                  name="veloplanner-intervals-token"
+                  autocomplete="one-time-code"
+                  autocorrect="off"
+                  autocapitalize="off"
+                  spellcheck="false"
+                  data-bwignore
+                  data-1p-ignore
+                  data-lpignore="true"
+                  placeholder="Paste API key"
+                  class="input-field w-full text-base font-mono"
+                />
+              </div>
+              <div>
+                <label for="intervalsAthleteId" class="block text-sm font-medium text-gray-500 mb-2">Athlete ID</label>
+                <input
+                  type="text"
+                  id="intervalsAthleteId"
+                  name="veloplanner-intervals-athlete"
+                  autocomplete="off"
+                  autocorrect="off"
+                  autocapitalize="off"
+                  spellcheck="false"
+                  data-bwignore
+                  data-1p-ignore
+                  data-lpignore="true"
+                  placeholder="e.g. i123456"
+                  class="input-field w-full text-base"
+                />
+              </div>
+            </div>
+          </form>
+          <p class="text-xs text-gray-400">Stored locally only (this browser, localStorage, and JSON export/import). Sent per sync request to the Netlify proxy — never saved on the server.</p>
+
+          <div class="flex flex-col sm:flex-row sm:flex-wrap gap-3">
+            <label class="inline-flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+              <input type="checkbox" id="useIntervalsLoad" class="rounded border-gray-300" checked />
+              Use intervals.icu CTL / ATL
+            </label>
+            <label class="inline-flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+              <input type="checkbox" id="intervalsAutoSync" class="rounded border-gray-300" />
+              Sync on app load
+            </label>
+            <label class="inline-flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+              <input type="checkbox" id="intervalsPushOnAdjust" class="rounded border-gray-300" />
+              Push to intervals.icu when adjusting
+            </label>
+            <label class="inline-flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+              <input type="checkbox" id="intervalsWriteWellness" class="rounded border-gray-300" />
+              Write feel back to wellness when you log RPE
+            </label>
+          </div>
+
+          <div id="intervalsFtpInfo" class="text-sm text-gray-600 hidden"></div>
+
+          <div class="flex flex-wrap items-center gap-3 pt-1">
+            <button type="button" id="btnIntervalsSync" class="btn-primary">Sync now</button>
+            <button type="button" id="btnPublishPlan" class="btn-secondary">Publish plan to calendar</button>
+            <button type="button" id="btnPublishLibrary" class="btn-secondary">Publish workouts to library</button>
+            <button type="button" id="btnPullEftp" class="btn-secondary text-sm">Pull eFTP from intervals</button>
+            <p id="intervalsSyncStatus" class="text-sm text-gray-400">Not synced yet</p>
+          </div>
+          <p class="text-xs text-gray-400">Publish replaces existing workouts on plan days (including duplicates), then pushes the plan. Sunday rides use weather start time when available.</p>
+          <p class="text-xs text-gray-400">eFTP is optional — workout targets use your VeloPlan FTP unless you pull eFTP. Best after an FTP test or about every 4 weeks; eFTP drops without recent all-out efforts.</p>
+        </div>
+      </section>
+
+      <section class="panel p-6 sm:p-8">
         <h2 class="text-lg font-bold mb-2">Training load baseline</h2>
-        <p class="text-sm text-gray-400 mb-6">Copy CTL, ATL &amp; form from intervals.icu or Strava. Used to seed the dashboard fitness chart and ramp projections.</p>
+        <p class="text-sm text-gray-400 mb-6">Manual fallback when intervals.icu sync is off. Sync above to auto-fill CTL, ATL &amp; form from your real training history.</p>
 
         <div class="space-y-4">
           <div>
@@ -419,6 +568,11 @@
     const Z2_LOW_IF = 0.55;
     const Z2_HIGH_IF = 0.75;
 
+    function planFtp() {
+      if (state.useIntervalsEftp && state.intervalsEftp) return state.intervalsEftp;
+      return state.predictedFtp || state.ftp;
+    }
+
     const ZWIFT_ZONES = {
       1: { label: 'Z1', color: '#A3A3A3' },
       2: { label: 'Z2', color: '#3B9FE8' },
@@ -441,6 +595,23 @@
       startCtl: 0,
       startAtl: 0,
       loadAnchorDate: formatDate(new Date()),
+      intervalsApiKey: '',
+      intervalsAthleteId: '',
+      intervalsLastSync: null,
+      useIntervalsLoad: true,
+      intervalsAutoSync: false,
+      intervalsPushOnAdjust: false,
+      intervalsWriteWellness: false,
+      useIntervalsEftp: false,
+      intervalsEftp: null,
+      intervalsEftpPulledAt: null,
+      intervalsWorkoutFolderId: null,
+      intervalsWellness: [],
+      intervalsActivities: [],
+      intervalsEvents: [],
+      intervalsSportSettings: null,
+      intervalsWeatherForecast: [],
+      intervalsWeatherConfig: null,
       plan: null,
     };
 
@@ -632,6 +803,7 @@
       const z2Range = formatFtpRange(Z2_LOW_IF, Z2_HIGH_IF, ftp);
       const outdoorTss = sundayOutdoorTss(day);
       const indoorTss = sundayIndoorTss(day);
+      const weatherAdvice = renderDayWeatherAdvice(day);
       const tssLabel = indoor
         ? (indoorTss < outdoorTss
           ? `${indoorTss} <span class="text-gray-400">(outdoor ${outdoorTss})</span>`
@@ -645,7 +817,7 @@
             <p class="text-xs text-gray-400">Indoor option: 1h30 at top Z2 (${formatFtpRange(Z2_LOW_IF, SUNDAY_INDOOR_MAX_IF, ftp)}).</p>`;
       const durLabel = indoor ? formatDuration(SUNDAY_INDOOR_MAX_MIN) + ' indoor' : outdoorDur;
       const powerLabel = indoor ? `~${pctIndoor}% FTP (${wattsIndoor}W)` : `Z2 ${z2Range}`;
-      return `<div class="space-y-4">${block}
+      return `<div class="space-y-4">${block}${weatherAdvice}
         <div class="grid grid-cols-2 gap-3 text-sm">
           <div class="p-3 rounded-md bg-gray-100"><span class="text-gray-400 block text-xs">Duration</span>${durLabel}</div>
           <div class="p-3 rounded-md bg-gray-100"><span class="text-gray-400 block text-xs">Target</span>${powerLabel}</div>
@@ -655,13 +827,13 @@
     }
 
     function renderWorkoutModalContent(day, week) {
-      const ftp = state.predictedFtp || state.ftp;
+      const ftp = planFtp();
       const expected = day.expectedRpe ?? getExpectedRpe(day, week);
+      let body = '';
 
-      if (isSundayEndurance(day)) return renderSundayEnduranceContent(day, week, ftp);
-
-      if (!day.segments || day.type === 'ftp-test') {
-        return `
+      if (isSundayEndurance(day)) body = renderSundayEnduranceContent(day, week, ftp);
+      else if (!day.segments || day.type === 'ftp-test') {
+        body = `
           <div class="space-y-4">
             <p class="text-sm text-gray-600 leading-relaxed">${day.desc}</p>
             ${day.zwiftBuiltin ? `
@@ -673,10 +845,8 @@
               <div class="p-3 rounded-md bg-gray-100"><span class="text-gray-400 block text-xs">Expected RPE</span>${expected}/10</div>
             </div>
           </div>`;
-      }
-
-      if (day.type === 'endurance') {
-        return `
+      } else if (day.type === 'endurance') {
+        body = `
           <div class="space-y-4">
             <div class="p-4 rounded-lg step-block" style="background: linear-gradient(135deg, #E5E7EB, #3B9FE8); color:#111827">
               ${formatDuration(day.durationMin)} steady endurance · mostly Z2
@@ -687,48 +857,51 @@
               <div class="p-3 rounded-md bg-gray-100"><span class="text-gray-400 block text-xs">Expected RPE</span>${expected}/10</div>
             </div>
           </div>`;
-      }
+      } else {
+        const stats = computeWorkoutStats(day.segments, ftp);
+        const stepsHtml = day.segments.map(seg => `
+          <div class="step-block" style="${stepBlockStyle(seg)}">${segmentInstruction(seg, ftp)}</div>
+        `).join('');
 
-      const stats = computeWorkoutStats(day.segments, ftp);
-      const stepsHtml = day.segments.map(seg => `
-        <div class="step-block" style="${stepBlockStyle(seg)}">${segmentInstruction(seg, ftp)}</div>
-      `).join('');
+        const zoneRows = [1, 2, 3, 4, 5, 6].map(z => {
+          const sec = stats.zoneSeconds[z];
+          const label = sec ? formatDurationSec(sec) : '—';
+          return `<div class="flex justify-between text-xs py-0.5"><span style="color:${ZWIFT_ZONES[z].color}" class="font-semibold">${ZWIFT_ZONES[z].label}</span><span class="text-gray-500">${label}</span></div>`;
+        }).join('');
 
-      const zoneRows = [1, 2, 3, 4, 5, 6].map(z => {
-        const sec = stats.zoneSeconds[z];
-        const label = sec ? formatDurationSec(sec) : '—';
-        return `<div class="flex justify-between text-xs py-0.5"><span style="color:${ZWIFT_ZONES[z].color}" class="font-semibold">${ZWIFT_ZONES[z].label}</span><span class="text-gray-500">${label}</span></div>`;
-      }).join('');
-
-      return `
-        <div class="grid md:grid-cols-2 gap-6">
-          <div class="space-y-3">
-            <p class="text-xs font-medium text-gray-400 uppercase tracking-wide">Instructions</p>
-            ${stepsHtml}
-            <p class="text-xs text-gray-400 pt-1">${day.desc}</p>
-            <p class="text-xs text-gray-400">FTP basis: ${ftp}W · Expected RPE ${expected}</p>
-          </div>
-          <div class="space-y-4">
-            <p class="text-xs font-medium text-gray-400 uppercase tracking-wide">Profile</p>
-            ${renderWorkoutGraph(day.segments)}
-            <div class="rounded-lg border border-gray-200 bg-white p-4 space-y-3">
-              <div class="flex gap-4 text-sm">
-                <div class="flex items-center gap-2 text-gray-600">
-                  <span class="text-base">⏱</span>
-                  <span><strong class="text-gray-800">${formatDurationSec(stats.totalSec)}</strong></span>
+        body = `
+          <div class="grid md:grid-cols-2 gap-6">
+            <div class="space-y-3">
+              <p class="text-xs font-medium text-gray-400 uppercase tracking-wide">Instructions</p>
+              ${stepsHtml}
+              <p class="text-xs text-gray-400 pt-1">${day.desc}</p>
+              <p class="text-xs text-gray-400">FTP basis: ${ftp}W · Expected RPE ${expected}</p>
+            </div>
+            <div class="space-y-4">
+              <p class="text-xs font-medium text-gray-400 uppercase tracking-wide">Profile</p>
+              ${renderWorkoutGraph(day.segments)}
+              <div class="rounded-lg border border-gray-200 bg-white p-4 space-y-3">
+                <div class="flex gap-4 text-sm">
+                  <div class="flex items-center gap-2 text-gray-600">
+                    <span class="text-base">⏱</span>
+                    <span><strong class="text-gray-800">${formatDurationSec(stats.totalSec)}</strong></span>
+                  </div>
+                  <div class="flex items-center gap-2 text-gray-600">
+                    <span class="text-base">🔥</span>
+                    <span>Stress <strong class="text-gray-800">${stats.tss}</strong> TSS</span>
+                  </div>
                 </div>
-                <div class="flex items-center gap-2 text-gray-600">
-                  <span class="text-base">🔥</span>
-                  <span>Stress <strong class="text-gray-800">${stats.tss}</strong> TSS</span>
+                <div class="flex gap-4 items-end">
+                  <div class="flex-1 space-y-0.5">${zoneRows}</div>
+                  ${renderZoneChart(stats.zoneSeconds, stats.totalSec)}
                 </div>
-              </div>
-              <div class="flex gap-4 items-end">
-                <div class="flex-1 space-y-0.5">${zoneRows}</div>
-                ${renderZoneChart(stats.zoneSeconds, stats.totalSec)}
               </div>
             </div>
-          </div>
-        </div>`;
+          </div>`;
+      }
+
+      if (isSundayEndurance(day)) return body;
+      return `${body}${renderDayWeatherAdvice(day)}`;
     }
 
     function renderCompletionControls(day, week, inModal) {
@@ -745,8 +918,11 @@
       const rpeUi = inModal
         ? `<div class="flex items-center gap-3"><span class="text-sm text-gray-500 w-24 shrink-0">Actual RPE</span><input type="range" min="1" max="10" step="1" value="${rpe}" data-action="rpe" data-date="${day.date}" class="flex-1" /><span class="text-sm font-semibold w-6 text-center" data-rpe-label="${day.date}">${rpe}</span></div><p class="text-xs text-gray-400">Expected RPE ${exp}/10 · used for FTP prediction</p>`
         : `<div class="flex items-center gap-2" data-rpe-wrap="${day.date}"><span class="text-xs text-gray-400 w-8">RPE</span><input type="range" min="1" max="10" step="1" value="${rpe}" data-action="rpe" data-date="${day.date}" class="w-20 sm:w-24" /><span class="text-xs font-semibold w-4 text-center" data-rpe-label="${day.date}">${rpe}</span></div>${done ? `<span class="text-xs text-gray-400 text-right">expected ${exp}</span>` : `<span class="text-xs text-gray-400 text-right">exp. RPE ${exp}</span>`}`;
+      const icuLine = inModal && day.type !== 'rest'
+        ? `<p class="text-xs text-gray-500">${plannedVsActualLine(day, day.date) || `Calendar: ${intervalsEventStatus(day).label}`}</p>`
+        : '';
       const acts = inModal
-        ? `<div class="flex flex-wrap items-center gap-3"><label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" data-action="toggle" data-date="${day.date}" class="w-4 h-4 rounded accent-blue-500" ${done ? 'checked' : ''} /><span class="text-sm font-medium text-gray-700">Completed</span></label><button type="button" data-action="skip" data-date="${day.date}" class="text-sm px-3 py-1.5 rounded-lg bg-white border border-gray-200 text-gray-500 hover:bg-amber-50 hover:text-amber-700 transition">Skip</button>${done ? `<button type="button" data-action="undo" data-date="${day.date}" class="text-sm text-gray-400 hover:text-blue-600 transition">Undo</button>` : ''}</div>${indoorUi}${rpeUi}`
+        ? `<div class="flex flex-wrap items-center gap-3"><label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" data-action="toggle" data-date="${day.date}" class="w-4 h-4 rounded accent-blue-500" ${done ? 'checked' : ''} /><span class="text-sm font-medium text-gray-700">Completed</span></label><button type="button" data-action="skip" data-date="${day.date}" class="text-sm px-3 py-1.5 rounded-lg bg-white border border-gray-200 text-gray-500 hover:bg-amber-50 hover:text-amber-700 transition">Skip</button>${done ? `<button type="button" data-action="undo" data-date="${day.date}" class="text-sm text-gray-400 hover:text-blue-600 transition">Undo</button>` : ''}<button type="button" data-action="push-icu" data-date="${day.date}" class="text-sm px-3 py-1.5 rounded-lg bg-white border border-gray-200 text-gray-600 hover:bg-blue-50 transition">Push to intervals</button></div>${icuLine}${indoorUi}${rpeUi}`
         : `<div class="flex flex-col gap-2 shrink-0 sm:items-end">${indoorUi}<div class="flex items-center gap-2 flex-wrap justify-end"><label class="flex items-center gap-1.5 cursor-pointer" title="Mark complete"><input type="checkbox" data-action="toggle" data-date="${day.date}" class="w-4 h-4 rounded accent-blue-500" ${done ? 'checked' : ''} /><span class="text-xs text-gray-500">Done</span></label><button type="button" data-action="skip" data-date="${day.date}" class="text-xs px-2 py-1 rounded-lg bg-gray-100 text-gray-500 hover:bg-amber-100 hover:text-amber-700 transition">Skip</button>${done ? `<button type="button" data-action="undo" data-date="${day.date}" class="text-xs text-gray-400 hover:text-blue-600 transition">Undo</button>` : ''}</div>${rpeUi}</div>`;
       return wrap(inModal ? `<div class="p-4 rounded-lg bg-gray-100 border border-gray-200 space-y-4">${acts}</div>` : acts);
     }
@@ -757,7 +933,7 @@
       const { day, week } = found;
       modalOpenDate = date;
       document.getElementById('modalWorkoutTitle').textContent = day.name;
-      document.getElementById('modalWorkoutMeta').textContent = `${day.dayName} · ${day.date}${week.weekNum ? ` · Week ${week.weekNum}` : ''}`;
+      document.getElementById('modalWorkoutMeta').textContent = `${day.dayName} · ${day.date}${week.weekNum ? ` · Week ${week.weekNum}` : ''}${day.type !== 'rest' ? ` · ${intervalsEventStatus(day).label}` : ''}`;
       document.getElementById('modalBody').innerHTML = renderWorkoutModalContent(day, week) + ((state.activeView === 'calendar' || isSundayEndurance(day)) ? renderCompletionControls(day, week, true) : '');
       const modal = document.getElementById('workoutModal');
       modal.classList.remove('hidden');
@@ -1341,6 +1517,7 @@
     }
 
     function setDayStatus(date, status, rpe) {
+      const found = findDayInPlan(date);
       if (status === 'completed') {
         state.completions[date] = { status: 'completed', rpe: rpe || 5, completedAt: new Date().toISOString() };
       } else if (status === 'skipped') {
@@ -1348,6 +1525,9 @@
       }
       state.predictedFtp = recalculatePredictedFtp();
       saveState();
+      if (status === 'completed') {
+        writeWellnessFromRpe(date, rpe || 5);
+      }
       renderPlan();
       if (modalOpenDate === date) openWorkoutModal(date);
     }
@@ -1664,6 +1844,23 @@ ${segs}
         state.startCtl = data.startCtl ?? 0;
         state.startAtl = data.startAtl ?? 0;
         state.loadAnchorDate = data.loadAnchorDate || formatDate(new Date());
+        state.intervalsApiKey = data.intervalsApiKey || '';
+        state.intervalsAthleteId = data.intervalsAthleteId || '';
+        state.intervalsLastSync = data.intervalsLastSync || null;
+        state.useIntervalsLoad = data.useIntervalsLoad !== false;
+        state.intervalsAutoSync = !!data.intervalsAutoSync;
+        state.intervalsPushOnAdjust = !!data.intervalsPushOnAdjust;
+        state.intervalsWriteWellness = !!data.intervalsWriteWellness;
+        state.useIntervalsEftp = !!data.useIntervalsEftp;
+        state.intervalsEftp = data.intervalsEftp ?? data.intervalsRideFtp ?? null;
+        state.intervalsEftpPulledAt = data.intervalsEftpPulledAt ?? null;
+        state.intervalsWorkoutFolderId = data.intervalsWorkoutFolderId ?? null;
+        state.intervalsWellness = Array.isArray(data.intervalsWellness) ? data.intervalsWellness : [];
+        state.intervalsActivities = Array.isArray(data.intervalsActivities) ? data.intervalsActivities : [];
+        state.intervalsEvents = Array.isArray(data.intervalsEvents) ? data.intervalsEvents : [];
+        state.intervalsSportSettings = data.intervalsSportSettings || null;
+        state.intervalsWeatherForecast = Array.isArray(data.intervalsWeatherForecast) ? data.intervalsWeatherForecast : [];
+        state.intervalsWeatherConfig = data.intervalsWeatherConfig || null;
         state.plan = migratePlan(data.plan || null);
         if (state.plan) {
           state.selectedWeek = clampWeekNum(state.selectedWeek, state.plan);
@@ -1680,6 +1877,7 @@ ${segs}
 
     function exportPlan() {
       if (!state.plan) { alert('Generate a plan first.'); return; }
+      intervalsCredentials();
       const data = { ...state, exportedAt: new Date().toISOString() };
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
       downloadBlob(blob, `veloplanner-${state.focus}-${state.plan.startDate}.json`);
@@ -1701,6 +1899,23 @@ ${segs}
           state.startCtl = data.startCtl ?? 0;
           state.startAtl = data.startAtl ?? 0;
           state.loadAnchorDate = data.loadAnchorDate || formatDate(new Date());
+          state.intervalsApiKey = data.intervalsApiKey || '';
+          state.intervalsAthleteId = data.intervalsAthleteId || '';
+          state.intervalsLastSync = data.intervalsLastSync || null;
+          state.useIntervalsLoad = data.useIntervalsLoad !== false;
+          state.intervalsAutoSync = !!data.intervalsAutoSync;
+          state.intervalsPushOnAdjust = !!data.intervalsPushOnAdjust;
+          state.intervalsWriteWellness = !!data.intervalsWriteWellness;
+          state.useIntervalsEftp = !!data.useIntervalsEftp;
+          state.intervalsEftp = data.intervalsEftp ?? data.intervalsRideFtp ?? null;
+          state.intervalsEftpPulledAt = data.intervalsEftpPulledAt ?? null;
+          state.intervalsWorkoutFolderId = data.intervalsWorkoutFolderId ?? null;
+          state.intervalsWellness = Array.isArray(data.intervalsWellness) ? data.intervalsWellness : [];
+          state.intervalsActivities = Array.isArray(data.intervalsActivities) ? data.intervalsActivities : [];
+          state.intervalsEvents = Array.isArray(data.intervalsEvents) ? data.intervalsEvents : [];
+          state.intervalsSportSettings = data.intervalsSportSettings || null;
+          state.intervalsWeatherForecast = Array.isArray(data.intervalsWeatherForecast) ? data.intervalsWeatherForecast : [];
+          state.intervalsWeatherConfig = data.intervalsWeatherConfig || null;
           state.plan = migratePlan(data.plan || null);
           if (state.plan) {
             state.selectedWeek = clampWeekNum(state.selectedWeek, state.plan);
@@ -1712,7 +1927,7 @@ ${segs}
           }
           state.predictedFtp = recalculatePredictedFtp();
           saveState();
-          (document.getElementById('startDate').value = state.startDate, document.getElementById('ftp').value = state.ftp, document.querySelectorAll('[data-focus]').forEach(b => { b.classList.toggle('active', b.dataset.focus === state.focus); b.classList.toggle('text-gray-500', b.dataset.focus !== state.focus); }), syncLoadInputs());
+          (document.getElementById('startDate').value = state.startDate, document.getElementById('ftp').value = state.ftp, document.querySelectorAll('[data-focus]').forEach(b => { b.classList.toggle('active', b.dataset.focus === state.focus); b.classList.toggle('text-gray-500', b.dataset.focus !== state.focus); }), syncLoadInputs(), syncIntervalsInputs());
           renderPlan();
         } catch {
           alert('Invalid plan file.');
@@ -1800,6 +2015,2030 @@ ${segs}
         state.loadAnchorDate = anchorEl.value || formatDate(new Date());
         persistAndRefresh();
       });
+    }
+
+    function intervalsCredentials() {
+      const keyEl = document.getElementById('intervalsApiKey');
+      const athleteEl = document.getElementById('intervalsAthleteId');
+      const apiKey = (keyEl?.value || state.intervalsApiKey || '').trim();
+      const athleteId = (athleteEl?.value || state.intervalsAthleteId || '').trim();
+      if (apiKey) state.intervalsApiKey = apiKey;
+      if (athleteId) state.intervalsAthleteId = athleteId;
+      return apiKey && athleteId ? { apiKey, athleteId } : null;
+    }
+
+    function intervalsHeaders() {
+      const creds = intervalsCredentials();
+      if (!creds) throw new Error('Intervals.icu not configured');
+      return { 'X-Intervals-Api-Key': creds.apiKey };
+    }
+
+    function intervalsQuery(athleteId, params = {}) {
+      const qs = new URLSearchParams({ athleteId, ...params });
+      return qs.toString();
+    }
+
+    function toBase64(text) {
+      return btoa(unescape(encodeURIComponent(text)));
+    }
+
+    function buildIntervalsActivitiesMap() {
+      const map = {};
+      for (const a of state.intervalsActivities || []) {
+        const date = (a.start_date_local || '').slice(0, 10);
+        if (!date) continue;
+        const tss = a.icu_training_load ?? a.training_load ?? a.load ?? 0;
+        if (!map[date]) map[date] = { tss: 0, count: 0, name: a.name || 'Ride' };
+        map[date].tss += tss;
+        map[date].count += 1;
+        if (a.name) map[date].name = a.name;
+      }
+      return map;
+    }
+
+    const BIKE_ACTIVITY_TYPES = new Set(['ride', 'virtualride', 'ebikeride', 'gravelride', 'mountainbikeride', 'cyclocross', 'handcycle', 'bmx', 'velomobile']);
+
+    function isBikeActivity(activity) {
+      return BIKE_ACTIVITY_TYPES.has((activity.type || '').toLowerCase());
+    }
+
+    function activityRpe(activity) {
+      const raw = activity.icu_rpe ?? activity.perceived_exertion;
+      if (raw == null || raw <= 0) return null;
+      return Math.max(1, Math.min(10, Math.round(raw)));
+    }
+
+    function primaryBikeActivityForDate(activities, date) {
+      return activities
+        .filter(a => (a.start_date_local || '').slice(0, 10) === date && isBikeActivity(a))
+        .sort((a, b) => (b.icu_training_load ?? 0) - (a.icu_training_load ?? 0))[0] || null;
+    }
+
+    function syncCompletionsFromIntervalsActivities() {
+      if (!state.plan || !state.intervalsActivities?.length) return 0;
+
+      const dayMap = buildPlanDayMap(state.plan);
+      const byDate = {};
+      for (const activity of state.intervalsActivities) {
+        const date = (activity.start_date_local || '').slice(0, 10);
+        if (!date) continue;
+        if (!byDate[date]) byDate[date] = [];
+        byDate[date].push(activity);
+      }
+
+      let updated = 0;
+      for (const [date, activities] of Object.entries(byDate)) {
+        const entry = dayMap[date];
+        if (!entry) continue;
+
+        const day = entry.day;
+        if (day.type === 'rest' && !day.optional) continue;
+
+        const existing = state.completions[date];
+        if (existing?.status === 'skipped') continue;
+
+        const primary = primaryBikeActivityForDate(activities, date);
+        if (!primary) continue;
+
+        const week = entry.week;
+        const expectedRpe = day.expectedRpe ?? getExpectedRpe(day, week);
+        const intervalsRpe = activityRpe(primary);
+        const rpe = intervalsRpe ?? Math.round(expectedRpe);
+
+        if (!existing || existing.status !== 'completed') {
+          state.completions[date] = {
+            status: 'completed',
+            rpe,
+            completedAt: primary.start_date_local || new Date().toISOString(),
+            source: 'intervals',
+            activityId: primary.id,
+            activityName: primary.name,
+          };
+          updated++;
+        } else if (intervalsRpe != null && existing.rpe !== intervalsRpe) {
+          state.completions[date] = {
+            ...existing,
+            rpe: intervalsRpe,
+            source: 'intervals',
+            activityId: primary.id,
+            activityName: primary.name,
+          };
+          updated++;
+        }
+      }
+
+      if (updated > 0) state.predictedFtp = recalculatePredictedFtp();
+      return updated;
+    }
+
+    function actualTssForDate(date) {
+      const entry = buildIntervalsActivitiesMap()[date];
+      return entry ? Math.round(entry.tss) : null;
+    }
+
+    function degToCompass(deg) {
+      const dirs = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+      return dirs[Math.round(((deg % 360) + 360) % 360 / 45) % 8];
+    }
+
+    function circularMeanDeg(degs, weights) {
+      let sin = 0;
+      let cos = 0;
+      for (let i = 0; i < degs.length; i++) {
+        const r = (degs[i] * Math.PI) / 180;
+        const w = weights[i] || 1;
+        sin += Math.sin(r) * w;
+        cos += Math.cos(r) * w;
+      }
+      if (!sin && !cos) return null;
+      return ((Math.atan2(sin, cos) * 180) / Math.PI + 360) % 360;
+    }
+
+    function forecastPrecipMm(f) {
+      return (f.rain || 0) + (f.showers || 0) + (f.snow || 0) * 0.5;
+    }
+
+    function formatTimeLocal(iso) {
+      const d = new Date(iso);
+      if (Number.isNaN(d.getTime())) return iso;
+      const pad = n => String(n).padStart(2, '0');
+      return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
+
+    function isWeatherSlotLike(obj) {
+      if (!obj || typeof obj !== 'object') return false;
+      if (obj.time || obj.date || obj.start_secs != null || obj.dt != null) return true;
+      if (obj.id && /^\d{4}-\d{2}-\d{2}/.test(String(obj.id)) && (obj.wind_deg != null || obj.rain != null)) return true;
+      return false;
+    }
+
+    function normalizeForecastSlot(raw, locMeta = {}, granularity = 'hourly') {
+      let time = raw.time || raw.date;
+      let dateStr = '';
+
+      if (!time && raw.id && /^\d{4}-\d{2}-\d{2}/.test(String(raw.id))) {
+        dateStr = String(raw.id).slice(0, 10);
+        const sunrise = raw.sunrise;
+        time = sunrise ? `${dateStr}T${sunrise}:00` : `${dateStr}T09:00:00`;
+      }
+
+      if (!time && raw.dt != null) {
+        const n = Number(raw.dt);
+        const ms = n > 1e12 ? n : n * 1000;
+        const d = new Date(ms);
+        if (!Number.isNaN(d.getTime())) {
+          time = d.toISOString();
+          dateStr = formatDate(d);
+        }
+      }
+
+      if (!time && raw.start_secs != null) {
+        const d = new Date(Number(raw.start_secs) * 1000);
+        if (!Number.isNaN(d.getTime())) {
+          time = d.toISOString();
+          dateStr = formatDate(d);
+        }
+      }
+
+      if (!dateStr && time) {
+        const d = new Date(time);
+        if (!Number.isNaN(d.getTime())) dateStr = formatDate(d);
+      }
+
+      if (!time) return null;
+
+      return {
+        time,
+        date: dateStr,
+        granularity,
+        daily: granularity === 'daily',
+        rain: raw.rain ?? 0,
+        showers: raw.showers ?? 0,
+        snow: raw.snow ?? 0,
+        wind_deg: raw.wind_deg,
+        wind_speed: raw.wind_speed,
+        sunrise: raw.sunrise,
+        sunset: raw.sunset,
+        location: locMeta.location,
+      };
+    }
+
+    function expandDailyForecastSlots(raw, locMeta) {
+      const dateStr = raw?.id && /^\d{4}-\d{2}-\d{2}/.test(String(raw.id)) ? String(raw.id).slice(0, 10) : null;
+      if (!dateStr) return [];
+
+      const pad = n => String(n).padStart(2, '0');
+      const parseHm = (hm, fallback) => {
+        if (!hm || typeof hm !== 'string') return fallback;
+        const [h, m] = hm.split(':').map(Number);
+        if (!Number.isFinite(h)) return fallback;
+        return `${pad(h)}:${pad(m || 0)}`;
+      };
+
+      const sunrise = parseHm(raw.sunrise, '07:00');
+      const sunset = parseHm(raw.sunset, '19:00');
+      const sunsetHour = Number(sunset.split(':')[0]) || 19;
+      const times = [
+        sunrise,
+        '10:00',
+        '13:00',
+        `${pad(Math.min(Math.max(sunsetHour - 2, 15), 18))}:00`,
+        sunset,
+      ];
+
+      const totalPrecip = forecastPrecipMm(raw);
+      const weight = 1 / times.length;
+
+      return times.map(hm => ({
+        time: `${dateStr}T${hm}:00`,
+        date: dateStr,
+        granularity: 'hourly',
+        daily: false,
+        derivedFromDaily: true,
+        rain: totalPrecip * weight,
+        showers: 0,
+        snow: 0,
+        wind_deg: raw.wind_deg,
+        wind_speed: raw.wind_speed,
+        location: locMeta.location,
+      }));
+    }
+
+    function normalizeWeatherForecast(payload) {
+      const slots = [];
+      const roots = Array.isArray(payload) ? payload : (payload?.forecasts || payload?.data || []);
+      if (!Array.isArray(roots)) return [];
+
+      for (const loc of roots) {
+        if (!loc || typeof loc !== 'object') continue;
+        const locMeta = {
+          location: loc.label || loc.location || loc.location_name,
+        };
+
+        for (const key of ['hourly', 'hours', 'three_hourly', '3hourly', 'threeHourly']) {
+          if (Array.isArray(loc[key])) {
+            for (const h of loc[key]) {
+              const slot = normalizeForecastSlot(h, locMeta, 'hourly');
+              if (slot) slots.push(slot);
+            }
+          }
+        }
+
+        if (Array.isArray(loc.daily)) {
+          for (const d of loc.daily) {
+            const slot = normalizeForecastSlot(d, locMeta, 'daily');
+            if (slot) slots.push(slot);
+
+            for (const key of ['hourly', 'hours', 'three_hourly', '3hourly', 'threeHourly']) {
+              if (!Array.isArray(d[key])) continue;
+              for (const h of d[key]) {
+                const nested = normalizeForecastSlot({ ...h, id: h.id || d.id }, locMeta, 'hourly');
+                if (nested) slots.push(nested);
+              }
+            }
+
+            for (const expanded of expandDailyForecastSlots(d, locMeta)) slots.push(expanded);
+          }
+        }
+
+        if (Array.isArray(loc.points)) {
+          for (const pt of loc.points) {
+            if (!Array.isArray(pt.times)) continue;
+            for (const t of pt.times) {
+              const slot = normalizeForecastSlot(t, locMeta, 'hourly');
+              if (slot) slots.push(slot);
+            }
+          }
+        }
+
+        if (isWeatherSlotLike(loc)) {
+          const slot = normalizeForecastSlot(loc, locMeta, loc.daily ? 'daily' : 'hourly');
+          if (slot) slots.push(slot);
+        }
+      }
+
+      const seen = new Set();
+      return slots.filter(slot => {
+        const key = `${slot.date}|${slot.time}|${slot.daily ? 'd' : 'h'}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+    }
+
+    function forecastSlotDate(forecast) {
+      if (forecast?.date) return forecast.date;
+      const raw = forecast?.time;
+      if (!raw) return '';
+      const d = new Date(raw);
+      if (!Number.isNaN(d.getTime())) return formatDate(d);
+      return String(raw).slice(0, 10);
+    }
+
+    function forecastsForDate(date) {
+      const all = (state.intervalsWeatherForecast || []).filter(f => forecastSlotDate(f) === date);
+      const hourly = all.filter(f => !f.daily);
+      const slots = (hourly.length ? hourly : all)
+        .sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+      return slots;
+    }
+
+    function weatherForecastRangeNote() {
+      const dates = [...new Set((state.intervalsWeatherForecast || []).map(forecastSlotDate).filter(Boolean))].sort();
+      const n = state.intervalsWeatherForecast?.length || 0;
+      if (!n) return '';
+      if (!dates.length) return ` · ${n} forecast slots`;
+      const range = dates.length === 1 ? dates[0] : `${dates[0]}→${dates[dates.length - 1]}`;
+      return ` · weather ${range} (${n} slots)`;
+    }
+
+    function primaryWeatherLocation() {
+      const fromConfig = state.intervalsWeatherConfig?.location_name
+        || state.intervalsWeatherConfig?.label
+        || state.intervalsWeatherConfig?.location;
+      if (fromConfig) return fromConfig;
+      return state.intervalsWeatherForecast?.find(f => f.location)?.location || 'your location';
+    }
+
+    function shouldShowDayWeather(date) {
+      return date >= formatDate(new Date());
+    }
+
+    function pickClosestWeatherSlot(slots, hour) {
+      let best = null;
+      let bestDiff = Infinity;
+      for (const slot of slots) {
+        const d = new Date(slot.time);
+        if (Number.isNaN(d.getTime())) continue;
+        const diff = Math.abs(d.getHours() + d.getMinutes() / 60 - hour);
+        if (diff < bestDiff) {
+          bestDiff = diff;
+          best = slot;
+        }
+      }
+      return best;
+    }
+
+    function weatherConditionKind(precip) {
+      if (precip < 0.1) return 'sun';
+      if (precip < 1.0) return 'cloud';
+      return 'rain';
+    }
+
+    function weatherIcon(kind) {
+      return kind === 'sun' ? '☀' : kind === 'cloud' ? '☁' : '🌧';
+    }
+
+    function snapshotFromSlot(slot) {
+      const precip = forecastPrecipMm(slot);
+      return {
+        time: slot.time,
+        timeLabel: formatTimeLocal(slot.time),
+        precip,
+        windKmh: slot.wind_speed,
+        windDir: slot.wind_deg != null ? degToCompass(slot.wind_deg) : null,
+        derived: !!slot.derivedFromDaily,
+        kind: weatherConditionKind(precip),
+      };
+    }
+
+    function dayWeatherTimeline(date) {
+      const slots = forecastsForDate(date);
+      if (!slots.length) return [];
+      const hourlySlots = slots.filter(s => !s.daily);
+      const source = hourlySlots.length ? hourlySlots : slots;
+      return source
+        .map(snapshotFromSlot)
+        .sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+    }
+
+    function dayWeatherKindFromTimeline(timeline) {
+      const maxPrecip = Math.max(...timeline.map(s => s.precip));
+      if (maxPrecip >= 1.0) return 'rain';
+      if (maxPrecip >= 0.1) return 'cloud';
+      return 'sun';
+    }
+
+    function dayWeatherCalendarSummary(date) {
+      const timeline = dayWeatherTimeline(date);
+      if (!timeline.length) return null;
+
+      const kind = dayWeatherKindFromTimeline(timeline);
+      const slots = forecastsForDate(date).filter(s => !s.daily);
+      const windSlot = slots.length ? pickClosestWeatherSlot(slots, 13) : null;
+      const windDir = windSlot?.wind_deg != null
+        ? degToCompass(windSlot.wind_deg)
+        : timeline.find(s => s.windDir)?.windDir || null;
+
+      return { kind, icon: weatherIcon(kind), windDir };
+    }
+
+    function formatCalendarWeatherHtml(date) {
+      if (!shouldShowDayWeather(date)) return '';
+      const summary = dayWeatherCalendarSummary(date);
+      if (!summary) return '';
+      const wind = summary.windDir ? `<span class="cal-weather-wind">${summary.windDir}</span>` : '';
+      return `<span class="cal-weather" title="Weather forecast">${summary.icon}${wind}</span>`;
+    }
+
+    function dayWeatherSnapshots(date) {
+      const timeline = dayWeatherTimeline(date);
+      if (!timeline.length) return null;
+
+      const targetHours = [7, 10, 13, 16, 19];
+      const out = [];
+      const used = new Set();
+      const slotRefs = timeline.map(s => ({ time: s.time }));
+      for (const hour of targetHours) {
+        const slot = pickClosestWeatherSlot(slotRefs, hour);
+        if (!slot) continue;
+        const snap = timeline.find(s => s.time === slot.time);
+        if (!snap || used.has(snap.timeLabel)) continue;
+        used.add(snap.timeLabel);
+        out.push(snap);
+      }
+
+      return out.length ? out : timeline.slice(0, 6);
+    }
+
+    function formatWeatherSnapshotLine(snapshot) {
+      const rain = snapshot.precip < 0.1 ? 'dry' : `${snapshot.precip.toFixed(1)} mm`;
+      const wind = snapshot.windKmh != null && snapshot.windDir
+        ? `${Math.round(snapshot.windKmh)} km/h ${snapshot.windDir}`
+        : snapshot.windKmh != null
+          ? `${Math.round(snapshot.windKmh)} km/h`
+          : '';
+      return `${snapshot.timeLabel} · ${rain}${wind ? ` · ${wind}` : ''}`;
+    }
+
+    function renderDayWeatherTimeline(day) {
+      const timeline = dayWeatherTimeline(day.date);
+      if (!timeline.length) return '';
+
+      const rows = timeline.map(s => {
+        const detail = s.precip < 0.1
+          ? 'dry'
+          : `${s.precip.toFixed(1)} mm`;
+        const wind = s.windDir
+          ? `${s.windKmh != null ? `${Math.round(s.windKmh)} km/h ` : ''}${s.windDir}`
+          : s.windKmh != null
+            ? `${Math.round(s.windKmh)} km/h`
+            : '';
+        return `<div class="day-weather-row">
+          <span class="day-weather-time">${s.timeLabel}</span>
+          <span class="day-weather-icon">${weatherIcon(s.kind)}</span>
+          <span class="day-weather-detail">${detail}${wind ? ` · ${wind}` : ''}</span>
+        </div>`;
+      }).join('');
+
+      const derivedNote = timeline.some(s => s.derived)
+        ? '<p class="text-muted">Some times estimated from daily forecast.</p>'
+        : '';
+
+      return `<div class="day-weather-timeline">${rows}</div>${derivedNote}`;
+    }
+
+    function adviseDayWeather(date, durationMin = 120) {
+      const slots = forecastsForDate(date);
+      if (!slots.length) return null;
+
+      const durationMs = Math.min(durationMin, 360) * 60 * 1000;
+      const dailyOnly = slots.every(s => s.daily);
+
+      if (dailyOnly || slots.length === 1) {
+        const slot = slots[0];
+        const start = new Date(slot.time);
+        if (Number.isNaN(start.getTime())) return null;
+        const precip = forecastPrecipMm(slot);
+        const windFrom = slot.wind_deg ?? null;
+        const windKmh = slot.wind_speed ?? null;
+        const startDir = windFrom != null ? degToCompass(windFrom) : null;
+        const finishDir = windFrom != null ? degToCompass((windFrom + 180) % 360) : null;
+        const location = slot.location || primaryWeatherLocation();
+        const dryNote = precip < 0.1
+          ? `Mostly dry (~${precip.toFixed(1)} mm day total).`
+          : `~${precip.toFixed(1)} mm rain expected during the day — pack a jacket.`;
+        const timingNote = dailyOnly
+          ? 'Daily forecast — suggested start around sunrise; hourly detail may appear closer to the ride.'
+          : null;
+        return {
+          location,
+          startLabel: formatTimeLocal(slot.time),
+          endLabel: formatTimeLocal(new Date(start.getTime() + durationMs)),
+          precip,
+          windKmh,
+          startDir,
+          finishDir,
+          dryNote: timingNote ? `${dryNote} ${timingNote}` : dryNote,
+          directionNote: startDir && finishDir && windKmh != null
+            ? `Start into the wind heading ${startDir} (~${Math.round(windKmh)} km/h), finish with tailwind from ${finishDir}.`
+            : null,
+        };
+      }
+
+      const stepMs = slots.length > 1
+        ? Math.max(600000, new Date(slots[1].time).getTime() - new Date(slots[0].time).getTime())
+        : 3600000;
+
+      let best = null;
+      for (let i = 0; i < slots.length; i++) {
+        const start = new Date(slots[i].time);
+        if (Number.isNaN(start.getTime())) continue;
+
+        let precip = 0;
+        const winds = [];
+        const wSpeeds = [];
+        let elapsed = 0;
+        let j = i;
+
+        while (j < slots.length && elapsed < durationMs) {
+          precip += forecastPrecipMm(slots[j]);
+          if (slots[j].wind_deg != null) {
+            winds.push(slots[j].wind_deg);
+            wSpeeds.push(Math.max(0.5, slots[j].wind_speed || 1));
+          }
+          elapsed += stepMs;
+          j++;
+        }
+
+        if (elapsed < durationMs * 0.5) break;
+
+        if (!best || precip < best.precip - 0.01 || (Math.abs(precip - best.precip) < 0.01 && elapsed > best.elapsed)) {
+          const windFrom = winds.length ? circularMeanDeg(winds, wSpeeds) : null;
+          const windKmh = wSpeeds.length ? wSpeeds.reduce((a, b) => a + b, 0) / wSpeeds.length : null;
+          best = {
+            startLabel: formatTimeLocal(slots[i].time),
+            endLabel: formatTimeLocal(new Date(start.getTime() + durationMs)),
+            precip,
+            windFrom,
+            windKmh,
+            elapsed,
+          };
+        }
+      }
+
+      if (!best) return null;
+
+      const startDir = best.windFrom != null ? degToCompass(best.windFrom) : null;
+      const finishDir = best.windFrom != null ? degToCompass((best.windFrom + 180) % 360) : null;
+      const location = slots.find(s => s.location)?.location || primaryWeatherLocation();
+      const dryNote = best.precip < 0.1
+        ? `Driest ${formatDuration(durationMin)} window — little to no rain expected.`
+        : `Best ${formatDuration(durationMin)} window — ~${best.precip.toFixed(1)} mm precip possible; pack a jacket.`;
+
+      return {
+        location,
+        startLabel: best.startLabel,
+        endLabel: best.endLabel,
+        precip: best.precip,
+        windKmh: best.windKmh,
+        startDir,
+        finishDir,
+        dryNote,
+        directionNote: startDir && finishDir && best.windKmh != null
+          ? `Start into the wind heading ${startDir} (~${Math.round(best.windKmh)} km/h), finish with tailwind from ${finishDir}.`
+          : null,
+      };
+    }
+
+    function adviseSundayRide(day) {
+      if (!isSundayEndurance(day) || isIndoorSunday(day.date) || !shouldShowDayWeather(day.date)) return null;
+      return adviseDayWeather(day.date, Math.min(day.durationMin || 120, 360));
+    }
+
+    function renderDayWeatherEmptyState(date, title = 'Weather forecast') {
+      const creds = intervalsCredentials();
+      const forecastCount = state.intervalsWeatherForecast?.length || 0;
+      const slotsForDay = forecastsForDate(date).length;
+
+      if (!creds) {
+        return `<div class="sunday-weather"><div class="sunday-weather-title">${title}</div><p class="text-muted">Add your intervals.icu API key and athlete ID in Settings, then sync.</p></div>`;
+      }
+      if (!state.intervalsLastSync) {
+        return `<div class="sunday-weather"><div class="sunday-weather-title">${title}</div><p class="text-muted">Click <strong>Sync from intervals.icu</strong> in Settings to load the forecast.</p></div>`;
+      }
+      if (!forecastCount) {
+        return `<div class="sunday-weather"><div class="sunday-weather-title">${title}</div><p class="text-muted">No forecast returned. Set your ride location in intervals.icu → Settings → Weather, then sync again.</p></div>`;
+      }
+      if (!slotsForDay) {
+        return `<div class="sunday-weather"><div class="sunday-weather-title">${title}</div><p class="text-muted">Forecast loaded (${forecastCount} points) but not for ${date} yet — check again closer to the day.</p></div>`;
+      }
+      return `<div class="sunday-weather"><div class="sunday-weather-title">${title}</div><p class="text-muted">Forecast data for this day looks incomplete. Try syncing again.</p></div>`;
+    }
+
+    function formatDayWeatherInline(day) {
+      if (!shouldShowDayWeather(day.date)) return '';
+      const summary = dayWeatherCalendarSummary(day.date);
+      if (!summary) return '';
+      const wind = summary.windDir ? ` <span class="cal-weather-wind">${summary.windDir}</span>` : '';
+      return `<p class="day-weather-inline">${summary.icon}${wind}</p>`;
+    }
+
+    function renderDayWeatherAdvice(day, { inline = false } = {}) {
+      if (!shouldShowDayWeather(day.date)) return '';
+
+      const location = primaryWeatherLocation();
+      const indoorNote = isIndoorSunday(day.date)
+        ? '<p class="text-muted">Indoor ride planned — outdoor conditions for reference.</p>'
+        : day.type === 'rest'
+          ? '<p class="text-muted">Rest day — forecast for planning around other activities.</p>'
+          : '';
+
+      if (inline) return formatDayWeatherInline(day);
+
+      const rideAdvice = isSundayEndurance(day) && !isIndoorSunday(day.date)
+        ? adviseDayWeather(day.date, Math.min(day.durationMin || 120, 360))
+        : null;
+
+      const timeline = dayWeatherTimeline(day.date);
+      if (!timeline.length && !rideAdvice) {
+        return renderDayWeatherEmptyState(day.date);
+      }
+
+      const rideBlock = rideAdvice
+        ? `<p><strong>Best ride window:</strong> ${rideAdvice.startLabel}–${rideAdvice.endLabel}</p>
+           <p>${rideAdvice.dryNote}</p>
+           ${rideAdvice.directionNote ? `<p class="text-muted">${rideAdvice.directionNote}</p>` : ''}`
+        : '';
+
+      return `<div class="sunday-weather">
+        <div class="sunday-weather-title">Weather forecast · ${location}</div>
+        ${rideBlock}
+        ${renderDayWeatherTimeline(day)}
+        ${indoorNote}
+      </div>`;
+    }
+
+    function median(values) {
+      const nums = values.filter(v => v != null && !Number.isNaN(v)).sort((a, b) => a - b);
+      if (!nums.length) return null;
+      const mid = Math.floor(nums.length / 2);
+      return nums.length % 2 ? nums[mid] : (nums[mid - 1] + nums[mid]) / 2;
+    }
+
+    function clampScore(n) {
+      return Math.max(0, Math.min(100, Math.round(n)));
+    }
+
+    function readinessBand(score) {
+      if (score < 34) return 'low';
+      if (score < 67) return 'moderate';
+      return 'high';
+    }
+
+    function readinessBandLabel(band) {
+      return band === 'low' ? 'Recover' : band === 'moderate' ? 'Moderate' : 'Ready';
+    }
+
+    function avgField(records, field, lastN = null) {
+      const slice = lastN ? records.slice(-lastN) : records;
+      const vals = slice.map(r => r[field]).filter(v => v != null && v > 0);
+      return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
+    }
+
+    function wellnessValueOnDate(records, date, field, lookbackDays = 2) {
+      for (let i = 0; i <= lookbackDays; i++) {
+        const d = addDays(date, -i);
+        const rec = records.find(r => r.id === d);
+        const val = rec?.[field];
+        if (val != null && val > 0) return { value: val, date: d, stale: i > 0, daysAgo: i };
+      }
+      return null;
+    }
+
+    function mostRecentWellnessValue(records, date, field) {
+      const sorted = [...records].filter(r => r.id <= date).sort((a, b) => b.id.localeCompare(a.id));
+      for (const rec of sorted) {
+        const val = rec[field];
+        if (val != null && val > 0) {
+          const daysAgo = daysBetween(rec.id, date);
+          return { value: val, date: rec.id, stale: daysAgo > 0, daysAgo };
+        }
+      }
+      return null;
+    }
+
+    function sleepStalenessNote(daysAgo) {
+      if (daysAgo == null || daysAgo <= 0) return null;
+      if (daysAgo === 1) return '⚠ No sleep recorded today yet';
+      return `⚠ Last sleep ${daysAgo} days ago`;
+    }
+
+    function sleepScoreReadiness(sleepHours, daysAgo) {
+      if (sleepHours == null) return null;
+      const base = clampScore((sleepHours / 7.5) * 100);
+      if (daysAgo === 0) return base;
+      if (daysAgo === 1) return null;
+      return clampScore(Math.min(base, 35));
+    }
+
+    function sleepScoreMetricReadiness(value, daysAgo) {
+      if (value == null) return null;
+      const base = clampScore(value);
+      if (daysAgo === 0) return base;
+      if (daysAgo === 1) return null;
+      return clampScore(Math.min(base, 35));
+    }
+
+    function barStatus(score) {
+      if (score == null) return 'na';
+      if (score >= 67) return 'good';
+      if (score >= 34) return 'mid';
+      return 'low';
+    }
+
+    function trendTextHigherBetter(recent3, recent7) {
+      if (recent3 == null || recent7 == null || recent7 === 0) return null;
+      const pct = ((recent3 - recent7) / recent7) * 100;
+      if (Math.abs(pct) < 4) return 'stable vs 7d';
+      return pct > 0 ? `↑ ${Math.round(pct)}% vs 7d` : `↓ ${Math.round(Math.abs(pct))}% vs 7d`;
+    }
+
+    function trendTextLowerBetter(recent3, recent7) {
+      if (recent3 == null || recent7 == null) return null;
+      const delta = recent3 - recent7;
+      if (Math.abs(delta) < 1) return 'stable vs 7d';
+      return delta < 0 ? `↓ ${Math.round(Math.abs(delta))} bpm vs 7d` : `↑ ${Math.round(delta)} bpm vs 7d`;
+    }
+
+    function hasCompletedToday(today) {
+      const activity = buildIntervalsActivitiesMap()[today];
+      if (activity?.count > 0) return true;
+      return state.completions[today]?.status === 'completed';
+    }
+
+    function computeReadiness(today) {
+      const records = [...(state.intervalsWellness || [])].filter(w => w.id <= today).sort((a, b) => a.id.localeCompare(b.id));
+      if (records.length < 3) return null;
+
+      const baselinePool = records.filter(w => w.id < today).slice(-21);
+      const displayMetrics = [];
+      const scored = [];
+
+      const hrvData = wellnessValueOnDate(records, today, 'hrv');
+      const hrvBase = median(baselinePool.map(w => w.hrv).filter(v => v > 0));
+      const hrv3 = avgField(records, 'hrv', 3);
+      const hrv7 = avgField(records, 'hrv', 7);
+      if (hrvData || hrvBase) {
+        let score = null;
+        let valueText = '—';
+        if (hrvData && hrvBase) {
+          const ratio = hrvData.value / hrvBase;
+          score = clampScore(50 + (ratio - 1) * 100);
+          valueText = `${Math.round(hrvData.value)} ms${hrvData.stale ? ` · ${hrvData.date}` : ''}`;
+          scored.push(score);
+        } else if (hrvData) {
+          valueText = `${Math.round(hrvData.value)} ms`;
+        }
+        displayMetrics.push({
+          key: 'HRV',
+          score,
+          valueText,
+          trendText: trendTextHigherBetter(hrv3, hrv7),
+        });
+      }
+
+      const rhrData = wellnessValueOnDate(records, today, 'restingHR');
+      const rhrBase = median(baselinePool.map(w => w.restingHR).filter(v => v > 0));
+      const rhr3 = avgField(records, 'restingHR', 3);
+      const rhr7 = avgField(records, 'restingHR', 7);
+      if (rhrData || rhrBase) {
+        let score = null;
+        let valueText = '—';
+        if (rhrData && rhrBase) {
+          const delta = rhrData.value - rhrBase;
+          score = clampScore(100 - delta * 6);
+          valueText = `${rhrData.value} bpm${delta >= 0 ? ` (+${Math.round(delta)})` : ` (${Math.round(delta)})`}${rhrData.stale ? ` · ${rhrData.date}` : ''}`;
+          scored.push(score);
+        } else if (rhrData) {
+          valueText = `${rhrData.value} bpm`;
+        }
+        displayMetrics.push({
+          key: 'Resting HR',
+          score,
+          valueText,
+          trendText: trendTextLowerBetter(rhr3, rhr7),
+        });
+      }
+
+      const sleepData = mostRecentWellnessValue(records, today, 'sleepSecs');
+      const sleep3 = avgField(records, 'sleepSecs', 3);
+      const sleep7 = avgField(records, 'sleepSecs', 7);
+      if (sleepData || sleep3) {
+        const sleepHours = sleepData ? sleepData.value / 3600 : null;
+        const daysAgo = sleepData?.daysAgo;
+        const score = sleepData ? sleepScoreReadiness(sleepHours, daysAgo) : null;
+        const valueText = sleepHours != null
+          ? `${sleepHours.toFixed(1)} h${daysAgo > 0 ? ` · ${sleepData.date}` : ''}`
+          : '—';
+        if (score != null) scored.push(score);
+        const sleepTrend = (sleep3 && sleep7) ? trendTextHigherBetter(sleep3 / 3600, sleep7 / 3600) : null;
+        displayMetrics.push({
+          key: 'Sleep',
+          score,
+          valueText,
+          warningText: sleepStalenessNote(daysAgo),
+          trendText: sleepTrend,
+        });
+      }
+
+      const sleepScoreData = mostRecentWellnessValue(records, today, 'sleepScore');
+      if (sleepScoreData || avgField(records, 'sleepScore', 7)) {
+        const daysAgo = sleepScoreData?.daysAgo;
+        const score = sleepScoreData ? sleepScoreMetricReadiness(sleepScoreData.value, daysAgo) : null;
+        const valueText = sleepScoreData
+          ? `${Math.round(sleepScoreData.value)}${daysAgo > 0 ? ` · ${sleepScoreData.date}` : ''}`
+          : '—';
+        if (score != null) scored.push(score);
+        displayMetrics.push({
+          key: 'Sleep score',
+          score,
+          valueText,
+          warningText: sleepStalenessNote(daysAgo),
+          trendText: trendTextHigherBetter(avgField(records, 'sleepScore', 3), avgField(records, 'sleepScore', 7)),
+        });
+      }
+
+      for (const [label, field] of [['Fatigue', 'fatigue'], ['Soreness', 'soreness'], ['Stress', 'stress']]) {
+        const data = wellnessValueOnDate(records, today, field, 0);
+        if (!data && !baselinePool.some(w => w[field] > 0)) continue;
+        let score = null;
+        let valueText = '—';
+        if (data) {
+          score = clampScore(((4 - data.value) / 3) * 100);
+          valueText = data.value <= 1 ? 'Low' : data.value === 2 ? 'Moderate' : data.value === 3 ? 'High' : 'Very high';
+          scored.push(score);
+        }
+        displayMetrics.push({ key: label, score, valueText, trendText: null });
+      }
+
+      const load = buildIntervalsLoadMap()[today];
+      if (load) {
+        const formScore = clampScore(50 + load.tsb * 2);
+        scored.push(formScore);
+        displayMetrics.push({
+          key: 'Form (TSB)',
+          score: formScore,
+          valueText: `${load.tsb >= 0 ? '+' : ''}${Math.round(load.tsb)}`,
+          trendText: null,
+        });
+      }
+
+      if (!displayMetrics.length) return null;
+
+      const rawScore = scored.length
+        ? clampScore(scored.reduce((s, m) => s + m, 0) / scored.length)
+        : null;
+      const score = rawScore == null ? null : clampScore(50 + (rawScore - 50) * Math.min(1, scored.length / 3));
+      const band = score == null ? 'moderate' : readinessBand(score);
+      const label = score == null
+        ? 'Insufficient data'
+        : scored.length < 3
+          ? `${readinessBandLabel(band)} · limited signals`
+          : readinessBandLabel(band);
+
+      return { score: score ?? '—', band, label, metrics: displayMetrics, signalCount: scored.length };
+    }
+
+    function createRecoverySpinDay(date, dayName, durationMin = 45) {
+      const workSec = Math.max(600, durationMin * 60 - 600);
+      return {
+        date,
+        dayName,
+        type: 'structured',
+        name: 'Recovery Spin (adjusted)',
+        desc: 'Easy Z1 spin — auto-adjusted for low readiness.',
+        durationMin,
+        segments: [
+          { tag: 'Warmup', Duration: 300, PowerLow: 0.45, PowerHigh: 0.55 },
+          { tag: 'SteadyState', Duration: workSec, Power: 0.55 },
+          { tag: 'Cooldown', Duration: 300, PowerHigh: 0.55, PowerLow: 0.45 },
+        ],
+        zwift: true,
+        adjusted: true,
+      };
+    }
+
+    function scaleSegmentPowers(segments, factor) {
+      const scaled = structuredClone(segments);
+      scaled.forEach(seg => {
+        ['Power', 'OnPower', 'OffPower', 'PowerLow', 'PowerHigh'].forEach(key => {
+          if (seg[key] != null) seg[key] *= factor;
+        });
+      });
+      return scaled;
+    }
+
+    function backupDay(day) {
+      if (!day._vpOriginal) {
+        const { _vpOriginal, ...rest } = day;
+        day._vpOriginal = structuredClone(rest);
+      }
+    }
+
+    function revertDayAdjustment(day) {
+      if (!day._vpOriginal) return false;
+      const restore = day._vpOriginal;
+      Object.keys(day).forEach(k => delete day[k]);
+      Object.assign(day, structuredClone(restore));
+      delete day._vpOriginal;
+      delete day.adjusted;
+      delete day.adjustmentReason;
+      return true;
+    }
+
+    function suggestWorkoutAdjustment(day, readiness, tsb, today) {
+      if (!day || day.type === 'ftp-test') return null;
+
+      if (hasCompletedToday(today)) {
+        const act = buildIntervalsActivitiesMap()[today];
+        const tss = act ? Math.round(act.tss) : null;
+        return {
+          action: 'keep',
+          completed: true,
+          reason: tss != null
+            ? `Already completed today (${tss} TSS logged in intervals.icu) — no adjustment needed.`
+            : 'Already marked complete today — no adjustment needed.',
+        };
+      }
+
+      const score = typeof readiness?.score === 'number' ? readiness.score : 50;
+
+      if (score < 35 || tsb < -25) {
+        if (day.type === 'rest') return { action: 'rest', reason: 'Very low readiness or deep fatigue — full rest recommended.' };
+        return { action: 'recovery', reason: 'Low readiness or deep fatigue — swap to easy recovery spin.', durationMin: 45 };
+      }
+      if (score < 55 || tsb < -15) {
+        if (day.type === 'structured') return { action: 'reduce', factor: 0.85, reason: 'Moderate fatigue — reduce intensity ~15%.' };
+        if (day.type === 'endurance') return { action: 'shorten', factor: 0.7, reason: 'Moderate fatigue — shorten endurance ride ~30%.' };
+        if (day.type === 'rest') return { action: 'rest', reason: 'Take the rest day — signals suggest you need it.' };
+      }
+      if (score >= 67 && tsb >= -10) return { action: 'keep', reason: 'Readiness looks good — proceed as planned.' };
+      return { action: 'keep', reason: 'No strong signal to change today\'s session.' };
+    }
+
+    function applyWorkoutAdjustment(day, week, suggestion) {
+      if (!suggestion || suggestion.action === 'keep') return false;
+      backupDay(day);
+      day.adjusted = true;
+      day.adjustmentReason = suggestion.reason;
+
+      if (suggestion.action === 'recovery') {
+        const spin = createRecoverySpinDay(day.date, day.dayName, suggestion.durationMin || 45);
+        Object.assign(day, spin);
+      } else if (suggestion.action === 'reduce' && day.segments) {
+        day.segments = scaleSegmentPowers(day.segments, suggestion.factor || 0.85);
+        day.name = `${day.name} (adjusted)`;
+        day.durationMin = Math.round(segmentDuration(day.segments) / 60);
+        day.desc = `${day.desc} Intensity reduced for readiness.`;
+      } else if (suggestion.action === 'shorten' && day.type === 'endurance') {
+        day.durationMin = Math.max(45, Math.round(day.durationMin * (suggestion.factor || 0.7)));
+        day.name = `${day.name} (shortened)`;
+        day.desc = `${day.desc} Shortened for readiness.`;
+      } else if (suggestion.action === 'rest' && day.type !== 'rest') {
+        day.type = 'rest';
+        day.name = 'Rest (adjusted)';
+        day.desc = 'Rest day — auto-adjusted for recovery.';
+        day.optional = true;
+        day.durationMin = 0;
+        delete day.segments;
+      }
+
+      day.expectedRpe = getExpectedRpe(day, week);
+      return true;
+    }
+
+    function veloplannerExternalId(date) {
+      return `veloplanner-${date}`;
+    }
+
+    function buildIntervalsEventsMap() {
+      const byDate = {};
+      const byExternalId = {};
+      for (const ev of state.intervalsEvents || []) {
+        const date = (ev.start_date_local || '').slice(0, 10);
+        if (date) {
+          if (!byDate[date]) byDate[date] = [];
+          byDate[date].push(ev);
+        }
+        if (ev.external_id) byExternalId[ev.external_id] = ev;
+      }
+      return { byDate, byExternalId };
+    }
+
+    function intervalsEventStatus(day) {
+      const { byDate, byExternalId } = buildIntervalsEventsMap();
+      const ext = veloplannerExternalId(day.date);
+      const linked = byExternalId[ext];
+      if (linked) {
+        const evDate = (linked.start_date_local || '').slice(0, 10);
+        if (evDate && evDate !== day.date) return { status: 'moved', label: 'moved', event: linked };
+        return { status: 'synced', label: 'icu', event: linked };
+      }
+      const dayEvents = byDate[day.date] || [];
+      const external = dayEvents.find(e => e.category === 'WORKOUT' && e.external_id && !e.external_id.startsWith('veloplanner-'));
+      if (external) return { status: 'external', label: 'other', event: external };
+      return { status: 'local', label: 'local' };
+    }
+
+    function intervalsSyncTagHtml(day) {
+      if (day.type === 'rest') return '';
+      const st = intervalsEventStatus(day);
+      const cls = { synced: 'icu-sync-synced', local: 'icu-sync-local', moved: 'icu-sync-moved', external: 'icu-sync-external' }[st.status] || 'icu-sync-local';
+      return `<span class="icu-sync-tag ${cls}">${st.label}</span>`;
+    }
+
+    function eventStartLocal(day) {
+      if (isSundayEndurance(day) && !isIndoorSunday(day.date)) {
+        const advice = adviseDayWeather(day.date, Math.min(day.durationMin || 120, 360));
+        const slots = forecastsForDate(day.date);
+        const slot = advice
+          ? slots.find(s => formatTimeLocal(s.time) === advice.startLabel) || slots[0]
+          : slots[0];
+        if (slot?.time) {
+          const d = new Date(slot.time);
+          if (!Number.isNaN(d.getTime())) {
+            const pad = n => String(n).padStart(2, '0');
+            return `${day.date}T${pad(d.getHours())}:${pad(d.getMinutes())}:00`;
+          }
+        }
+      }
+      return `${day.date}T07:00:00`;
+    }
+
+    function formatIntervalsWorkoutDuration(mins) {
+      const m = Math.max(1, Math.round(mins));
+      const h = Math.floor(m / 60);
+      const rm = m % 60;
+      if (h && rm) return `${h}h${rm}m`;
+      if (h) return `${h}h`;
+      return `${m}m`;
+    }
+
+    function buildIntervalsWorkoutDescription(day, week) {
+      const ftp = planFtp();
+      const parts = [];
+
+      if (day.type === 'endurance') {
+        const mins = sundayDisplayDurationMin(day, day.date);
+        const dur = formatIntervalsWorkoutDuration(mins);
+        if (isSundayEndurance(day) && isIndoorSunday(day.date)) {
+          const ifIndoor = sundayIndoorTargetIf(day);
+          parts.push(`-${dur} z2`);
+          parts.push(`Indoor · cap ~${Math.round(ifIndoor * 100)}% FTP (${Math.round(ifIndoor * ftp)}W).`);
+        } else {
+          parts.push(`-${dur} z2`);
+        }
+        if (day.desc) parts.unshift(day.desc);
+        return parts.join('\n\n');
+      }
+
+      if (day.type === 'ftp-test') {
+        if (day.desc) parts.push(day.desc);
+        parts.push(`-${formatIntervalsWorkoutDuration(day.durationMin || 25)} z5`);
+        return parts.join('\n\n');
+      }
+
+      return day.desc || day.name;
+    }
+
+    async function fetchIntervalsEventsRange(oldest, newest) {
+      const creds = intervalsCredentials();
+      if (!creds) return [];
+      const res = await fetch(`/api/intervals/events?${intervalsQuery(creds.athleteId, { oldest, newest })}`, {
+        headers: intervalsHeaders(),
+      });
+      const payload = await res.json().catch(() => []);
+      if (!res.ok) throw new Error(payload.error || payload.message || `Events fetch failed (${res.status})`);
+      return Array.isArray(payload) ? payload : [];
+    }
+
+    function planWorkoutEventsOnDate(date) {
+      const { byDate } = buildIntervalsEventsMap();
+      return (byDate[date] || []).filter(e => e.category === 'WORKOUT' || e.type === 'Ride');
+    }
+
+    function eventsToDeleteForRepublish(date) {
+      const { byDate, byExternalId } = buildIntervalsEventsMap();
+      const seen = new Set();
+      const out = [];
+
+      for (const ev of planWorkoutEventsOnDate(date)) {
+        if (ev.id != null && !seen.has(ev.id)) {
+          seen.add(ev.id);
+          out.push(ev);
+        }
+      }
+
+      const linked = byExternalId[veloplannerExternalId(date)];
+      if (linked?.id != null && !seen.has(linked.id)) {
+        seen.add(linked.id);
+        out.push(linked);
+      }
+
+      return out;
+    }
+
+    function planRepublishPreview(dayMap, today, end) {
+      const publish = [];
+      const toDelete = [];
+      const deleteIds = new Set();
+      const skipCompleted = [];
+
+      for (const [date, entry] of Object.entries(dayMap)) {
+        if (date < today || date > end) continue;
+        if (entry.day.type === 'rest') continue;
+        if (getCompletion(date)?.status === 'completed') {
+          skipCompleted.push({ date, ...entry });
+          continue;
+        }
+
+        for (const ev of eventsToDeleteForRepublish(date)) {
+          if (ev.id != null && !deleteIds.has(ev.id)) {
+            deleteIds.add(ev.id);
+            toDelete.push(ev);
+          }
+        }
+        publish.push({ date, ...entry });
+      }
+
+      return { publish, toDelete, skipCompleted };
+    }
+
+    function formatPlanPublishPreviewMessage(preview) {
+      const lines = [];
+      if (preview.publish.length) {
+        lines.push(`Replace ${preview.publish.length} planned workout${preview.publish.length === 1 ? '' : 's'} on your calendar.`);
+      }
+      if (preview.toDelete.length) {
+        lines.push(`Remove ${preview.toDelete.length} existing event${preview.toDelete.length === 1 ? '' : 's'} first (duplicates and other workouts on those days).`);
+      }
+      if (preview.skipCompleted.length) {
+        lines.push(`Skip ${preview.skipCompleted.length} completed day${preview.skipCompleted.length === 1 ? '' : 's'}.`);
+      }
+      return lines.join('\n');
+    }
+
+    async function deleteIntervalsEventsBulk(events) {
+      if (!events.length) return 0;
+      const creds = intervalsCredentials();
+      if (!creds) throw new Error('Add intervals.icu credentials in Settings.');
+
+      const body = events
+        .map(ev => (ev.id != null ? { id: ev.id } : ev.external_id ? { external_id: ev.external_id } : null))
+        .filter(Boolean);
+      if (!body.length) return 0;
+
+      const res = await fetch(`/api/intervals/events-bulk-delete?${intervalsQuery(creds.athleteId)}`, {
+        method: 'PUT',
+        headers: { ...intervalsHeaders(), 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const payload = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(payload.error || payload.message || `Delete failed (${res.status})`);
+      return typeof payload === 'number' ? payload : body.length;
+    }
+
+    function buildEventForDay(day, week) {
+      const ftp = planFtp();
+      const description = buildIntervalsWorkoutDescription(day, week);
+      const base = {
+        category: 'WORKOUT',
+        type: 'Ride',
+        name: day.name,
+        start_date_local: eventStartLocal(day),
+        external_id: veloplannerExternalId(day.date),
+        description,
+      };
+
+      if (isSundayEndurance(day) && isIndoorSunday(day.date)) base.indoor = true;
+
+      if (day.type === 'rest' || day.type === 'endurance' || day.type === 'ftp-test' || !day.segments) {
+        const mins = day.type === 'endurance'
+          ? sundayDisplayDurationMin(day, day.date)
+          : (day.durationMin || 0);
+        if (mins > 0) {
+          base.moving_time = mins * 60;
+          base.icu_training_load = dayPlannedTss(day);
+        }
+        return base;
+      }
+
+      const zwo = workoutToZwo(day, {
+        name: day.name,
+        desc: description,
+        weekNum: week?.weekNum || 0,
+        dayName: day.dayName,
+        date: day.date,
+        ftp,
+      });
+      return {
+        ...base,
+        filename: `veloplanner-${day.date}.zwo`,
+        file_contents_base64: toBase64(zwo),
+        moving_time: Math.round(computeWorkoutStats(day.segments, ftp).totalSec),
+        icu_training_load: dayPlannedTss(day),
+      };
+    }
+
+    function plannedVsActualLine(day, date) {
+      const actual = actualTssForDate(date);
+      const planned = dayPlannedTss(day);
+      const { byExternalId } = buildIntervalsEventsMap();
+      const ev = byExternalId[veloplannerExternalId(date)];
+      const eventTss = ev?.icu_training_load != null ? Math.round(ev.icu_training_load) : null;
+      if (actual == null && eventTss == null) return null;
+      const target = eventTss ?? planned;
+      if (actual == null) return `Calendar ${eventTss} TSS · planned ${planned} TSS`;
+      const delta = actual - target;
+      const deltaTxt = Math.abs(delta) >= 5 ? (delta > 0 ? ` · +${delta}` : ` · ${delta}`) : '';
+      return `Actual ${actual} TSS · target ${target}${deltaTxt}`;
+    }
+
+    function rpeToFeel(rpe) {
+      return Math.max(1, Math.min(5, Math.round((rpe / 10) * 5) || 1));
+    }
+
+    async function writeWellnessFromRpe(date, rpe) {
+      if (!state.intervalsWriteWellness) return;
+      const creds = intervalsCredentials();
+      if (!creds || !rpe) return;
+      const feel = rpeToFeel(rpe);
+      const body = {
+        id: date,
+        feel,
+        fatigue: feel <= 2 ? 1 : feel >= 4 ? 4 : 2,
+        soreness: feel >= 4 ? 3 : 1,
+      };
+      try {
+        await fetch(`/api/intervals/wellness-put?${intervalsQuery(creds.athleteId, { date })}`, {
+          method: 'PUT',
+          headers: { ...intervalsHeaders(), 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+      } catch { /* best-effort */ }
+    }
+
+    function eftpFromSportSettings(settings) {
+      if (!settings) return null;
+      const fromModel = settings.mmp_model?.ftp ?? settings.mmpModel?.ftp;
+      if (fromModel != null && fromModel > 0) return Math.round(fromModel);
+      const direct = settings.eftp ?? settings.eFTP ?? settings.icu_eftp;
+      if (direct != null && direct > 0) return Math.round(direct);
+      return null;
+    }
+
+    function eftpFromWellness() {
+      const sorted = [...(state.intervalsWellness || [])].sort((a, b) => b.id.localeCompare(a.id));
+      for (const w of sorted) {
+        const infos = w.sportInfo || w.sport_info || [];
+        const ride = infos.find(s => s.type === 'Ride' || s.types?.includes?.('Ride'));
+        const eftp = ride?.eftp ?? ride?.eFTP;
+        if (eftp != null && eftp > 0) return Math.round(eftp);
+      }
+      return null;
+    }
+
+    async function pullEftpFromIntervals() {
+      const creds = intervalsCredentials();
+      if (!creds) throw new Error('Add intervals.icu credentials in Settings.');
+
+      const res = await fetch(`/api/intervals/sport-settings?${intervalsQuery(creds.athleteId, { sport: 'Ride' })}`, {
+        headers: intervalsHeaders(),
+      });
+      const settings = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(settings.error || settings.message || `eFTP pull failed (${res.status})`);
+
+      let eftp = eftpFromSportSettings(settings);
+      if (!eftp) eftp = eftpFromWellness();
+      if (!eftp) throw new Error('No eFTP found in intervals.icu Ride settings or wellness data.');
+
+      state.intervalsSportSettings = settings;
+      state.intervalsEftp = eftp;
+      state.useIntervalsEftp = true;
+      state.intervalsEftpPulledAt = new Date().toISOString();
+      state.predictedFtp = recalculatePredictedFtp();
+      saveState();
+      renderIntervalsEftpInfo();
+      return eftp;
+    }
+
+    function clearIntervalsEftp() {
+      state.useIntervalsEftp = false;
+      saveState();
+      renderIntervalsEftpInfo();
+      if (state.plan) renderPlan();
+    }
+
+    function renderIntervalsEftpInfo() {
+      const el = document.getElementById('intervalsFtpInfo');
+      if (!el) return;
+
+      const veloplanFtp = state.predictedFtp || state.ftp;
+      if (!state.intervalsEftp && !state.useIntervalsEftp) {
+        el.classList.remove('hidden');
+        el.innerHTML = `Workout targets use VeloPlan FTP: <strong>${veloplanFtp}W</strong>`;
+        return;
+      }
+
+      const pulled = state.intervalsEftpPulledAt ? formatSyncTime(state.intervalsEftpPulledAt) : null;
+      const pulledNote = pulled ? ` · pulled ${pulled}` : '';
+      if (state.useIntervalsEftp && state.intervalsEftp) {
+        el.classList.remove('hidden');
+        el.innerHTML = `Workout targets use intervals eFTP: <strong>${state.intervalsEftp}W</strong>${pulledNote} · VeloPlan FTP is ${veloplanFtp}W · <button type="button" id="btnClearEftp" class="text-blue-600 hover:underline">use VeloPlan FTP</button>`;
+        document.getElementById('btnClearEftp')?.addEventListener('click', clearIntervalsEftp);
+        return;
+      }
+
+      el.classList.remove('hidden');
+      el.innerHTML = `Last intervals eFTP: <strong>${state.intervalsEftp}W</strong>${pulledNote} · using VeloPlan FTP ${veloplanFtp}W · <button type="button" id="btnUseEftp" class="text-blue-600 hover:underline">use eFTP</button>`;
+      document.getElementById('btnUseEftp')?.addEventListener('click', () => {
+        state.useIntervalsEftp = true;
+        saveState();
+        renderIntervalsEftpInfo();
+        if (state.plan) renderPlan();
+      });
+    }
+
+    function listUpcomingPlanDays(fromDate, count = 7) {
+      if (!state.plan) return [];
+      const dayMap = buildPlanDayMap(state.plan);
+      const out = [];
+      for (const date of Object.keys(dayMap).sort()) {
+        if (date < fromDate) continue;
+        const entry = dayMap[date];
+        if (entry.day.type === 'rest' && !entry.day.optional) continue;
+        out.push({ date, ...entry });
+        if (out.length >= count) break;
+      }
+      return out;
+    }
+
+    function computeWeekAheadSuggestions(today) {
+      const loadMap = buildIntervalsLoadMap();
+      const readiness = computeReadiness(today);
+      const tsbToday = loadMap[today]?.tsb ?? ((state.startCtl ?? 0) - (state.startAtl ?? 0));
+      return listUpcomingPlanDays(today, 7).map(({ date, day, week }) => ({
+        date,
+        day,
+        week,
+        suggestion: suggestWorkoutAdjustment(day, readiness, tsbToday, date),
+        evStatus: intervalsEventStatus(day),
+      }));
+    }
+
+    function computeMissedSessions(today) {
+      if (!state.plan) return [];
+      const activityMap = buildIntervalsActivitiesMap();
+      const dayMap = buildPlanDayMap(state.plan);
+      const missed = [];
+      for (const [date, { day, week }] of Object.entries(dayMap)) {
+        if (date >= today) continue;
+        if (day.type !== 'structured' && day.type !== 'endurance') continue;
+        const c = getCompletion(date);
+        if (c?.status === 'completed' || c?.status === 'skipped') continue;
+        if (activityMap[date]?.count > 0) continue;
+        missed.push({ date, day, week });
+      }
+      return missed.sort((a, b) => b.date.localeCompare(a.date)).slice(0, 6);
+    }
+
+    function renderWeekAheadPanel(plan, today) {
+      const el = document.getElementById('weekAheadContent');
+      if (!el) return;
+      const rows = computeWeekAheadSuggestions(today);
+      if (!rows.length) {
+        el.innerHTML = '<p class="text-sm text-gray-400">No upcoming sessions in range.</p>';
+        return;
+      }
+      el.innerHTML = rows.map(({ date, day, suggestion, evStatus }) => {
+        const tagCls = { synced: 'icu-sync-synced', local: 'icu-sync-local', moved: 'icu-sync-moved', external: 'icu-sync-external' }[evStatus.status];
+        const action = suggestion?.action === 'keep' ? 'Keep' : suggestion?.action === 'recovery' ? 'Recover' : suggestion?.action === 'reduce' ? 'Reduce' : suggestion?.action === 'shorten' ? 'Shorten' : suggestion?.action === 'rest' ? 'Rest' : 'Review';
+        return `<div class="week-ahead-row">
+          <div class="min-w-0 flex-1">
+            <div class="text-sm font-medium text-gray-800">${day.dayName} ${date.slice(5)} · ${day.name}</div>
+            <div class="text-xs text-gray-500 mt-0.5">${suggestion?.reason || '—'}</div>
+          </div>
+          <div class="text-right shrink-0">
+            <span class="icu-sync-tag ${tagCls}">${evStatus.label}</span>
+            <div class="text-xs text-gray-400 mt-1">${action}</div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    function renderMissedSessionsPanel(today) {
+      const el = document.getElementById('missedSessionsContent');
+      if (!el) return;
+      const missed = computeMissedSessions(today);
+      if (!missed.length) {
+        el.innerHTML = '<p class="text-sm text-gray-400">No missed workouts in the current plan window.</p>';
+        return;
+      }
+      el.innerHTML = missed.map(({ date, day, week }) => `<div class="missed-row">
+        <div class="min-w-0">
+          <div class="text-sm font-medium text-gray-800">${day.dayName} ${date} · ${day.name}</div>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <button type="button" class="btn-secondary text-xs" data-missed-action="skip" data-date="${date}">Mark skipped</button>
+          <button type="button" class="btn-secondary text-xs" data-missed-action="push" data-date="${date}">Push to calendar</button>
+          <button type="button" class="btn-secondary text-xs" data-missed-action="view" data-date="${date}">View</button>
+        </div>
+      </div>`).join('');
+
+      el.querySelectorAll('[data-missed-action]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const date = btn.dataset.date;
+          const found = findDayInPlan(date);
+          if (!found) return;
+          const { day, week } = found;
+          if (btn.dataset.missedAction === 'skip') {
+            if (confirm(`Mark ${day.name} on ${date} as skipped?`)) setDayStatus(date, 'skipped');
+          } else if (btn.dataset.missedAction === 'view') {
+            openWorkoutModal(date);
+          } else if (btn.dataset.missedAction === 'push') {
+            btn.disabled = true;
+            try {
+              await pushDayToIntervals(day, week);
+              btn.textContent = 'Pushed';
+            } catch (err) {
+              alert(err.message || 'Push failed');
+              btn.disabled = false;
+            }
+          }
+        });
+      });
+    }
+
+    async function publishPlanToIntervals({ weeksAhead = 12 } = {}) {
+      const creds = intervalsCredentials();
+      if (!creds) throw new Error('Add intervals.icu credentials in Settings.');
+      if (!state.plan) throw new Error('Generate a plan first.');
+
+      const today = formatDate(new Date());
+      const end = addDays(today, weeksAhead * 7);
+      const dayMap = buildPlanDayMap(state.plan);
+
+      state.intervalsEvents = await fetchIntervalsEventsRange(today, end);
+      saveState();
+
+      const preview = planRepublishPreview(dayMap, today, end);
+      if (!preview.publish.length) {
+        throw new Error(formatPlanPublishPreviewMessage(preview) || 'No upcoming workouts to publish.');
+      }
+
+      const deleted = await deleteIntervalsEventsBulk(preview.toDelete);
+
+      const events = preview.publish.map(({ day, week }) => buildEventForDay(day, week));
+      const res = await fetch(`/api/intervals/events-bulk?${intervalsQuery(creds.athleteId, { upsert: 'true' })}`, {
+        method: 'POST',
+        headers: { ...intervalsHeaders(), 'Content-Type': 'application/json' },
+        body: JSON.stringify(events),
+      });
+      const payload = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(payload.error || payload.message || `Publish failed (${res.status})`);
+
+      state.intervalsEvents = await fetchIntervalsEventsRange(today, end);
+      saveState();
+
+      return {
+        count: events.length,
+        deleted,
+        preview,
+        payload,
+      };
+    }
+
+    async function ensureVeloPlannerFolder() {
+      const creds = intervalsCredentials();
+      if (!creds) throw new Error('Add intervals.icu credentials in Settings.');
+      if (state.intervalsWorkoutFolderId) return state.intervalsWorkoutFolderId;
+
+      const listRes = await fetch(`/api/intervals/folders?${intervalsQuery(creds.athleteId)}`, { headers: intervalsHeaders() });
+      const folders = await listRes.json().catch(() => []);
+      if (listRes.ok && Array.isArray(folders)) {
+        const existing = folders.find(f => f.name === 'VeloPlanner' && f.type === 'FOLDER');
+        if (existing?.id) {
+          state.intervalsWorkoutFolderId = existing.id;
+          saveState();
+          return existing.id;
+        }
+      }
+
+      const createRes = await fetch(`/api/intervals/folders?${intervalsQuery(creds.athleteId)}`, {
+        method: 'POST',
+        headers: { ...intervalsHeaders(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: 'VeloPlanner', type: 'FOLDER', description: 'Workouts from VeloPlanner' }),
+      });
+      const created = await createRes.json().catch(() => ({}));
+      if (!createRes.ok || !created.id) throw new Error(created.error || created.message || 'Could not create VeloPlanner folder.');
+      state.intervalsWorkoutFolderId = created.id;
+      saveState();
+      return created.id;
+    }
+
+    async function publishWorkoutLibraryToIntervals() {
+      const creds = intervalsCredentials();
+      if (!creds) throw new Error('Add intervals.icu credentials in Settings.');
+      if (!state.plan) throw new Error('Generate a plan first.');
+
+      const folderId = await ensureVeloPlannerFolder();
+      const seen = new Set();
+      const workouts = [];
+      const ftp = planFtp();
+
+      for (const week of state.plan.weeks) {
+        for (const day of week.days) {
+          if (day.type !== 'structured' || !day.segments) continue;
+          const key = day.name;
+          if (seen.has(key)) continue;
+          seen.add(key);
+          const stats = computeWorkoutStats(day.segments, ftp);
+          workouts.push({
+            name: `VeloPlanner: ${day.name}`,
+            type: 'Ride',
+            folder_id: folderId,
+            description: day.desc || day.name,
+            moving_time: Math.round(stats.totalSec),
+            icu_training_load: Math.round(stats.tss),
+            tags: ['veloplanner'],
+          });
+        }
+      }
+
+      if (!workouts.length) throw new Error('No structured workouts to publish.');
+
+      const res = await fetch(`/api/intervals/workouts-bulk?${intervalsQuery(creds.athleteId)}`, {
+        method: 'POST',
+        headers: { ...intervalsHeaders(), 'Content-Type': 'application/json' },
+        body: JSON.stringify(workouts),
+      });
+      const payload = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(payload.error || payload.message || `Library publish failed (${res.status})`);
+      return { count: workouts.length, payload };
+    }
+
+    async function pushDayToIntervals(day, week) {
+      const creds = intervalsCredentials();
+      if (!creds) throw new Error('Add intervals.icu API key and athlete ID in Settings.');
+
+      const res = await fetch(`/api/intervals/events-bulk?${intervalsQuery(creds.athleteId, { upsert: 'true' })}`, {
+        method: 'POST',
+        headers: { ...intervalsHeaders(), 'Content-Type': 'application/json' },
+        body: JSON.stringify([buildEventForDay(day, week)]),
+      });
+      const payload = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(payload.error || payload.message || `Push failed (${res.status})`);
+      return payload;
+    }
+
+    function renderReadinessMetricRow(m) {
+      const status = barStatus(m.score);
+      const barPct = m.score != null ? m.score : 0;
+      return `
+        <div class="readiness-metric">
+          <div class="readiness-metric-head">
+            <span class="readiness-metric-label">${m.key}</span>
+            <span class="readiness-metric-value">${m.valueText}${m.score != null ? ` · ${m.score}` : ''}</span>
+          </div>
+          <div class="readiness-bar-track" aria-hidden="true">
+            <div class="readiness-bar-fill readiness-bar-${status}" style="width:${barPct}%"></div>
+          </div>
+          ${m.warningText ? `<div class="readiness-metric-trend text-amber-600">${m.warningText}</div>` : ''}
+          ${m.trendText ? `<div class="readiness-metric-trend">${m.trendText}</div>` : ''}
+        </div>`;
+    }
+
+    function renderReadinessPanel(today) {
+      const el = document.getElementById('readinessContent');
+      if (!el) return;
+      const readiness = computeReadiness(today);
+      if (!readiness) {
+        el.innerHTML = '<p class="text-sm text-gray-400">Sync intervals.icu to calculate readiness from Garmin wellness data.</p>';
+        return;
+      }
+      const metrics = readiness.metrics.map(renderReadinessMetricRow).join('');
+      const scoreDisplay = readiness.score === '—' ? '—' : readiness.score;
+      el.innerHTML = `
+        <div class="flex items-center gap-5">
+          <div class="readiness-ring readiness-${readiness.band}">${scoreDisplay}</div>
+          <div class="min-w-0">
+            <div class="text-sm font-semibold text-gray-800">${readiness.label}</div>
+            <p class="text-xs text-gray-400 mt-1">${readiness.signalCount} of ${readiness.metrics.length} signals scored · 21-day baseline</p>
+          </div>
+        </div>
+        <div class="mt-4 pt-4 border-t border-gray-100 space-y-0.5">${metrics}</div>`;
+    }
+
+    function renderTodayAdaptPanel(plan, today) {
+      const el = document.getElementById('todayAdaptContent');
+      if (!el) return;
+      const found = findDayInPlan(today);
+      if (!found || today < plan.startDate || today > (plan.ftpTest?.date || plan.endDate)) {
+        el.innerHTML = '<p class="text-sm text-gray-400">No session scheduled today.</p>';
+        return;
+      }
+      const { day, week } = found;
+      const load = buildIntervalsLoadMap()[today];
+      const tsb = load?.tsb ?? ((state.startCtl ?? 0) - (state.startAtl ?? 0));
+      const readiness = computeReadiness(today);
+      const suggestion = suggestWorkoutAdjustment(day, readiness, tsb, today);
+      const actualTss = actualTssForDate(today);
+      const plannedTss = dayPlannedTss(day);
+      const vsLine = plannedVsActualLine(day, today);
+      const adjustedBadge = day.adjusted ? '<span class="day-adjusted-badge">Adjusted</span>' : '';
+      const completedToday = suggestion?.completed;
+      const evTag = intervalsSyncTagHtml(day);
+      const tssLine = vsLine || (actualTss != null
+        ? `Actual ${actualTss} TSS from intervals.icu · planned ${plannedTss}`
+        : `Planned ${plannedTss} TSS`);
+
+      el.innerHTML = `
+        <div class="space-y-3">
+          <div>
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="font-semibold text-gray-800">${day.name}</span>${adjustedBadge}${evTag}
+              ${completedToday ? '<span class="text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">Completed</span>' : ''}
+            </div>
+            <p class="text-xs text-gray-400 mt-1">${day.dayName} · ${tssLine}</p>
+            ${day.adjustmentReason ? `<p class="text-xs text-purple-600 mt-1">${day.adjustmentReason}</p>` : ''}
+          </div>
+          <p class="text-sm text-gray-600 p-3 rounded-lg bg-gray-50">${suggestion?.reason || '—'}</p>
+          <div class="flex flex-wrap gap-2">
+            <button type="button" id="btnAdaptToday" class="btn-primary text-sm" ${suggestion?.action === 'keep' ? 'disabled' : ''}>Adjust session</button>
+            <button type="button" id="btnPushIntervals" class="btn-secondary text-sm" ${completedToday ? 'disabled' : ''}>Push to intervals.icu</button>
+            ${day.adjusted ? '<button type="button" id="btnRevertAdjust" class="btn-secondary text-sm">Revert</button>' : ''}
+            <button type="button" id="btnOpenTodayWorkout" class="btn-secondary text-sm">View workout</button>
+          </div>
+          <p id="todayAdaptStatus" class="text-xs text-gray-400"></p>
+        </div>`;
+
+      document.getElementById('btnAdaptToday')?.addEventListener('click', async () => {
+        if (!suggestion || suggestion.action === 'keep') return;
+        if (!confirm(`${suggestion.reason}\n\nApply this change to today's plan?`)) return;
+        applyWorkoutAdjustment(day, week, suggestion);
+        saveState();
+        renderPlan();
+        if (state.intervalsPushOnAdjust) {
+          try {
+            await pushDayToIntervals(day, week);
+            document.getElementById('todayAdaptStatus').textContent = 'Adjusted and pushed to intervals.icu.';
+          } catch (err) {
+            document.getElementById('todayAdaptStatus').textContent = `Adjusted locally. Push failed: ${err.message}`;
+          }
+        } else {
+          document.getElementById('todayAdaptStatus').textContent = 'Session adjusted.';
+        }
+      });
+
+      document.getElementById('btnPushIntervals')?.addEventListener('click', async () => {
+        const status = document.getElementById('todayAdaptStatus');
+        status.textContent = 'Pushing…';
+        try {
+          await pushDayToIntervals(day, week);
+          status.textContent = 'Pushed to intervals.icu calendar.';
+        } catch (err) {
+          status.textContent = err.message || 'Push failed';
+        }
+      });
+
+      document.getElementById('btnRevertAdjust')?.addEventListener('click', () => {
+        if (!confirm('Revert today\'s session to the original plan?')) return;
+        revertDayAdjustment(day);
+        saveState();
+        renderPlan();
+      });
+
+      document.getElementById('btnOpenTodayWorkout')?.addEventListener('click', () => openWorkoutModal(today));
+    }
+
+    function parseWellnessLoad(w) {
+      if (!w) return null;
+      const ctl = w.ctl ?? w.ctlLoad;
+      const atl = w.atl ?? w.atlLoad;
+      if (ctl == null || atl == null) return null;
+      return {
+        ctl,
+        atl,
+        tsb: ctl - atl,
+        restingHR: w.restingHR,
+        hrv: w.hrv,
+        sleepSecs: w.sleepSecs,
+      };
+    }
+
+    function buildIntervalsLoadMap() {
+      const map = {};
+      for (const w of state.intervalsWellness || []) {
+        const load = parseWellnessLoad(w);
+        if (load) map[w.id] = load;
+      }
+      return map;
+    }
+
+    function latestIntervalsLoadRecord(wellness, preferDate) {
+      const sorted = [...wellness].sort((a, b) => b.id.localeCompare(a.id));
+      if (preferDate) {
+        const exact = sorted.find(w => w.id === preferDate && parseWellnessLoad(w));
+        if (exact) return exact;
+      }
+      return sorted.find(w => parseWellnessLoad(w)) || null;
+    }
+
+    function applyIntervalsLoadBaseline(wellness, preferDate) {
+      const record = latestIntervalsLoadRecord(wellness, preferDate);
+      const load = parseWellnessLoad(record);
+      if (!load) return false;
+      state.startCtl = Math.round(load.ctl);
+      state.startAtl = Math.round(load.atl);
+      state.loadAnchorDate = record.id;
+      return true;
+    }
+
+    function enrichLoadWithActuals(loadSeries) {
+      const actuals = buildIntervalsLoadMap();
+      return loadSeries.map(d => {
+        const a = actuals[d.date];
+        return a ? { ...d, actualCtl: a.ctl, actualAtl: a.atl, actualTsb: a.tsb } : d;
+      });
+    }
+
+    function formatSyncTime(iso) {
+      if (!iso) return 'Not synced yet';
+      const d = new Date(iso);
+      if (Number.isNaN(d.getTime())) return 'Not synced yet';
+      const diffMin = Math.round((Date.now() - d.getTime()) / 60000);
+      if (diffMin < 1) return 'Synced just now';
+      if (diffMin < 60) return `Synced ${diffMin} min ago`;
+      const diffHr = Math.round(diffMin / 60);
+      if (diffHr < 24) return `Synced ${diffHr}h ago`;
+      return `Synced ${d.toLocaleString('nl-NL', { hour12: false })}`;
+    }
+
+    function setIntervalsSyncStatus(message, tone = 'muted') {
+      const el = document.getElementById('intervalsSyncStatus');
+      if (!el) return;
+      el.textContent = message;
+      el.classList.remove('sync-status-ok', 'sync-status-error', 'sync-status-pending', 'text-gray-400');
+      if (tone === 'ok') el.classList.add('sync-status-ok');
+      else if (tone === 'error') el.classList.add('sync-status-error');
+      else if (tone === 'pending') el.classList.add('sync-status-pending');
+      else el.classList.add('text-gray-400');
+    }
+
+    function syncIntervalsInputs() {
+      const keyEl = document.getElementById('intervalsApiKey');
+      const athleteEl = document.getElementById('intervalsAthleteId');
+      const useEl = document.getElementById('useIntervalsLoad');
+      const autoEl = document.getElementById('intervalsAutoSync');
+      const pushEl = document.getElementById('intervalsPushOnAdjust');
+      const wellnessEl = document.getElementById('intervalsWriteWellness');
+      if (keyEl) keyEl.value = state.intervalsApiKey || '';
+      if (athleteEl) athleteEl.value = state.intervalsAthleteId || '';
+      if (useEl) useEl.checked = state.useIntervalsLoad !== false;
+      if (autoEl) autoEl.checked = !!state.intervalsAutoSync;
+      if (pushEl) pushEl.checked = !!state.intervalsPushOnAdjust;
+      if (wellnessEl) wellnessEl.checked = !!state.intervalsWriteWellness;
+      renderIntervalsEftpInfo();
+      const activityCount = (state.intervalsActivities || []).length;
+      const eventCount = (state.intervalsEvents || []).length;
+      setIntervalsSyncStatus(
+        state.intervalsLastSync
+          ? `${formatSyncTime(state.intervalsLastSync)} · ${(state.intervalsWellness || []).length} wellness · ${activityCount} activities · ${eventCount} events`
+          : 'Not synced yet',
+        state.intervalsLastSync ? 'ok' : 'muted',
+      );
+    }
+
+    let intervalsSyncInFlight = false;
+
+    async function syncIntervalsWellness({ silent = false } = {}) {
+      const apiKey = state.intervalsApiKey?.trim();
+      const athleteId = state.intervalsAthleteId?.trim();
+      if (!apiKey) {
+        if (!silent) setIntervalsSyncStatus('Add your API key first.', 'error');
+        return false;
+      }
+      if (!athleteId) {
+        if (!silent) setIntervalsSyncStatus('Add your athlete ID first.', 'error');
+        return false;
+      }
+      if (intervalsSyncInFlight) return false;
+      intervalsSyncInFlight = true;
+
+      const today = formatDate(new Date());
+      const oldest = addDays(today, -89);
+      const btn = document.getElementById('btnIntervalsSync');
+      if (btn) btn.disabled = true;
+      if (!silent) setIntervalsSyncStatus('Syncing from intervals.icu…', 'pending');
+
+      try {
+        const query = intervalsQuery(athleteId, { oldest, newest: today });
+        const eventsNewest = state.plan
+          ? (state.plan.ftpTest?.date || state.plan.endDate)
+          : addDays(today, 56);
+        const eventsQuery = intervalsQuery(athleteId, { oldest: today, newest: eventsNewest > today ? eventsNewest : addDays(today, 56) });
+        const headers = intervalsHeaders();
+        const [wellnessRes, activitiesRes, weatherRes, weatherCfgRes, eventsRes] = await Promise.all([
+          fetch(`/api/intervals/wellness?${query}`, { headers }),
+          fetch(`/api/intervals/activities?${query}`, { headers }),
+          fetch(`/api/intervals/weather-forecast?${intervalsQuery(athleteId)}`, { headers }),
+          fetch(`/api/intervals/weather-config?${intervalsQuery(athleteId)}`, { headers }),
+          fetch(`/api/intervals/events?${eventsQuery}`, { headers }),
+        ]);
+        const wellness = await wellnessRes.json().catch(() => ({}));
+        const activities = await activitiesRes.json().catch(() => ({}));
+        const weatherPayload = await weatherRes.json().catch(() => ({}));
+        const weatherCfg = await weatherCfgRes.json().catch(() => ({}));
+        const events = await eventsRes.json().catch(() => ({}));
+        if (!wellnessRes.ok) {
+          throw new Error(wellness.error || wellness.message || `Wellness sync failed (${wellnessRes.status})`);
+        }
+        if (!activitiesRes.ok) {
+          throw new Error(activities.error || activities.message || `Activities sync failed (${activitiesRes.status})`);
+        }
+        if (!Array.isArray(wellness)) throw new Error('Unexpected wellness response from intervals.icu');
+        if (!Array.isArray(activities)) throw new Error('Unexpected activities response from intervals.icu');
+
+        state.intervalsWellness = wellness;
+        state.intervalsActivities = activities;
+        state.intervalsEvents = eventsRes.ok && Array.isArray(events) ? events : [];
+        state.intervalsWeatherForecast = normalizeWeatherForecast(weatherPayload);
+        if (weatherCfgRes.ok && weatherCfg && !weatherCfg.error) {
+          state.intervalsWeatherConfig = weatherCfg;
+        } else if (Array.isArray(weatherPayload?.forecasts)?.[0]) {
+          const loc = weatherPayload.forecasts.find(f => f.enabled !== false) || weatherPayload.forecasts[0];
+          state.intervalsWeatherConfig = {
+            location_name: loc.label || loc.location,
+            latitude: loc.lat,
+            longitude: loc.lon,
+          };
+        }
+        state.intervalsLastSync = new Date().toISOString();
+
+        let applied = false;
+        if (state.useIntervalsLoad) {
+          applied = applyIntervalsLoadBaseline(wellness, today);
+          syncLoadInputs();
+        }
+
+        const completed = syncCompletionsFromIntervalsActivities();
+
+        saveState();
+        syncIntervalsInputs();
+        updateFitnessChartLegend();
+
+        const loadNote = applied
+          ? ` · CTL ${state.startCtl} / ATL ${state.startAtl} as of ${state.loadAnchorDate}`
+          : ' · no CTL/ATL in range';
+        const completeNote = completed ? ` · ${completed} session${completed === 1 ? '' : 's'} auto-completed` : '';
+        const weatherNote = state.intervalsWeatherForecast.length
+          ? weatherForecastRangeNote()
+          : (weatherRes.ok ? ' · no weather forecast (set location in intervals.icu)' : ' · weather fetch failed');
+        const eventsNote = state.intervalsEvents.length ? ` · ${state.intervalsEvents.length} calendar events` : '';
+        setIntervalsSyncStatus(`Synced ${wellness.length} wellness · ${activities.length} activities${eventsNote}${weatherNote}${loadNote}${completeNote}`, 'ok');
+
+        if (state.plan) renderPlan();
+        return true;
+      } catch (err) {
+        const msg = err.message || 'Sync failed';
+        if (!silent) setIntervalsSyncStatus(msg.includes('fetch') ? 'Sync unavailable — use npm run dev (netlify dev) locally' : msg, 'error');
+        return false;
+      } finally {
+        intervalsSyncInFlight = false;
+        if (btn) btn.disabled = false;
+      }
+    }
+
+    function bindIntervalsSettings() {
+      const keyEl = document.getElementById('intervalsApiKey');
+      const athleteEl = document.getElementById('intervalsAthleteId');
+      const useEl = document.getElementById('useIntervalsLoad');
+      const autoEl = document.getElementById('intervalsAutoSync');
+      const pushEl = document.getElementById('intervalsPushOnAdjust');
+      const wellnessEl = document.getElementById('intervalsWriteWellness');
+      const btn = document.getElementById('btnIntervalsSync');
+      const publishBtn = document.getElementById('btnPublishPlan');
+      const libraryBtn = document.getElementById('btnPublishLibrary');
+      const pullEftpBtn = document.getElementById('btnPullEftp');
+
+      keyEl.addEventListener('change', () => {
+        state.intervalsApiKey = keyEl.value.trim();
+        saveState();
+      });
+
+      athleteEl.addEventListener('change', () => {
+        state.intervalsAthleteId = athleteEl.value.trim();
+        saveState();
+      });
+
+      useEl.addEventListener('change', () => {
+        state.useIntervalsLoad = useEl.checked;
+        if (state.useIntervalsLoad && state.intervalsWellness?.length) {
+          applyIntervalsLoadBaseline(state.intervalsWellness, formatDate(new Date()));
+          syncLoadInputs();
+          if (state.plan && state.activeView === 'dashboard') renderPlan();
+        }
+        saveState();
+      });
+
+      autoEl.addEventListener('change', () => {
+        state.intervalsAutoSync = autoEl.checked;
+        saveState();
+      });
+
+      pushEl.addEventListener('change', () => {
+        state.intervalsPushOnAdjust = pushEl.checked;
+        saveState();
+      });
+
+      wellnessEl?.addEventListener('change', () => {
+        state.intervalsWriteWellness = wellnessEl.checked;
+        saveState();
+      });
+
+      btn.addEventListener('click', () => syncIntervalsWellness());
+
+      publishBtn?.addEventListener('click', async () => {
+        publishBtn.disabled = true;
+        setIntervalsSyncStatus('Checking calendar…', 'pending');
+        try {
+          const today = formatDate(new Date());
+          const end = addDays(today, 12 * 7);
+          state.intervalsEvents = await fetchIntervalsEventsRange(today, end);
+          saveState();
+          const preview = planRepublishPreview(buildPlanDayMap(state.plan), today, end);
+          const message = formatPlanPublishPreviewMessage(preview);
+          if (!preview.publish.length) {
+            setIntervalsSyncStatus(message || 'Nothing to publish.', 'error');
+            return;
+          }
+          if (!confirm(`${message}\n\nThis replaces existing workouts on those days.\n\nContinue?`)) return;
+
+          setIntervalsSyncStatus('Publishing plan…', 'pending');
+          const { count, deleted } = await publishPlanToIntervals();
+          const delNote = deleted ? ` · removed ${deleted} old event${deleted === 1 ? '' : 's'}` : '';
+          setIntervalsSyncStatus(`Published ${count} workout${count === 1 ? '' : 's'}${delNote}`, 'ok');
+          syncIntervalsInputs();
+          if (state.plan) renderPlan();
+        } catch (err) {
+          setIntervalsSyncStatus(err.message || 'Publish failed', 'error');
+        } finally {
+          publishBtn.disabled = false;
+        }
+      });
+
+      pullEftpBtn?.addEventListener('click', async () => {
+        if (!confirm('Pull eFTP from intervals.icu and use it for workout targets?\n\nBest after an FTP test or about every 4 weeks — eFTP drops without recent all-out efforts.')) return;
+        pullEftpBtn.disabled = true;
+        try {
+          const eftp = await pullEftpFromIntervals();
+          setIntervalsSyncStatus(`Using intervals eFTP ${eftp}W for workout targets.`, 'ok');
+          if (state.plan) renderPlan();
+        } catch (err) {
+          setIntervalsSyncStatus(err.message || 'eFTP pull failed', 'error');
+        } finally {
+          pullEftpBtn.disabled = false;
+        }
+      });
+
+      libraryBtn?.addEventListener('click', async () => {
+        libraryBtn.disabled = true;
+        setIntervalsSyncStatus('Publishing workout library…', 'pending');
+        try {
+          const { count } = await publishWorkoutLibraryToIntervals();
+          setIntervalsSyncStatus(`Published ${count} workouts to VeloPlanner library folder.`, 'ok');
+        } catch (err) {
+          setIntervalsSyncStatus(err.message || 'Library publish failed', 'error');
+        } finally {
+          libraryBtn.disabled = false;
+        }
+      });
+
+    }
+
+    function updateFitnessChartLegend() {
+      const legend = document.getElementById('fitnessChartLegend');
+      const subtitle = document.getElementById('fitnessChartSubtitle');
+      const hasActual = (state.intervalsWellness || []).some(w => parseWellnessLoad(w));
+      if (!legend) return;
+      if (hasActual) {
+        legend.innerHTML = `
+          <span class="flex items-center gap-1.5"><span class="chart-legend-solid bg-blue-500"></span> CTL actual</span>
+          <span class="flex items-center gap-1.5"><span class="chart-legend-solid bg-amber-500"></span> ATL actual</span>
+          <span class="flex items-center gap-1.5"><span class="chart-legend-dash text-blue-500"></span> CTL planned</span>
+          <span class="flex items-center gap-1.5"><span class="chart-legend-dash text-amber-500"></span> ATL planned</span>
+          <span class="flex items-center gap-1.5"><span class="chart-legend-solid bg-emerald-500"></span> Form planned</span>
+        `;
+        if (subtitle) subtitle.textContent = 'Solid = intervals.icu actual · dashed = plan projection';
+      } else {
+        legend.innerHTML = `
+          <span class="flex items-center gap-1.5"><span class="chart-legend-solid bg-blue-500"></span> CTL</span>
+          <span class="flex items-center gap-1.5"><span class="chart-legend-solid bg-amber-500"></span> ATL</span>
+          <span class="flex items-center gap-1.5"><span class="chart-legend-solid bg-emerald-500"></span> Form</span>
+        `;
+        if (subtitle) subtitle.textContent = 'Planned CTL / ATL / form · click or hover chart to inspect any day';
+      }
     }
 
     // ─── View routing ─────────────────────────────────────────────
@@ -1916,8 +4155,14 @@ ${segs}
       const typeClass = { structured: 'cal-workout-structured', endurance: 'cal-workout-endurance', rest: 'cal-workout-rest', 'ftp-test': 'cal-workout-ftp-test' }[day.type] || 'cal-workout-rest';
       const dur = day.type === 'rest' && day.optional ? `≤${formatDuration(day.durationMin)}` : formatDuration(sundayDisplayDurationMin(day, day.date));
       const indoorTag = isSundayEndurance(day) && isIndoorSunday(day.date) ? ' · indoor' : '';
-      const statusMeta = c?.status === 'completed' ? `✓ RPE ${c.rpe}` : c?.status === 'skipped' ? 'Skipped' : `RPE ~${Math.round(day.expectedRpe ?? getExpectedRpe(day, week))}`;
-      return `<button type="button" class="cal-workout ${typeClass} ${statusClass}" data-open-workout="${day.date}" style="border-left-color:${workoutAccentColor(day)}" title="${day.name}"><span class="cal-workout-title">${day.name}</span><span class="cal-workout-meta">${dur}${indoorTag} · ${statusMeta}</span></button>`;
+      const actual = actualTssForDate(day.date);
+      const statusMeta = actual != null
+        ? `${actual} TSS actual`
+        : c?.status === 'completed' ? `✓ RPE ${c.rpe}` : c?.status === 'skipped' ? 'Skipped' : `RPE ~${Math.round(day.expectedRpe ?? getExpectedRpe(day, week))}`;
+      const adj = day.adjusted ? ' · adj' : '';
+      const weatherBadge = formatCalendarWeatherHtml(day.date);
+      const syncTag = day.type !== 'rest' ? ` · ${intervalsEventStatus(day).label}` : '';
+      return `<button type="button" class="cal-workout ${typeClass} ${statusClass}" data-open-workout="${day.date}" style="border-left-color:${workoutAccentColor(day)}" title="${day.name}"><span class="cal-workout-title">${day.name}${adj}</span><span class="cal-workout-meta">${dur}${indoorTag}${syncTag} · ${statusMeta}</span>${weatherBadge}</button>`;
     }
 
     function renderCalendarDayCell(date, dayMap, plan) {
@@ -1984,7 +4229,9 @@ ${segs}
         const entry = byDate[date];
         const plannedTss = entry ? dayPlannedTss(entry.day) : 0;
         const c = state.completions[date];
-        series.push({ date, plannedTss, doneTss: c?.status === 'completed' && entry ? plannedTss : 0 });
+        const actual = actualTssForDate(date);
+        const doneTss = actual != null ? actual : (c?.status === 'completed' && entry ? plannedTss : 0);
+        series.push({ date, plannedTss, doneTss, actualTss: actual });
       }
       return series;
     }
@@ -2035,13 +4282,19 @@ ${segs}
 
     function weeklyTss(plan) {
       return plan.weeks.map(week => {
-        let planned = 0, done = 0;
+        let planned = 0, done = 0, actual = 0;
         week.days.forEach(day => {
           const tss = dayPlannedTss(day);
           planned += tss;
-          if (state.completions[day.date]?.status === 'completed') done += tss;
+          const fromIntervals = actualTssForDate(day.date);
+          if (fromIntervals != null) {
+            done += fromIntervals;
+            actual += fromIntervals;
+          } else if (state.completions[day.date]?.status === 'completed') {
+            done += tss;
+          }
         });
-        return { weekNum: week.weekNum, label: week.label, phase: week.phase, isRecovery: week.isRecovery, planned, done };
+        return { weekNum: week.weekNum, label: week.label, phase: week.phase, isRecovery: week.isRecovery, planned, done, actual };
       });
     }
 
@@ -2079,8 +4332,8 @@ ${segs}
     function fitnessChartLayout(series) {
       const w = 720, h = 260, pad = { t: 20, r: 16, b: 44, l: 48 };
       const innerW = w - pad.l - pad.r, innerH = h - pad.t - pad.b;
-      const maxVal = Math.max(...series.map(d => Math.max(d.ctl, d.atl, Math.abs(d.tsb))), 10);
-      const yMin = Math.min(Math.min(...series.map(d => d.tsb), 0) * 1.2, -5);
+      const maxVal = Math.max(...series.map(d => Math.max(d.ctl, d.atl, Math.abs(d.tsb), d.actualCtl || 0, d.actualAtl || 0, Math.abs(d.actualTsb || 0))), 10);
+      const yMin = Math.min(Math.min(...series.map(d => Math.min(d.tsb, d.actualTsb ?? d.tsb)), 0) * 1.2, -5);
       const yMax = maxVal * 1.1, yRange = yMax - yMin;
       const x = i => pad.l + (i / Math.max(1, series.length - 1)) * innerW;
       const y = v => pad.t + innerH - ((v - yMin) / yRange) * innerH;
@@ -2090,6 +4343,18 @@ ${segs}
     function renderFitnessChart(series, today) {
       const { w, h, pad, innerW, innerH, yMin, yMax, x, y } = fitnessChartLayout(series);
       const line = key => series.map((d, i) => `${i === 0 ? 'M' : 'L'}${x(i).toFixed(1)},${y(d[key]).toFixed(1)}`).join(' ');
+      const lineActual = key => {
+        let d = '';
+        let started = false;
+        series.forEach((pt, i) => {
+          if (pt[key] == null || pt.date > today) { started = false; return; }
+          d += `${started ? 'L' : 'M'}${x(i).toFixed(1)},${y(pt[key]).toFixed(1)} `;
+          started = true;
+        });
+        return d.trim();
+      };
+      const hasActual = series.some(d => d.actualCtl != null && d.date <= today);
+      const plannedClass = hasActual ? ' chart-line-planned' : '';
       let todayIdx = series.findIndex(d => d.date === today);
       if (todayIdx < 0) todayIdx = today < series[0].date ? 0 : today > series[series.length - 1].date ? series.length - 1 : series.findIndex(d => d.date >= today);
       const todayX = x(todayIdx);
@@ -2110,9 +4375,15 @@ ${segs}
       });
       svg += `<text x="${(pad.l + innerW / 2).toFixed(1)}" y="${h - 6}" text-anchor="middle" font-size="10" fill="#9CA3AF">Date</text>`;
       svg += `<rect class="chart-area-past" x="${pad.l}" y="${pad.t}" width="${Math.max(0, todayX - pad.l)}" height="${innerH}" />`;
-      svg += `<path class="chart-line-ctl" d="${line('ctl')}" />`;
-      svg += `<path class="chart-line-atl" d="${line('atl')}" />`;
-      svg += `<path class="chart-line-tsb" d="${line('tsb')}" />`;
+      if (hasActual) {
+        const actualCtl = lineActual('actualCtl');
+        const actualAtl = lineActual('actualAtl');
+        if (actualCtl) svg += `<path class="chart-line-actual-ctl" d="${actualCtl}" />`;
+        if (actualAtl) svg += `<path class="chart-line-actual-atl" d="${actualAtl}" />`;
+      }
+      svg += `<path class="chart-line-ctl${plannedClass}" d="${line('ctl')}" />`;
+      svg += `<path class="chart-line-atl${plannedClass}" d="${line('atl')}" />`;
+      svg += `<path class="chart-line-tsb${plannedClass}" d="${line('tsb')}" />`;
       svg += `<line class="chart-today" x1="${todayX}" y1="${pad.t}" x2="${todayX}" y2="${h - pad.b}" />`;
       svg += `<circle cx="${todayX}" cy="${y(series[todayIdx].ctl)}" r="4" fill="#3B82F6" />`;
       svg += `<text x="${todayX}" y="${pad.t - 4}" text-anchor="middle" font-size="10" font-weight="600" fill="#111827">Today</text>`;
@@ -2157,12 +4428,17 @@ ${segs}
         selectLine.setAttribute('y1', pad.t);
         selectLine.setAttribute('y2', h - pad.b);
         selectLine.setAttribute('opacity', '1');
+        const dotVal = d.actualCtl != null && d.date <= today ? d.actualCtl : d.ctl;
         dotCtl.setAttribute('cx', cx);
-        dotCtl.setAttribute('cy', y(d.ctl));
+        dotCtl.setAttribute('cy', y(dotVal));
         dotCtl.setAttribute('opacity', '1');
         const isToday = d.date === today;
         const label = isToday ? `Today (${d.date})` : `${formatShortDate(d.date)} (${d.date})`;
-        insight.innerHTML = `<strong class="text-gray-600">${label}:</strong> CTL ${Math.round(d.ctl)}, ATL ${Math.round(d.atl)}, Form ${d.tsb >= 0 ? '+' : ''}${Math.round(d.tsb)}. ${chartTsbNote(d.tsb)}${isToday ? baselineNote : ''}`;
+        const hasActual = d.actualCtl != null && d.date <= today;
+        const loadLine = hasActual
+          ? `Actual CTL ${Math.round(d.actualCtl)}, ATL ${Math.round(d.actualAtl)}, Form ${d.actualTsb >= 0 ? '+' : ''}${Math.round(d.actualTsb)}. Planned CTL ${Math.round(d.ctl)}, ATL ${Math.round(d.atl)}.`
+          : `CTL ${Math.round(d.ctl)}, ATL ${Math.round(d.atl)}, Form ${d.tsb >= 0 ? '+' : ''}${Math.round(d.tsb)}. ${chartTsbNote(d.tsb)}`;
+        insight.innerHTML = `<strong class="text-gray-600">${label}:</strong> ${loadLine}${isToday ? baselineNote : ''}`;
       }
 
       hit.addEventListener('click', e => showDay(pickIdx(e.clientX)));
@@ -2208,7 +4484,7 @@ ${segs}
         const pctDone = w.planned ? (w.done / w.planned) * pctPlanned : 0;
         const ramp = rampRate(weeks, i);
         const isCurrent = w.weekNum === currentWeek;
-        return `<div class="flex items-center gap-3 ${isCurrent ? 'week-bar-current rounded-lg p-1 -m-1' : ''}"><div class="w-8 text-xs font-semibold text-gray-500 shrink-0">W${w.weekNum}</div><div class="flex-1 h-7 bg-gray-100 rounded-lg overflow-hidden relative"><div class="week-bar-planned absolute inset-y-0 left-0 rounded-lg" style="width:${pctPlanned}%"></div><div class="week-bar-done absolute inset-y-0 left-0 rounded-lg" style="width:${pctDone}%"></div></div><div class="w-20 text-right text-xs shrink-0"><span class="font-medium text-gray-700">${w.planned}</span> TSS</div></div><div class="text-[10px] text-gray-400 ml-11 -mt-1 mb-1">${w.isRecovery ? 'Recovery' : w.phase}${ramp != null ? ` · ramp ${ramp > 0 ? '+' : ''}${ramp.toFixed(0)}%` : ''}${isCurrent ? ' · current' : ''}</div>`;
+        return `<div class="flex items-center gap-3 ${isCurrent ? 'week-bar-current rounded-lg p-1 -m-1' : ''}"><div class="w-8 text-xs font-semibold text-gray-500 shrink-0">W${w.weekNum}</div><div class="flex-1 h-7 bg-gray-100 rounded-lg overflow-hidden relative"><div class="week-bar-planned absolute inset-y-0 left-0 rounded-lg" style="width:${pctPlanned}%"></div><div class="week-bar-done absolute inset-y-0 left-0 rounded-lg" style="width:${pctDone}%"></div></div><div class="w-24 text-right text-xs shrink-0"><span class="font-medium text-gray-700">${w.done}</span><span class="text-gray-400"> / ${w.planned}</span> TSS</div></div><div class="text-[10px] text-gray-400 ml-11 -mt-1 mb-1">${w.isRecovery ? 'Recovery' : w.phase}${ramp != null ? ` · ramp ${ramp > 0 ? '+' : ''}${ramp.toFixed(0)}%` : ''}${w.actual ? ' · from intervals' : ''}${isCurrent ? ' · current' : ''}</div>`;
       }).join('');
     }
 
@@ -2226,23 +4502,33 @@ ${segs}
     function renderDashboard(plan) {
       const today = formatDate(new Date());
       const currentWeek = currentPlanWeek(plan, today);
-      const load = computeLoadSeries(buildDailySeries(plan));
+      const load = enrichLoadWithActuals(computeLoadSeries(buildDailySeries(plan)));
       const todayEntry = load.find(d => d.date === today) || load[load.length - 1];
+      const actualToday = buildIntervalsLoadMap()[today];
+      const displayCtl = actualToday?.ctl ?? todayEntry.ctl;
+      const displayAtl = actualToday?.atl ?? todayEntry.atl;
+      const displayTsb = actualToday?.tsb ?? todayEntry.tsb;
+      const loadSource = actualToday ? 'intervals.icu' : 'planned';
       const weeks = weeklyTss(plan);
       const ramp = currentWeek > 1 ? rampRate(weeks, currentWeek - 1) : rampRate(weeks, 1);
       const totalPlannedTss = weeks.reduce((s, w) => s + w.planned, 0);
       const doneTss = weeks.reduce((s, w) => s + w.done, 0);
 
       document.getElementById('statCards').innerHTML = [
-        statCard('CTL (fitness)', Math.round(todayEntry.ctl), `ATL ${Math.round(todayEntry.atl)} today`, 'text-blue-500'),
-        statCard('Form (TSB)', `${todayEntry.tsb >= 0 ? '+' : ''}${Math.round(todayEntry.tsb)}`, todayEntry.tsb >= 0 ? 'Fresh-ish' : 'Fatigue building', todayEntry.tsb >= 0 ? 'text-emerald-600' : 'text-orange-500'),
+        statCard('CTL (fitness)', Math.round(displayCtl), `ATL ${Math.round(displayAtl)} today · ${loadSource}`, 'text-blue-500'),
+        statCard('Form (TSB)', `${displayTsb >= 0 ? '+' : ''}${Math.round(displayTsb)}`, displayTsb >= 0 ? 'Fresh-ish' : 'Fatigue building', displayTsb >= 0 ? 'text-emerald-600' : 'text-orange-500'),
         statCard('Ramp rate', ramp == null ? '—' : `${ramp > 0 ? '+' : ''}${ramp.toFixed(0)}%`, 'Week-over-week TSS', ramp > 8 ? 'text-orange-500' : 'text-gray-700'),
         statCard('Load done', `${doneTss}`, `${Math.round((doneTss / totalPlannedTss) * 100)}% of ${totalPlannedTss} TSS`, 'text-blue-500'),
       ].join('');
       document.getElementById('fitnessChart').innerHTML = renderFitnessChart(load, today);
       bindFitnessChart(load, today);
+      updateFitnessChartLegend();
       document.getElementById('weeklyBars').innerHTML = renderWeeklyBars(weeks, currentWeek);
       document.getElementById('planTimeline').innerHTML = renderPlanTimeline(plan, today, currentWeek);
+      renderReadinessPanel(today);
+      renderTodayAdaptPanel(plan, today);
+      renderWeekAheadPanel(plan, today);
+      renderMissedSessionsPanel(today);
     }
 
     function dayBadge(day) {
@@ -2277,6 +4563,7 @@ ${segs}
               ${c?.status === 'completed' ? '<span class="text-xs text-emerald-600 font-medium">✓</span>' : ''}
             </div>
             <p class="text-sm text-gray-400 mt-0.5 leading-relaxed">${day.desc}</p>
+            ${renderDayWeatherAdvice(day, { inline: true })}
           </div>
           <div class="text-sm font-medium text-gray-600 lg:text-right shrink-0 lg:w-20">
             ${day.type === 'rest' && day.optional ? '≤' : ''}${formatDuration(sundayDisplayDurationMin(day, day.date))}
@@ -2442,6 +4729,10 @@ ${segs}
           return;
         }
         if (action === 'undo') { undoDay(date); return; }
+        if (action === 'push-icu') {
+          pushDayToIntervals(day, week).then(() => alert('Pushed to intervals.icu calendar.')).catch(err => alert(err.message || 'Push failed'));
+          return;
+        }
         if (action === 'toggle') {
           const root = modal ? '#workoutModal ' : '';
           const rpeInput = document.querySelector(`${root}input[data-action="rpe"][data-date="${date}"]`);
@@ -2463,9 +4754,11 @@ ${segs}
       if (label) label.textContent = e.target.value;
       const c = getCompletion(date);
       if (c?.status === 'completed') {
-        state.completions[date].rpe = parseInt(e.target.value, 10);
+        const rpe = parseInt(e.target.value, 10);
+        state.completions[date].rpe = rpe;
         state.predictedFtp = recalculatePredictedFtp();
         saveState();
+        writeWellnessFromRpe(date, rpe);
         document.getElementById('statPredictedFtp').textContent = `${state.predictedFtp}W`;
         document.getElementById('ftpInsight').innerHTML = renderFtpInsightText(state.predictedFtp);
         if (refresh) renderPlan();
@@ -2476,6 +4769,7 @@ ${segs}
     function init() {
       initFocusSelector();
       loadState();
+      syncCompletionsFromIntervalsActivities();
       document.getElementById('startDate').value = state.startDate;
       document.getElementById('ftp').value = state.ftp;
       document.querySelectorAll('[data-focus]').forEach(b => {
@@ -2484,6 +4778,9 @@ ${segs}
       });
       syncLoadInputs();
       bindLoadBaselineInputs();
+      syncIntervalsInputs();
+      bindIntervalsSettings();
+      updateFitnessChartLegend();
       initViewRouting();
 
       document.getElementById('startDate').addEventListener('change', (e) => {
@@ -2576,6 +4873,10 @@ ${segs}
         if (!state.plan) { alert('Generate a plan first.'); return; }
         exportZwift(state.plan, state.predictedFtp || state.ftp);
       });
+
+      if (state.intervalsAutoSync && state.intervalsApiKey?.trim() && state.intervalsAthleteId?.trim()) {
+        syncIntervalsWellness({ silent: true });
+      }
     }
 
     document.addEventListener('DOMContentLoaded', init);
