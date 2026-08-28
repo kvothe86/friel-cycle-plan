@@ -4,6 +4,21 @@ All notable changes to VeloPlanner.
 
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [3.1.7] - 2026-08-28
+
+### Added
+- **Copy coach context** — Dashboard and Settings button copies the full Friel coach system prompt (`friel-coach-context.md`) plus a live athlete snapshot (readiness, PMC, plan, compliance, week ahead) for paste into Cursor or Codex chat; no API key required
+
+## [3.1.6] - 2026-08-28
+
+### Fixed
+- **Stale best ride window** — ride-window advice could stay on old timings after a forecast update because synthetic hourly slots (derived from daily data) were mixed with real hourly data from intervals.icu; derived slots are now dropped only when native hourly coverage is substantial (≥3 points, or ≥2 points spanning ≥2 hours)
+- **Single time slot (e.g. 09:00 only)** — a sparse native hourly point (often one anchor at sunrise) incorrectly caused all derived slots to be removed, leaving one row in the timeline; the app now keeps derived slots until real hourly data is sufficient, and re-expands daily forecasts on the fly when needed
+- **Ride window after sync** — plan/calendar weather panels refresh on every successful intervals.icu sync (not only when a plan already exists)
+
+### Changed
+- **Daylight-aware ride windows** — Sunday outdoor endurance “best ride window” must fit fully between sunrise and sunset from the daily forecast; daily-only advice starts at sunrise and caps duration before sunset; if no window fits in daylight, the driest window is shown with an explicit note
+
 ## [3.1.5] - 2026-08-28
 
 ### Changed

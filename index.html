@@ -354,6 +354,16 @@
           </section>
         </div>
         <section class="panel p-5 sm:p-6">
+          <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-3">
+            <div>
+              <h2 class="text-lg font-bold mb-1">AI coach (Cursor / Codex)</h2>
+              <p class="text-xs text-gray-400 max-w-xl">Copy Friel coach instructions plus your live training snapshot — paste into Cursor or Codex chat. No API key needed.</p>
+            </div>
+            <button type="button" id="btnCopyCoachContextDash" class="btn-secondary shrink-0">Copy coach context</button>
+          </div>
+          <p id="coachCopyStatusDash" class="text-xs text-gray-400 hidden"></p>
+        </section>
+        <section class="panel p-5 sm:p-6">
           <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-4">
             <div>
               <h2 class="text-lg font-bold">Fitness & fatigue</h2>
@@ -520,6 +530,16 @@
 
           <p id="loadBaselineHint" class="text-xs text-gray-400 p-3 rounded-md bg-gray-100">Form = CTL − ATL. Edit any two values — the third updates automatically.</p>
         </div>
+      </section>
+
+      <section class="panel p-6 sm:p-8">
+        <h2 class="text-lg font-bold mb-2">AI coach (Cursor / Codex)</h2>
+        <p class="text-sm text-gray-400 mb-4">Copies the full <strong>Friel coach</strong> system prompt, then your training snapshot (readiness, PMC, plan, compliance). Paste into a new Cursor or Codex chat — no API key.</p>
+        <div class="flex flex-wrap items-center gap-3">
+          <button type="button" id="btnCopyCoachContext" class="btn-primary">Copy coach context</button>
+          <p id="coachCopyStatus" class="text-sm text-gray-400"></p>
+        </div>
+        <p class="text-xs text-gray-400 mt-3">Tip: after pasting, add your question at the bottom — e.g. <em>Should I do today's workout?</em> or <em>I missed Tuesday — what now?</em></p>
       </section>
     </div>
 
@@ -1910,6 +1930,216 @@ ${segs}
       downloadBlob(blob, `veloplanner-${state.focus}-${state.plan.startDate}.json`);
     }
 
+    const FRIEL_COACH_CONTEXT_URL = 'friel-coach-context.md';
+    let frielCoachContextCache = null;
+    let frielCoachContextIsFallback = false;
+
+    const FRIEL_COACH_CONTEXT_FALLBACK = `# Friel Coach (abbreviated)
+
+You are a Joe Friel–style cycling coach: direct, calm, periodization and PMC over fads.
+Verdict first, then prescription. Prefer RPE + wellness + form (TSB) over one metric.
+Stop signs (illness, injury, fever, poor sleep 2+ nights) → rest.
+Readiness < 35 or TSB < −25 → rest or Z1 ≤45 min. < 55 or TSB < −15 → reduce intensity ~15% or shorten endurance ~30%. ≥ 67 and TSB ≥ −10 → proceed.
+VeloPlanner: 12 weeks, 3 load + 1 recovery; Tue/Thu/Sat structured, Sun endurance, Mon/Wed/Fri rest.
+Response: ## Verdict · ## Prescription · ## Why (Friel lens) · ## This week · ## Watch for.
+Not a doctor. No copyrighted Training Bible quotes.`;
+
+    async function getFrielCoachContext() {
+      if (frielCoachContextCache) return frielCoachContextCache;
+      try {
+        const res = await fetch(FRIEL_COACH_CONTEXT_URL, { cache: 'no-cache' });
+        if (res.ok) {
+          frielCoachContextCache = (await res.text()).trim();
+          frielCoachContextIsFallback = false;
+          return frielCoachContextCache;
+        }
+      } catch (_) {}
+      frielCoachContextCache = FRIEL_COACH_CONTEXT_FALLBACK;
+      frielCoachContextIsFallback = true;
+      return frielCoachContextCache;
+    }
+
+    function findCurrentPlanWeek(today) {
+      if (!state.plan) return null;
+      return state.plan.weeks.find(w => today >= w.startDate && today <= w.endDate) || null;
+    }
+
+    function buildCoachTrainingContext() {
+      const today = formatDate(new Date());
+      const focus = FOCUSES[state.focus] || FOCUSES.allround;
+      const loadMap = buildIntervalsLoadMap();
+      const loadToday = loadMap[today];
+      const readiness = computeReadiness(today);
+      const tsbToday = loadToday?.tsb ?? ((state.startCtl ?? 0) - (state.startAtl ?? 0));
+      const lines = [
+        '# VeloPlanner — athlete snapshot',
+        '',
+        `Exported: ${new Date().toISOString()}`,
+        `Today: ${today}`,
+        '',
+        '## Profile',
+        `- Focus: ${focus.label} (${focus.sub})`,
+        `- VeloPlan FTP: ${state.ftp}W`,
+      ];
+
+      if (state.predictedFtp && state.predictedFtp !== state.ftp) {
+        lines.push(`- Predicted FTP (from session RPE): ${state.predictedFtp}W`);
+      }
+      if (state.useIntervalsEftp && state.intervalsEftp) {
+        lines.push(`- Active workout FTP: intervals eFTP ${state.intervalsEftp}W`);
+      } else {
+        lines.push(`- Active workout FTP: ${planFtp()}W`);
+        if (state.intervalsEftp) lines.push(`- Last intervals eFTP (not active): ${state.intervalsEftp}W`);
+      }
+      if (state.intervalsLastSync) {
+        lines.push(`- intervals.icu sync: ${formatSyncTime(state.intervalsLastSync)}`);
+      }
+
+      lines.push('', '## Plan');
+      if (!state.plan) {
+        lines.push('No plan generated yet.');
+      } else {
+        const week = findCurrentPlanWeek(today);
+        lines.push(`- Range: ${state.plan.startDate} → ${state.plan.endDate} (${state.plan.focusLabel || focus.label})`);
+        if (week) {
+          lines.push(`- Current week: ${week.weekNum}/12 · ${week.label} · ${week.phase} phase${week.isRecovery ? ' · recovery week' : ''}`);
+        }
+        lines.push(`- Compliance: ${countCompletedDays(state.plan)}/${countTrackableDays(state.plan)} key sessions done or skipped`);
+        if (state.plan.ftpTest) {
+          lines.push(`- Post-plan FTP test: ${state.plan.ftpTest.date}`);
+        }
+      }
+
+      lines.push('', '## Training load (PMC)');
+      if (loadToday) {
+        lines.push(`- Today: CTL ${Math.round(loadToday.ctl)}, ATL ${Math.round(loadToday.atl)}, form ${loadToday.tsb >= 0 ? '+' : ''}${Math.round(loadToday.tsb)}`);
+      } else {
+        const tsb = Math.round((state.startCtl ?? 0) - (state.startAtl ?? 0));
+        lines.push(`- Baseline (${state.loadAnchorDate || 'manual'}): CTL ${state.startCtl ?? 0}, ATL ${state.startAtl ?? 0}, form ${tsb >= 0 ? '+' : ''}${tsb}`);
+        lines.push('- No wellness load row for today — sync intervals.icu for live CTL/ATL.');
+      }
+
+      lines.push('', '## Readiness');
+      if (!readiness) {
+        lines.push('Insufficient wellness data (sync intervals.icu; need ≥3 days).');
+      } else {
+        lines.push(`- Score: ${readiness.score} — ${readiness.label} (${readiness.signalCount} signals)`);
+        for (const m of readiness.metrics) {
+          const detail = m.score != null ? `${m.valueText} · score ${Math.round(m.score)}` : m.valueText;
+          lines.push(`- ${m.key}: ${detail}`);
+        }
+      }
+
+      lines.push('', '## Today');
+      const todayEntry = findDayInPlan(today);
+      if (!todayEntry) {
+        lines.push('No planned session today (or no plan).');
+      } else {
+        const { day, week } = todayEntry;
+        const suggestion = suggestWorkoutAdjustment(day, readiness, tsbToday, today);
+        const dur = day.type === 'endurance'
+          ? formatDuration(sundayDisplayDurationMin(day, today))
+          : (day.type === 'rest' && day.optional ? `≤${formatDuration(day.durationMin)}` : formatDuration(day.durationMin));
+        const c = getCompletion(today);
+        let status = 'planned';
+        if (c?.status === 'completed') status = `completed · RPE ${c.rpe}`;
+        else if (c?.status === 'skipped') status = 'skipped';
+        else if (hasCompletedToday(today)) status = 'logged in intervals.icu';
+        lines.push(`- ${day.dayName} · **${day.name}** · ${dur} · ${status}`);
+        if (day.adjusted && day.adjustmentReason) lines.push(`- Auto-adjusted: ${day.adjustmentReason}`);
+        if (suggestion?.reason) lines.push(`- App hint (${suggestion.action || 'keep'}): ${suggestion.reason}`);
+        if (day.type === 'endurance' && state.intervalsWeatherForecast?.length) {
+          const advice = adviseDayWeather(today, sundayDisplayDurationMin(day, today));
+          if (advice?.startLabel) {
+            lines.push(`- Best ride window: ${advice.startLabel}–${advice.endLabel}${advice.dryNote ? ` · ${advice.dryNote}` : ''}`);
+          }
+        }
+      }
+
+      lines.push('', '## Next 7 sessions (app hints)');
+      const ahead = computeWeekAheadSuggestions(today);
+      if (!ahead.length) {
+        lines.push('None in range.');
+      } else {
+        for (const { date, day, suggestion } of ahead) {
+          const action = suggestion?.completed ? 'done' : (suggestion?.action || 'review');
+          const reason = suggestion?.reason || '—';
+          lines.push(`- ${date} (${day.dayName}) · ${day.name} · **${action}** — ${reason}`);
+        }
+      }
+
+      lines.push('', '## Missed workouts (not logged, not skipped)');
+      const missed = computeMissedSessions(today);
+      if (!missed.length) {
+        lines.push('None in plan window.');
+      } else {
+        for (const { date, day, week } of missed) {
+          lines.push(`- ${date} · week ${week.weekNum} · ${day.name}`);
+        }
+      }
+
+      lines.push('', '## Last 14 days');
+      const activityMap = buildIntervalsActivitiesMap();
+      let anyHistory = false;
+      for (let i = 1; i <= 14; i++) {
+        const date = addDays(today, -i);
+        const entry = findDayInPlan(date);
+        const c = getCompletion(date);
+        const act = activityMap[date];
+        if (!entry && !c && !act) continue;
+        anyHistory = true;
+        const parts = [];
+        if (entry) parts.push(entry.day.name);
+        if (c?.status === 'completed') parts.push(`RPE ${c.rpe}`);
+        else if (c?.status === 'skipped') parts.push('skipped');
+        if (act?.count) parts.push(`${Math.round(act.tss)} TSS`);
+        lines.push(`- ${date}: ${parts.join(' · ')}`);
+      }
+      if (!anyHistory) lines.push('No completions or rides logged.');
+
+      return lines.join('\n');
+    }
+
+    function setCoachCopyStatus(msg, isError) {
+      for (const id of ['coachCopyStatus', 'coachCopyStatusDash']) {
+        const el = document.getElementById(id);
+        if (!el) continue;
+        el.textContent = msg || '';
+        el.classList.toggle('hidden', !msg);
+        el.classList.toggle('text-emerald-600', !isError && !!msg);
+        el.classList.toggle('text-red-600', !!isError);
+      }
+    }
+
+    async function copyCoachContext() {
+      setCoachCopyStatus('Preparing…', false);
+      try {
+        const coach = await getFrielCoachContext();
+        const text = [
+          coach,
+          '',
+          '---',
+          '',
+          buildCoachTrainingContext(),
+          '',
+          '---',
+          '',
+          '## Your question',
+          '',
+          '[Type your coaching question here — e.g. "Should I do today\'s workout?" or "I missed Tuesday — what now?"]',
+          '',
+        ].join('\n');
+        await navigator.clipboard.writeText(text);
+        const note = frielCoachContextIsFallback
+          ? 'Copied (abbreviated coach prompt — run npm run dev for full instructions). Paste in Cursor or Codex.'
+          : 'Copied! Paste into a new Cursor or Codex chat.';
+        setCoachCopyStatus(note, false);
+        setTimeout(() => setCoachCopyStatus('', false), 8000);
+      } catch (_) {
+        setCoachCopyStatus('Copy failed — allow clipboard access in your browser.', true);
+      }
+    }
+
     function importPlan(file) {
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -2270,7 +2500,6 @@ ${segs}
         '10:00',
         '13:00',
         `${pad(Math.min(Math.max(sunsetHour - 2, 15), 18))}:00`,
-        sunset,
       ];
 
       const totalPrecip = forecastPrecipMm(raw);
@@ -2287,8 +2516,35 @@ ${segs}
         snow: 0,
         wind_deg: raw.wind_deg,
         wind_speed: raw.wind_speed,
+        sunrise: raw.sunrise,
+        sunset: raw.sunset,
         location: locMeta.location,
       }));
+    }
+
+    function hasSubstantialNativeHourly(nativeHourly) {
+      if (!nativeHourly?.length) return false;
+      if (nativeHourly.length >= 3) return true;
+      const times = nativeHourly
+        .map(s => new Date(s.time).getTime())
+        .filter(t => !Number.isNaN(t))
+        .sort((a, b) => a - b);
+      if (times.length >= 2 && times[times.length - 1] - times[0] >= 2 * 3600000) return true;
+      return false;
+    }
+
+    function expandDailySlotRecord(daily) {
+      if (!daily) return [];
+      return expandDailyForecastSlots({
+        id: daily.date,
+        sunrise: daily.sunrise,
+        sunset: daily.sunset,
+        rain: daily.rain,
+        showers: daily.showers,
+        snow: daily.snow,
+        wind_deg: daily.wind_deg,
+        wind_speed: daily.wind_speed,
+      }, { location: daily.location });
     }
 
     function normalizeWeatherForecast(payload) {
@@ -2345,12 +2601,61 @@ ${segs}
       }
 
       const seen = new Set();
-      return slots.filter(slot => {
+      const deduped = slots.filter(slot => {
         const key = `${slot.date}|${slot.time}|${slot.daily ? 'd' : 'h'}`;
         if (seen.has(key)) return false;
         seen.add(key);
         return true;
       });
+
+      const byDate = deduped.reduce((acc, slot) => {
+        if (!slot.date) return acc;
+        (acc[slot.date] ||= []).push(slot);
+        return acc;
+      }, {});
+
+      return deduped.filter(slot => {
+        if (!slot.derivedFromDaily) return true;
+        const daySlots = byDate[slot.date] || [];
+        const nativeHourly = daySlots.filter(s => !s.daily && !s.derivedFromDaily);
+        return !hasSubstantialNativeHourly(nativeHourly);
+      });
+    }
+
+    function daylightBoundsForDate(date) {
+      const all = (state.intervalsWeatherForecast || []).filter(f => forecastSlotDate(f) === date);
+      const ref = all.find(f => f.daily && (f.sunrise || f.sunset))
+        || all.find(f => f.sunrise || f.sunset);
+      if (!ref) return null;
+
+      const parseLocal = (hm, fallbackH, fallbackM) => {
+        const d = new Date(`${date}T00:00:00`);
+        if (hm && typeof hm === 'string' && hm.includes(':')) {
+          const [h, m] = hm.split(':').map(Number);
+          if (Number.isFinite(h)) {
+            d.setHours(h, m || 0, 0, 0);
+            return d;
+          }
+        }
+        d.setHours(fallbackH, fallbackM, 0, 0);
+        return d;
+      };
+
+      const sunrise = parseLocal(ref.sunrise, 7, 0);
+      const sunset = parseLocal(ref.sunset, 19, 0);
+      if (sunset <= sunrise) return null;
+      return { sunrise, sunset };
+    }
+
+    function rideFitsDaylight(start, durationMs, bounds) {
+      if (!bounds) return true;
+      const end = new Date(start.getTime() + durationMs);
+      return start >= bounds.sunrise && end <= bounds.sunset;
+    }
+
+    function daylightWindowNote(bounds) {
+      if (!bounds) return null;
+      return `Window stays in daylight (${formatTimeLocal(bounds.sunrise)}–${formatTimeLocal(bounds.sunset)}).`;
     }
 
     function forecastSlotDate(forecast) {
@@ -2365,9 +2670,26 @@ ${segs}
     function forecastsForDate(date) {
       const all = (state.intervalsWeatherForecast || []).filter(f => forecastSlotDate(f) === date);
       const hourly = all.filter(f => !f.daily);
-      const slots = (hourly.length ? hourly : all)
-        .sort((a, b) => (a.time || '').localeCompare(b.time || ''));
-      return slots;
+      const nativeHourly = hourly.filter(f => !f.derivedFromDaily);
+      const derivedHourly = hourly.filter(f => f.derivedFromDaily);
+      const daily = all.find(f => f.daily);
+
+      let slots;
+      if (hasSubstantialNativeHourly(nativeHourly)) {
+        slots = nativeHourly;
+      } else if (derivedHourly.length >= 2) {
+        slots = derivedHourly;
+      } else if (nativeHourly.length >= 2) {
+        slots = nativeHourly;
+      } else if (daily) {
+        slots = expandDailySlotRecord(daily);
+      } else if (hourly.length) {
+        slots = hourly;
+      } else {
+        slots = all;
+      }
+
+      return slots.sort((a, b) => (a.time || '').localeCompare(b.time || ''));
     }
 
     function weatherForecastRangeNote() {
@@ -2499,13 +2821,23 @@ ${segs}
       const slots = forecastsForDate(date);
       if (!slots.length) return null;
 
-      const durationMs = Math.min(durationMin, 360) * 60 * 1000;
+      let durationMs = Math.min(durationMin, 360) * 60 * 1000;
       const dailyOnly = slots.every(s => s.daily);
+      const bounds = daylightBoundsForDate(date);
 
       if (dailyOnly || slots.length === 1) {
         const slot = slots[0];
-        const start = new Date(slot.time);
+        let start = new Date(slot.time);
         if (Number.isNaN(start.getTime())) return null;
+
+        if (bounds) {
+          if (start < bounds.sunrise) start = new Date(bounds.sunrise);
+          const daylightMs = bounds.sunset.getTime() - start.getTime();
+          if (daylightMs < durationMs * 0.5) start = new Date(bounds.sunrise);
+          durationMs = Math.min(durationMs, Math.max(0, bounds.sunset.getTime() - start.getTime()));
+          if (durationMs < 30 * 60 * 1000) return null;
+        }
+
         const precip = forecastPrecipMm(slot);
         const windFrom = slot.wind_deg ?? null;
         const windKmh = slot.wind_speed ?? null;
@@ -2515,18 +2847,19 @@ ${segs}
         const dryNote = precip < 0.1
           ? `Mostly dry (~${precip.toFixed(1)} mm day total).`
           : `~${precip.toFixed(1)} mm rain expected during the day — pack a jacket.`;
-        const timingNote = dailyOnly
-          ? 'Daily forecast — suggested start around sunrise; hourly detail may appear closer to the ride.'
-          : null;
+        const timingParts = [
+          dailyOnly ? 'Daily forecast — hourly detail may appear closer to the ride.' : null,
+          daylightWindowNote(bounds),
+        ].filter(Boolean);
         return {
           location,
-          startLabel: formatTimeLocal(slot.time),
+          startLabel: formatTimeLocal(start),
           endLabel: formatTimeLocal(new Date(start.getTime() + durationMs)),
           precip,
           windKmh,
           startDir,
           finishDir,
-          dryNote: timingNote ? `${dryNote} ${timingNote}` : dryNote,
+          dryNote: timingParts.length ? `${dryNote} ${timingParts.join(' ')}` : dryNote,
           directionNote: startDir && finishDir && windKmh != null
             ? `Start into the wind heading ${startDir} (~${Math.round(windKmh)} km/h), finish with tailwind from ${finishDir}.`
             : null,
@@ -2538,6 +2871,7 @@ ${segs}
         : 3600000;
 
       let best = null;
+      let bestAny = null;
       for (let i = 0; i < slots.length; i++) {
         const start = new Date(slots[i].time);
         if (Number.isNaN(start.getTime())) continue;
@@ -2560,40 +2894,53 @@ ${segs}
 
         if (elapsed < durationMs * 0.5) break;
 
-        if (!best || precip < best.precip - 0.01 || (Math.abs(precip - best.precip) < 0.01 && elapsed > best.elapsed)) {
-          const windFrom = winds.length ? circularMeanDeg(winds, wSpeeds) : null;
-          const windKmh = wSpeeds.length ? wSpeeds.reduce((a, b) => a + b, 0) / wSpeeds.length : null;
-          best = {
-            startLabel: formatTimeLocal(slots[i].time),
-            endLabel: formatTimeLocal(new Date(start.getTime() + durationMs)),
-            precip,
-            windFrom,
-            windKmh,
-            elapsed,
-          };
-        }
+        const windFrom = winds.length ? circularMeanDeg(winds, wSpeeds) : null;
+        const windKmh = wSpeeds.length ? wSpeeds.reduce((a, b) => a + b, 0) / wSpeeds.length : null;
+        const candidate = {
+          startLabel: formatTimeLocal(slots[i].time),
+          endLabel: formatTimeLocal(new Date(start.getTime() + durationMs)),
+          precip,
+          windFrom,
+          windKmh,
+          elapsed,
+          start,
+        };
+
+        const isBetter = (a, b) => !b
+          || a.precip < b.precip - 0.01
+          || (Math.abs(a.precip - b.precip) < 0.01 && a.elapsed > b.elapsed);
+
+        if (isBetter(candidate, bestAny)) bestAny = candidate;
+        if (!rideFitsDaylight(start, durationMs, bounds)) continue;
+        if (isBetter(candidate, best)) best = candidate;
       }
 
-      if (!best) return null;
+      const chosen = best || bestAny;
+      if (!chosen) return null;
 
-      const startDir = best.windFrom != null ? degToCompass(best.windFrom) : null;
-      const finishDir = best.windFrom != null ? degToCompass((best.windFrom + 180) % 360) : null;
+      const startDir = chosen.windFrom != null ? degToCompass(chosen.windFrom) : null;
+      const finishDir = chosen.windFrom != null ? degToCompass((chosen.windFrom + 180) % 360) : null;
       const location = slots.find(s => s.location)?.location || primaryWeatherLocation();
-      const dryNote = best.precip < 0.1
+      const dryNote = chosen.precip < 0.1
         ? `Driest ${formatDuration(durationMin)} window — little to no rain expected.`
-        : `Best ${formatDuration(durationMin)} window — ~${best.precip.toFixed(1)} mm precip possible; pack a jacket.`;
+        : `Best ${formatDuration(durationMin)} window — ~${chosen.precip.toFixed(1)} mm precip possible; pack a jacket.`;
+      const daylightNote = best
+        ? daylightWindowNote(bounds)
+        : bounds
+          ? `No window fits fully in daylight — showing best weather anyway (daylight ${formatTimeLocal(bounds.sunrise)}–${formatTimeLocal(bounds.sunset)}).`
+          : null;
 
       return {
         location,
-        startLabel: best.startLabel,
-        endLabel: best.endLabel,
-        precip: best.precip,
-        windKmh: best.windKmh,
+        startLabel: chosen.startLabel,
+        endLabel: chosen.endLabel,
+        precip: chosen.precip,
+        windKmh: chosen.windKmh,
         startDir,
         finishDir,
-        dryNote,
-        directionNote: startDir && finishDir && best.windKmh != null
-          ? `Start into the wind heading ${startDir} (~${Math.round(best.windKmh)} km/h), finish with tailwind from ${finishDir}.`
+        dryNote: daylightNote ? `${dryNote} ${daylightNote}` : dryNote,
+        directionNote: startDir && finishDir && chosen.windKmh != null
+          ? `Start into the wind heading ${startDir} (~${Math.round(chosen.windKmh)} km/h), finish with tailwind from ${finishDir}.`
           : null,
       };
     }
@@ -3890,7 +4237,7 @@ ${segs}
         const eventsNote = state.intervalsEvents.length ? ` · ${state.intervalsEvents.length} calendar events` : '';
         setIntervalsSyncStatus(`Synced ${wellness.length} wellness · ${activities.length} activities${eventsNote}${weatherNote}${loadNote}${completeNote}`, 'ok');
 
-        if (state.plan) renderPlan();
+        renderPlan();
         return true;
       } catch (err) {
         const msg = err.message || 'Sync failed';
@@ -4974,6 +5321,9 @@ ${segs}
       });
 
       document.getElementById('btnExport').addEventListener('click', exportPlan);
+
+      document.getElementById('btnCopyCoachContext')?.addEventListener('click', copyCoachContext);
+      document.getElementById('btnCopyCoachContextDash')?.addEventListener('click', copyCoachContext);
 
       document.getElementById('btnImport').addEventListener('click', () => {
         document.getElementById('fileImport').click();

@@ -12,6 +12,7 @@ const outDir = join(root, 'netlify-deploy');
 
 const includes = [
   'index.html',
+  'friel-coach-context.md',
   'netlify.toml',
   join('netlify', 'functions'),
 ];

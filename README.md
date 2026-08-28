@@ -32,6 +32,8 @@ Plan settings moved out of the main flow into **Settings**. Generate a plan ther
 - **Post-plan FTP test** — The Grade in Zwift, scheduled 3 days after final training
 - **Training load dashboard** — CTL, ATL, and form (TSB) chart with optional baseline from intervals.icu / Strava
 - **Workout detail modal** — click any session to view Zwift-style instructions, watt targets, intensity profile, and zone breakdown
+- **Weather forecast** (intervals.icu) — hourly timeline on plan days; best dry ride window on outdoor Sundays; see [Weather forecast](#weather-forecast) below
+- **Copy coach context** — Friel coach prompt + training snapshot for Cursor/Codex chat (no API key)
 
 ## Workout detail modal
 
@@ -45,6 +47,72 @@ Click any **structured**, **endurance**, or **FTP test** row (List) or calendar 
 | Completion | Mark done / skip / undo with RPE slider (Calendar and Sunday endurance in modal; always on List rows) |
 
 Close with **×**, the backdrop, or **Escape**.
+
+## Weather forecast
+
+When intervals.icu is connected, the app syncs a **weather forecast** for your home location (same sync as wellness / training load). Forecast data appears on plan days in the **List** view and on **Sunday endurance** sessions.
+
+### What you see
+
+| UI element | When | Meaning |
+|------------|------|---------|
+| **Hourly timeline** | Tue / Thu / Sat workouts and other days with slots | Rain %, wind, and temperature per time slot for that calendar day |
+| **Best ride window** | Sunday outdoor endurance | Suggested start time for the planned ride duration, favouring the driest contiguous window |
+
+After you change location in intervals.icu or when the forecast updates, use **Sync** in Settings so the app replaces stored forecast data and refreshes the plan view.
+
+### Best ride window logic
+
+The Sunday advice picks a **contiguous dry window** long enough for the planned ride (default 3 hours, or your configured endurance duration):
+
+1. Sort slots by time for that day.
+2. Prefer windows with **low rain probability** and **moderate wind** (wind is a tie-breaker).
+3. Require the full ride to fit **inside daylight** — between sunrise and sunset from the daily forecast for that date. If no dry window fits in daylight, the driest option is still shown with a note that it may extend into dusk or darkness.
+
+Outdoor Sunday rides are not exported to Zwift; the weather panel is guidance for when to ride outside.
+
+### Forecast slot types (intervals.icu)
+
+intervals.icu does not always return the same shape of data. The app normalises three kinds of slot:
+
+| Type | Source | Typical times |
+|------|--------|----------------|
+| **Native hourly** | Real hourly points from the API | Whatever the API provides (often sparse early in the week) |
+| **Derived hourly** | Daily summary split into four synthetic points | Morning, midday, afternoon, evening (sunrise used as morning anchor; sunset is not used as a ride start) |
+| **Daily only** | Single row per day with min/max rain and wind | One slot; ride advice uses sunrise as earliest start |
+
+**Timeline display** — the app shows the richest set available for each day:
+
+1. Substantial **native hourly** (≥3 points, or ≥2 points at least 2 hours apart) — use native only; drop derived slots for that day so stale synthetic times do not override fresh hourly data.
+2. Otherwise **derived hourly** (≥2 points) — e.g. four times per day from the daily forecast.
+3. Otherwise **native hourly** if at least 2 points exist.
+4. Otherwise **expand daily** — rebuild four derived times from the stored daily record on the fly.
+5. Fall back to whatever slots exist.
+
+This avoids two failure modes that were fixed in v3.1.6:
+
+- **Stale window** — old derived slots mixed with new native hourly data kept suggesting yesterday’s timing after sync.
+- **Single 09:00 slot** — one sparse native point (e.g. at sunrise) incorrectly removed all derived slots, so the timeline showed only one hour.
+
+### Implementation notes
+
+All logic lives in `index.html` (no separate weather module):
+
+- `normalizeWeatherForecast()` — cleans synced payload; strips `derivedFromDaily` only when `hasSubstantialNativeHourly()` is true for that date.
+- `forecastsForDate()` — chooses which slots to render in the timeline.
+- `adviseDayWeather()` — computes best ride window with daylight checks via `daylightBoundsForDate()` / `rideFitsDaylight()`.
+- `syncIntervalsWellness()` — always calls `renderPlan()` after a successful sync so weather panels update even before a plan is generated.
+
+API route: `netlify/functions/intervals-weather-forecast.js` (proxies intervals.icu). State key: `state.intervalsWeatherForecast` in `localStorage`.
+
+### AI coach (Cursor / Codex, no API)
+
+**Copy coach context** (Dashboard or Settings) puts two blocks on your clipboard:
+
+1. **Friel coach instructions** — full system prompt from `friel-coach-context.md` (same content as the Cursor skill)
+2. **Your athlete snapshot** — readiness, CTL/ATL/form, today’s session, week ahead, missed workouts, last 14 days
+
+Paste into a new Cursor or Codex chat and add your question at the bottom. Uses your existing subscription — no OpenAI/Anthropic API key.
 
 ## Dashboard
 
