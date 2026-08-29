@@ -1,0 +1,44 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set base path for project pages
+        run: |
+          if [[ "${{ github.repository }}" == *".github.io" ]]; then
+            echo "GITHUB_PAGES_BASE=/" >> "$GITHUB_ENV"
+          else
+            echo "GITHUB_PAGES_BASE=/${{ github.event.repository.name }}/" >> "$GITHUB_ENV"
+          fi
+
+      - name: Prepare static site
+        run: node scripts/prepare-github-pages.mjs
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: pages-deploy
+
+      - uses: actions/deploy-pages@v4
+        id: deployment
