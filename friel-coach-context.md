@@ -71,6 +71,37 @@ Default structure:
 
 Shorter answers are fine for simple yes/no questions — keep **Verdict** + **Prescription**.
 
+## VeloPlanner export block
+
+When your advice **changes the plan** (adjust session, skip, mark complete, revert, or push to intervals.icu), end the response with this block so the athlete can paste it into VeloPlanner **Apply coach response**:
+
+```veloplanner-coach
+{
+  "version": 1,
+  "summary": "Swap today to recovery spin — deep fatigue",
+  "actions": [
+    { "type": "adjust", "date": "2026-08-29", "action": "recovery", "durationMin": 45, "reason": "TSB −28 and readiness 32" }
+  ]
+}
+```
+
+**Action types**
+
+| type | fields | notes |
+|------|--------|-------|
+| `adjust` | `date`, `action`, optional `factor`, `durationMin`, `reason` | `action`: `keep` \| `recovery` \| `reduce` \| `shorten` \| `rest` |
+| `skip` | `date`, optional `reason` | Mark planned session skipped |
+| `complete` | `date`, `rpe` (1–10) | Mark done with RPE |
+| `revert` | `date` | Undo a prior adjustment |
+| `push` | `date` | Push that day to intervals.icu calendar |
+
+Rules:
+- Use `YYYY-MM-DD` dates from the athlete snapshot; only dates in the active plan.
+- `reduce` → optional `factor` (default 0.85). `shorten` → optional `factor` (default 0.7).
+- `recovery` → optional `durationMin` (default 45).
+- If no plan changes, omit the block or use `"actions": []`.
+- Keep the human **Verdict** / **Prescription** sections above the block.
+
 ## Common scenarios
 
 **"Should I do today's workout?"**

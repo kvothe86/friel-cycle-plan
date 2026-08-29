@@ -1,44 +1,53 @@
 # Current task
 
-**Version:** 3.1.5  
-**Updated:** 2026-08-28
+**Version:** 3.1.8  
+**Updated:** 2026-08-29
 
 ## Status
 
-Phase 3 — **done** (intervals.icu two-way slice)
+Production on **GitHub Pages** (auto-deploy on push to `github` `main`).
 
-- [x] Publish plan (replace existing workouts on plan days)
-- [x] Optional manual eFTP pull
-- [x] Calendar events sync + status tags
-- [x] Week ahead + missed sessions
-- [x] Wellness write-back on RPE
-- [x] Weather on all plan days (calendar icons + modal timeline)
-- [x] Sleep/readiness fixes + 24h time format
+Recent:
+- [x] GitHub Pages + Actions deploy
+- [x] intervals.icu direct API (no proxy)
+- [x] Friel Coach LLM import/export (`veloplanner-coach` JSON block)
 
-## Netlify deploy (manual)
-
-When updating production, run:
+## Deploy (production)
 
 ```bash
-npm run prepare:netlify
+git push github main
 ```
 
-This creates **`netlify-deploy/`** with only:
-- `index.html`
-- `netlify.toml`
-- `netlify/functions/`
+GitHub Actions runs → live at https://kvothe86.github.io/friel-cycle-plan/
 
-Excluded: all `.md` files, `package.json`, JSON backups, dev/git folders.
+Local Pages preview:
 
-Upload **`netlify-deploy/`** to Netlify (drag & drop or `netlify deploy --dir=netlify-deploy`).
+```bash
+GITHUB_PAGES_BASE=/friel-cycle-plan/ npm run prepare:pages
+npx serve pages-deploy
+```
+
+## Local dev
+
+```bash
+npm run dev   # http://localhost:4317
+```
+
+## Friel Coach loop
+
+1. **Copy coach context** (Dashboard / Settings)
+2. Paste into Cursor or Codex + ask question
+3. Coach replies with Verdict/Prescription + optional ` ```veloplanner-coach` JSON
+4. **Apply coach changes** in VeloPlanner
+
+Format spec: `friel-coach-context.md` → VeloPlanner export block.
 
 ## Not planned
 
 - Activity interval compliance
 - Webhook / scheduled sync
-- netlify-cli upgrade (for now)
 
 ## Notes
 
-- Local dev: `npm run dev` (netlify dev for API proxies)
 - Library workouts on intervals = metadata only; calendar gets full ZWO
+- JSON export/import includes intervals API key if saved

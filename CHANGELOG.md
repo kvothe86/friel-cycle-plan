@@ -4,6 +4,17 @@ All notable changes to VeloPlanner.
 
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [3.1.8] - 2026-08-29
+
+### Added
+- **Friel Coach LLM import/export** — paste coach replies containing a `veloplanner-coach` JSON block; **Apply coach changes** adjusts sessions, skip/complete, revert, or push to intervals.icu
+- **GitHub Pages production deploy** — Actions workflow; live at kvothe86.github.io/friel-cycle-plan
+
+### Changed
+- **intervals.icu** — browser calls `/api/v1/` directly (CORS); no server proxy required
+- **Local dev** — `npm run dev` serves static files only (removed Netlify CLI dependency)
+- **Copy coach context** — export format instructions included; coach prompt updated in `friel-coach-context.md`
+
 ## [3.1.7] - 2026-08-28
 
 ### Added

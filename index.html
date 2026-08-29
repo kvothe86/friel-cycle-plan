@@ -356,12 +356,18 @@
         <section class="panel p-5 sm:p-6">
           <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-3">
             <div>
-              <h2 class="text-lg font-bold mb-1">AI coach (Cursor / Codex)</h2>
-              <p class="text-xs text-gray-400 max-w-xl">Copy Friel coach instructions plus your live training snapshot — paste into Cursor or Codex chat. No API key needed.</p>
+              <h2 class="text-lg font-bold mb-1">Friel Coach — LLM import/export</h2>
+              <p class="text-xs text-gray-400 max-w-xl">Copy context → paste into Cursor/Codex → paste the coach’s <code class="text-gray-500">veloplanner-coach</code> block back here to apply plan changes.</p>
             </div>
             <button type="button" id="btnCopyCoachContextDash" class="btn-secondary shrink-0">Copy coach context</button>
           </div>
           <p id="coachCopyStatusDash" class="text-xs text-gray-400 hidden"></p>
+          <label class="block text-xs font-medium text-gray-500 mt-4 mb-2" for="coachImportTextDash">Paste coach response</label>
+          <textarea id="coachImportTextDash" class="input-field w-full text-sm font-mono min-h-[7rem]" placeholder="Paste LLM reply containing a ```veloplanner-coach JSON block…"></textarea>
+          <div class="flex flex-wrap items-center gap-3 mt-3">
+            <button type="button" class="btn-primary text-sm btn-apply-coach">Apply coach changes</button>
+            <p class="coach-import-status text-xs text-gray-400"></p>
+          </div>
         </section>
         <section class="panel p-5 sm:p-6">
           <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-4">
@@ -533,13 +539,19 @@
       </section>
 
       <section class="panel p-6 sm:p-8">
-        <h2 class="text-lg font-bold mb-2">AI coach (Cursor / Codex)</h2>
-        <p class="text-sm text-gray-400 mb-4">Copies the full <strong>Friel coach</strong> system prompt, then your training snapshot (readiness, PMC, plan, compliance). Paste into a new Cursor or Codex chat — no API key.</p>
-        <div class="flex flex-wrap items-center gap-3">
+        <h2 class="text-lg font-bold mb-2">Friel Coach — LLM import/export</h2>
+        <p class="text-sm text-gray-400 mb-4">1. <strong>Copy coach context</strong> (Friel prompt + live snapshot). 2. Paste into Cursor/Codex and ask your question. 3. Paste the reply below — VeloPlanner applies any <code class="text-gray-500">veloplanner-coach</code> JSON block automatically.</p>
+        <div class="flex flex-wrap items-center gap-3 mb-4">
           <button type="button" id="btnCopyCoachContext" class="btn-primary">Copy coach context</button>
           <p id="coachCopyStatus" class="text-sm text-gray-400"></p>
         </div>
-        <p class="text-xs text-gray-400 mt-3">Tip: after pasting, add your question at the bottom — e.g. <em>Should I do today's workout?</em> or <em>I missed Tuesday — what now?</em></p>
+        <label class="block text-sm font-medium text-gray-500 mb-2" for="coachImportText">Paste coach response</label>
+        <textarea id="coachImportText" class="input-field w-full text-sm font-mono min-h-[8rem]" placeholder="Paste LLM reply containing a ```veloplanner-coach JSON block…"></textarea>
+        <div class="flex flex-wrap items-center gap-3 mt-3">
+          <button type="button" class="btn-primary btn-apply-coach">Apply coach changes</button>
+          <p class="coach-import-status text-sm text-gray-400"></p>
+        </div>
+        <p class="text-xs text-gray-400 mt-3">Example question: <em>Should I do today's workout?</em> — the coach should reply with Verdict/Prescription plus an export block if the plan should change.</p>
       </section>
     </div>
 
@@ -1942,6 +1954,7 @@ Stop signs (illness, injury, fever, poor sleep 2+ nights) → rest.
 Readiness < 35 or TSB < −25 → rest or Z1 ≤45 min. < 55 or TSB < −15 → reduce intensity ~15% or shorten endurance ~30%. ≥ 67 and TSB ≥ −10 → proceed.
 VeloPlanner: 12 weeks, 3 load + 1 recovery; Tue/Thu/Sat structured, Sun endurance, Mon/Wed/Fri rest.
 Response: ## Verdict · ## Prescription · ## Why (Friel lens) · ## This week · ## Watch for.
+If plan changes: end with a \`\`\`veloplanner-coach JSON block (version 1, actions array).
 Not a doctor. No copyrighted Training Bible quotes.`;
 
     async function getFrielCoachContext() {
@@ -2128,6 +2141,10 @@ Not a doctor. No copyrighted Training Bible quotes.`;
           '',
           '[Type your coaching question here — e.g. "Should I do today\'s workout?" or "I missed Tuesday — what now?"]',
           '',
+          '## Reminder for the coach',
+          '',
+          'If your advice changes the plan, end with a ```veloplanner-coach JSON block (see VeloPlanner export block in instructions above).',
+          '',
         ].join('\n');
         await navigator.clipboard.writeText(text);
         const note = frielCoachContextIsFallback
@@ -2137,6 +2154,212 @@ Not a doctor. No copyrighted Training Bible quotes.`;
         setTimeout(() => setCoachCopyStatus('', false), 8000);
       } catch (_) {
         setCoachCopyStatus('Copy failed — allow clipboard access in your browser.', true);
+      }
+    }
+
+    const COACH_ADJUST_ACTIONS = new Set(['keep', 'recovery', 'reduce', 'shorten', 'rest']);
+
+    function extractCoachExportBlock(text) {
+      const tagged = text.match(/```veloplanner-coach\s*([\s\S]*?)```/i);
+      if (tagged) return tagged[1].trim();
+      const fenced = text.match(/```json\s*([\s\S]*?)```/gi);
+      if (fenced) {
+        for (const block of fenced) {
+          const inner = block.replace(/```json/i, '').replace(/```$/, '').trim();
+          if (inner.includes('"actions"') && inner.includes('"version"')) return inner;
+        }
+      }
+      const start = text.indexOf('{"version"');
+      if (start >= 0) {
+        let depth = 0;
+        for (let i = start; i < text.length; i++) {
+          if (text[i] === '{') depth++;
+          else if (text[i] === '}') {
+            depth--;
+            if (depth === 0) return text.slice(start, i + 1);
+          }
+        }
+      }
+      return null;
+    }
+
+    function parseCoachExport(text) {
+      const raw = extractCoachExportBlock(String(text || '').trim());
+      if (!raw) return { ok: false, error: 'No veloplanner-coach block found. Ask the coach to include one (see export format in coach context).' };
+      let data;
+      try {
+        data = JSON.parse(raw);
+      } catch {
+        return { ok: false, error: 'Invalid JSON in veloplanner-coach block.' };
+      }
+      if (data.version !== 1) return { ok: false, error: `Unsupported export version (${data.version}). Expected version 1.` };
+      if (data.actions != null && !Array.isArray(data.actions)) return { ok: false, error: '"actions" must be an array.' };
+      return { ok: true, data: { version: 1, summary: data.summary || '', actions: data.actions || [] } };
+    }
+
+    function coachActionPreviewLine(action, index) {
+      const n = index + 1;
+      if (action.type === 'adjust') {
+        const extras = [];
+        if (action.factor != null) extras.push(`factor ${action.factor}`);
+        if (action.durationMin != null) extras.push(`${action.durationMin} min`);
+        const tail = extras.length ? ` (${extras.join(', ')})` : '';
+        return `${n}. Adjust ${action.date}: ${action.action}${tail}${action.reason ? ` — ${action.reason}` : ''}`;
+      }
+      if (action.type === 'skip') return `${n}. Skip ${action.date}${action.reason ? ` — ${action.reason}` : ''}`;
+      if (action.type === 'complete') return `${n}. Complete ${action.date} · RPE ${action.rpe ?? 5}`;
+      if (action.type === 'revert') return `${n}. Revert adjustment on ${action.date}`;
+      if (action.type === 'push') return `${n}. Push ${action.date} to intervals.icu`;
+      return `${n}. Unknown action type: ${action.type}`;
+    }
+
+    function validateCoachAction(action) {
+      if (!action || typeof action !== 'object') return 'Invalid action object';
+      if (!action.type) return 'Missing action type';
+      const dateRe = /^\d{4}-\d{2}-\d{2}$/;
+      if (action.type !== 'note' && !dateRe.test(action.date || '')) return `Invalid or missing date on ${action.type}`;
+      if (action.type === 'adjust') {
+        if (!COACH_ADJUST_ACTIONS.has(action.action)) return `Invalid adjust action "${action.action}"`;
+        return null;
+      }
+      if (action.type === 'skip' || action.type === 'revert' || action.type === 'push') return null;
+      if (action.type === 'complete') {
+        const rpe = Number(action.rpe ?? 5);
+        if (!Number.isFinite(rpe) || rpe < 1 || rpe > 10) return 'complete requires rpe 1–10';
+        return null;
+      }
+      return `Unknown action type "${action.type}"`;
+    }
+
+    async function applyCoachExport(data) {
+      if (!state.plan) throw new Error('Generate a plan first.');
+      const results = { applied: [], skipped: [], errors: [] };
+
+      for (const action of data.actions) {
+        const err = validateCoachAction(action);
+        if (err) {
+          results.errors.push(`${action.date || action.type}: ${err}`);
+          continue;
+        }
+
+        const found = findDayInPlan(action.date);
+
+        if (action.type === 'adjust') {
+          if (!found) {
+            results.errors.push(`${action.date}: not in plan`);
+            continue;
+          }
+          if (action.action === 'keep') {
+            results.skipped.push(`${action.date}: keep (no change)`);
+            continue;
+          }
+          const suggestion = {
+            action: action.action,
+            reason: action.reason || data.summary || 'Coach adjustment',
+            factor: action.factor,
+            durationMin: action.durationMin,
+          };
+          applyWorkoutAdjustment(found.day, found.week, suggestion);
+          results.applied.push(`Adjusted ${action.date} → ${action.action}`);
+          continue;
+        }
+
+        if (action.type === 'skip') {
+          setDayStatus(action.date, 'skipped');
+          results.applied.push(`Skipped ${action.date}`);
+          continue;
+        }
+
+        if (action.type === 'complete') {
+          setDayStatus(action.date, 'completed', Math.round(Number(action.rpe ?? 5)));
+          results.applied.push(`Completed ${action.date} · RPE ${action.rpe ?? 5}`);
+          continue;
+        }
+
+        if (action.type === 'revert') {
+          if (!found) {
+            results.errors.push(`${action.date}: not in plan`);
+            continue;
+          }
+          if (!revertDayAdjustment(found.day)) {
+            results.skipped.push(`${action.date}: nothing to revert`);
+            continue;
+          }
+          found.day.expectedRpe = getExpectedRpe(found.day, found.week);
+          results.applied.push(`Reverted ${action.date}`);
+          continue;
+        }
+
+        if (action.type === 'push') {
+          if (!found) {
+            results.errors.push(`${action.date}: not in plan`);
+            continue;
+          }
+          try {
+            await pushDayToIntervals(found.day, found.week);
+            results.applied.push(`Pushed ${action.date} to intervals.icu`);
+          } catch (e) {
+            results.errors.push(`${action.date} push: ${e.message || 'failed'}`);
+          }
+        }
+      }
+
+      state.predictedFtp = recalculatePredictedFtp();
+      saveState();
+      renderPlan();
+      return results;
+    }
+
+    function setCoachImportStatus(msg, isError) {
+      for (const el of document.querySelectorAll('.coach-import-status')) {
+        el.textContent = msg || '';
+        el.classList.toggle('text-emerald-600', !isError && !!msg);
+        el.classList.toggle('text-red-600', !!isError);
+      }
+    }
+
+    async function importCoachResponse(sourceEl) {
+      const text = sourceEl?.value?.trim()
+        || document.getElementById('coachImportText')?.value?.trim()
+        || document.getElementById('coachImportTextDash')?.value?.trim()
+        || '';
+      if (!text) {
+        setCoachImportStatus('Paste the coach reply first.', true);
+        return;
+      }
+
+      const parsed = parseCoachExport(text);
+      if (!parsed.ok) {
+        setCoachImportStatus(parsed.error, true);
+        return;
+      }
+
+      const { data } = parsed;
+      if (!data.actions.length) {
+        setCoachImportStatus('No plan changes in export block (empty actions).', false);
+        return;
+      }
+
+      const preview = data.actions.map(coachActionPreviewLine).join('\n');
+      const header = data.summary ? `${data.summary}\n\n` : '';
+      if (!confirm(`${header}Apply ${data.actions.length} coach action(s)?\n\n${preview}`)) return;
+
+      setCoachImportStatus('Applying…', false);
+      try {
+        const results = await applyCoachExport(data);
+        const parts = [];
+        if (results.applied.length) parts.push(`Applied: ${results.applied.join('; ')}`);
+        if (results.skipped.length) parts.push(`Skipped: ${results.skipped.join('; ')}`);
+        if (results.errors.length) parts.push(`Errors: ${results.errors.join('; ')}`);
+        setCoachImportStatus(parts.join(' · ') || 'Done.', results.errors.length > 0);
+        if (results.applied.length) {
+          for (const id of ['coachImportText', 'coachImportTextDash']) {
+            const el = document.getElementById(id);
+            if (el) el.value = '';
+          }
+        }
+      } catch (err) {
+        setCoachImportStatus(err.message || 'Apply failed', true);
       }
     }
 
@@ -5332,6 +5555,9 @@ Not a doctor. No copyrighted Training Bible quotes.`;
 
       document.getElementById('btnCopyCoachContext')?.addEventListener('click', copyCoachContext);
       document.getElementById('btnCopyCoachContextDash')?.addEventListener('click', copyCoachContext);
+      document.querySelectorAll('.btn-apply-coach').forEach(btn => {
+        btn.addEventListener('click', () => importCoachResponse());
+      });
 
       document.getElementById('btnImport').addEventListener('click', () => {
         document.getElementById('fileImport').click();
@@ -5356,4 +5582,3 @@ Not a doctor. No copyrighted Training Bible quotes.`;
   </script>
 </body>
 </html>
-<script async src="/.netlify/scripts/hud?variant=public" data-nf-variant="public" data-netlify-site-id="ad80cc3a-1ac8-47a3-a9f6-73654c296039" data-app-host="app.netlify.com"></script>

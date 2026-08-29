@@ -2,7 +2,7 @@
 
 Your personal **12-week** cycling plan generator. Fixed **3/1 blocks** — three weeks of progressive load followed by one recovery week.
 
-**Live app:** [veloplanner.netlify.app](https://veloplanner.netlify.app/)
+**Live app:** [kvothe86.github.io/friel-cycle-plan](https://kvothe86.github.io/friel-cycle-plan/)
 
 ## Views
 
@@ -33,7 +33,7 @@ Plan settings moved out of the main flow into **Settings**. Generate a plan ther
 - **Training load dashboard** — CTL, ATL, and form (TSB) chart with optional baseline from intervals.icu / Strava
 - **Workout detail modal** — click any session to view Zwift-style instructions, watt targets, intensity profile, and zone breakdown
 - **Weather forecast** (intervals.icu) — hourly timeline on plan days; best dry ride window on outdoor Sundays; see [Weather forecast](#weather-forecast) below
-- **Copy coach context** — Friel coach prompt + training snapshot for Cursor/Codex chat (no API key)
+- **Friel Coach LLM import/export** — copy coach context to Cursor/Codex; paste `veloplanner-coach` JSON back to apply plan changes
 
 ## Workout detail modal
 
@@ -103,16 +103,18 @@ All logic lives in `index.html` (no separate weather module):
 - `adviseDayWeather()` — computes best ride window with daylight checks via `daylightBoundsForDate()` / `rideFitsDaylight()`.
 - `syncIntervalsWellness()` — always calls `renderPlan()` after a successful sync so weather panels update even before a plan is generated.
 
-API route: `netlify/functions/intervals-weather-forecast.js` (proxies intervals.icu). State key: `state.intervalsWeatherForecast` in `localStorage`.
+- `syncIntervalsWellness()` — fetches wellness, activities, weather, and events directly from intervals.icu `/api/v1/` (browser CORS). State key: `state.intervalsWeatherForecast` in `localStorage`.
 
-### AI coach (Cursor / Codex, no API)
+### Friel Coach (Cursor / Codex, no API)
 
-**Copy coach context** (Dashboard or Settings) puts two blocks on your clipboard:
+**Copy coach context** (Dashboard or Settings) puts on your clipboard:
 
-1. **Friel coach instructions** — full system prompt from `friel-coach-context.md` (same content as the Cursor skill)
-2. **Your athlete snapshot** — readiness, CTL/ATL/form, today’s session, week ahead, missed workouts, last 14 days
+1. **Friel coach instructions** — from `friel-coach-context.md`
+2. **Your athlete snapshot** — readiness, PMC, plan, compliance, week ahead
 
-Paste into a new Cursor or Codex chat and add your question at the bottom. Uses your existing subscription — no OpenAI/Anthropic API key.
+Paste into Cursor or Codex, ask your question. If the coach recommends plan changes, it should end with a **`veloplanner-coach` JSON block**. Paste the full reply back into VeloPlanner and click **Apply coach changes**.
+
+See `friel-coach-context.md` → *VeloPlanner export block* for the action schema (`adjust`, `skip`, `complete`, `revert`, `push`).
 
 ## Dashboard
 
@@ -162,30 +164,21 @@ Or open `index.html` directly in a browser (network needed only for the Google F
 
 ## Deploy
 
-No build step. Push the repo root (`index.html`, favicon files, and `.nojekyll` for GitHub Pages) to any static host.
+No build step at runtime. **Production is GitHub Pages** — auto-deploys on every push to `main` via [`.github/workflows/deploy-pages.yml`](.github/workflows/deploy-pages.yml).
 
-### Netlify
+**Live site:** https://kvothe86.github.io/friel-cycle-plan/
 
-Connect the repo or drag-and-drop the folder. Publish directory is the repo root. Live example: [veloplanner.netlify.app](https://veloplanner.netlify.app/).
+```bash
+git push github main   # updates the live site (~1 min)
+```
 
-### GitHub Pages (recommended)
-
-Auto-deploys on every push to `main` via [`.github/workflows/deploy-pages.yml`](.github/workflows/deploy-pages.yml).
-
-1. **Connect GitHub** (one-time):
-   ```bash
-   gh auth login
-   gh auth setup-git
-   git push github main
-   ```
-2. On GitHub: **Settings → Pages → Build and deployment → Source: GitHub Actions**
-3. After the first successful workflow run, the site is live at  
-   `https://<username>.github.io/<repo-name>/`  
-   (for this repo: `https://kvothe86.github.io/friel-cycle-plan/`)
+One-time setup: GitHub **Settings → Pages → Source: GitHub Actions**.
 
 Local preview: `GITHUB_PAGES_BASE=/friel-cycle-plan/ npm run prepare:pages` then serve `pages-deploy/`.
 
-**intervals.icu sync** calls the intervals.icu API directly from your browser (their `/api/v1/` endpoints support CORS). Your API key stays in localStorage and is never stored on a server.
+**intervals.icu sync** calls the API directly from your browser (`/api/v1/` supports CORS). API key stays in localStorage — never on a server.
+
+`.nojekyll` is included so GitHub Pages serves the app as-is.
 
 ## Zwift import
 

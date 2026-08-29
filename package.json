@@ -1,12 +1,10 @@
 {
   "name": "veloplanner",
-  "version": "3.1.7",
+  "version": "3.1.8",
   "description": "Your personal 12-week cycling plan generator with calendar, dashboard, Zwift export, and training-load tracking",
   "scripts": {
-    "dev": "npx --yes netlify-cli@17.38.1 dev",
-    "dev:static": "npx --yes serve -l 4317 .",
+    "dev": "npx --yes serve -l 4317 .",
     "start": "npm run dev",
-    "prepare:netlify": "node scripts/prepare-netlify-deploy.mjs",
     "prepare:pages": "node scripts/prepare-github-pages.mjs"
   }
 }

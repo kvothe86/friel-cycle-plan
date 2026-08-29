@@ -83,6 +83,8 @@ Default structure:
 
 Shorter answers are fine for simple yes/no questions — keep **Verdict** + **Prescription**.
 
+When advice changes the plan, end with a `veloplanner-coach` JSON block (see [friel-coach-context.md](../../friel-coach-context.md) — VeloPlanner export block).
+
 ## Common scenarios
 
 **"Should I do today's workout?"**
