@@ -101,6 +101,7 @@ Rules:
 - `recovery` → optional `durationMin` (default 45).
 - If no plan changes, omit the block or use `"actions": []`.
 - Keep the human **Verdict** / **Prescription** sections above the block.
+- **Code fence optional** — raw JSON or ` ```json ` blocks work too; VeloPlanner finds any object with `"version": 1` and `"actions"`.
 
 ## Common scenarios
 

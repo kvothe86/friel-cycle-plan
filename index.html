@@ -2159,33 +2159,80 @@ Not a doctor. No copyrighted Training Bible quotes.`;
 
     const COACH_ADJUST_ACTIONS = new Set(['keep', 'recovery', 'reduce', 'shorten', 'rest']);
 
-    function extractCoachExportBlock(text) {
-      const tagged = text.match(/```veloplanner-coach\s*([\s\S]*?)```/i);
-      if (tagged) return tagged[1].trim();
-      const fenced = text.match(/```json\s*([\s\S]*?)```/gi);
-      if (fenced) {
-        for (const block of fenced) {
-          const inner = block.replace(/```json/i, '').replace(/```$/, '').trim();
-          if (inner.includes('"actions"') && inner.includes('"version"')) return inner;
+    function extractBalancedJson(text, start) {
+      let depth = 0;
+      let inString = false;
+      let escape = false;
+      for (let i = start; i < text.length; i++) {
+        const c = text[i];
+        if (inString) {
+          if (escape) escape = false;
+          else if (c === '\\') escape = true;
+          else if (c === '"') inString = false;
+          continue;
         }
-      }
-      const start = text.indexOf('{"version"');
-      if (start >= 0) {
-        let depth = 0;
-        for (let i = start; i < text.length; i++) {
-          if (text[i] === '{') depth++;
-          else if (text[i] === '}') {
-            depth--;
-            if (depth === 0) return text.slice(start, i + 1);
-          }
+        if (c === '"') { inString = true; continue; }
+        if (c === '{') depth++;
+        else if (c === '}') {
+          depth--;
+          if (depth === 0) return text.slice(start, i + 1);
         }
       }
       return null;
     }
 
+    function looksLikeCoachExport(jsonText) {
+      if (!jsonText.includes('"version"') || !jsonText.includes('"actions"')) return false;
+      try {
+        const data = JSON.parse(jsonText);
+        return data && data.version === 1 && Array.isArray(data.actions);
+      } catch {
+        return false;
+      }
+    }
+
+    function extractCoachExportBlock(text) {
+      const s = String(text || '').trim();
+      if (!s) return null;
+
+      const tagged = s.match(/```veloplanner-coach\s*([\s\S]*?)```/i);
+      if (tagged?.[1]?.trim()) return tagged[1].trim();
+
+      const fences = s.match(/```[^\n]*\n([\s\S]*?)```/g);
+      if (fences) {
+        for (const block of fences) {
+          const inner = block.replace(/^```[^\n]*\n?/, '').replace(/```$/, '').trim();
+          if (looksLikeCoachExport(inner)) return inner;
+        }
+      }
+
+      if (s.startsWith('{') && looksLikeCoachExport(s)) return s;
+
+      const versionIdx = s.search(/"version"\s*:\s*1\b/);
+      if (versionIdx >= 0) {
+        for (let start = s.lastIndexOf('{', versionIdx); start >= 0; start = s.lastIndexOf('{', start - 1)) {
+          const candidate = extractBalancedJson(s, start);
+          if (candidate && looksLikeCoachExport(candidate)) return candidate;
+        }
+      }
+
+      const compactStart = s.indexOf('{"version"');
+      if (compactStart >= 0) {
+        const candidate = extractBalancedJson(s, compactStart);
+        if (candidate && looksLikeCoachExport(candidate)) return candidate;
+      }
+
+      return null;
+    }
+
     function parseCoachExport(text) {
-      const raw = extractCoachExportBlock(String(text || '').trim());
-      if (!raw) return { ok: false, error: 'No veloplanner-coach block found. Ask the coach to include one (see export format in coach context).' };
+      const raw = extractCoachExportBlock(text);
+      if (!raw) {
+        return {
+          ok: false,
+          error: 'No coach export JSON found. Paste the full reply, or a JSON object with "version": 1 and "actions": [...]. Code fence optional.',
+        };
+      }
       let data;
       try {
         data = JSON.parse(raw);
