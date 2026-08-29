@@ -185,9 +185,7 @@ Auto-deploys on every push to `main` via [`.github/workflows/deploy-pages.yml`](
 
 Local preview: `GITHUB_PAGES_BASE=/friel-cycle-plan/ npm run prepare:pages` then serve `pages-deploy/`.
 
-**Note:** GitHub Pages is static-only. Plan generation, calendar, dashboard, and Zwift export work fully. **intervals.icu sync** needs the Netlify API proxies — use `npm run dev` locally for sync, or keep the [Netlify deploy](#netlify) for full API support.
-
-`.nojekyll` is included so GitHub Pages serves the app as-is.
+**intervals.icu sync** calls the intervals.icu API directly from your browser (their `/api/v1/` endpoints support CORS). Your API key stays in localStorage and is never stored on a server.
 
 ## Zwift import
 

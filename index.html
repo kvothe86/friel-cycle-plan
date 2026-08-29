@@ -467,7 +467,7 @@
               </div>
             </div>
           </form>
-          <p class="text-xs text-gray-400">Stored locally only (this browser, localStorage, and JSON export/import). Sent per sync request to the Netlify proxy — never saved on the server.</p>
+          <p class="text-xs text-gray-400">Stored locally only (this browser, localStorage, and JSON export/import). Sent directly to intervals.icu from your browser — never saved on any server.</p>
 
           <div class="flex flex-col sm:flex-row sm:flex-wrap gap-3">
             <label class="inline-flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
@@ -2284,15 +2284,25 @@ Not a doctor. No copyrighted Training Bible quotes.`;
       return apiKey && athleteId ? { apiKey, athleteId } : null;
     }
 
-    function intervalsHeaders() {
+    function intervalsHeaders(json = false) {
       const creds = intervalsCredentials();
       if (!creds) throw new Error('Intervals.icu not configured');
-      return { 'X-Intervals-Api-Key': creds.apiKey };
+      const headers = {
+        Authorization: 'Basic ' + toBase64(`API_KEY:${creds.apiKey}`),
+        Accept: 'application/json',
+      };
+      if (json) headers['Content-Type'] = 'application/json';
+      return headers;
     }
 
-    function intervalsQuery(athleteId, params = {}) {
-      const qs = new URLSearchParams({ athleteId, ...params });
-      return qs.toString();
+    function intervalsApiUrl(path, params = {}) {
+      const creds = intervalsCredentials();
+      if (!creds) throw new Error('Intervals.icu not configured');
+      const url = new URL(`https://intervals.icu/api/v1/athlete/${encodeURIComponent(creds.athleteId)}/${path}`);
+      for (const [key, value] of Object.entries(params)) {
+        if (value != null && value !== '') url.searchParams.set(key, String(value));
+      }
+      return url.toString();
     }
 
     function toBase64(text) {
@@ -3444,7 +3454,7 @@ Not a doctor. No copyrighted Training Bible quotes.`;
     async function fetchIntervalsEventsRange(oldest, newest) {
       const creds = intervalsCredentials();
       if (!creds) return [];
-      const res = await fetch(`/api/intervals/events?${intervalsQuery(creds.athleteId, { oldest, newest })}`, {
+      const res = await fetch(intervalsApiUrl('events', { oldest, newest }), {
         headers: intervalsHeaders(),
       });
       const payload = await res.json().catch(() => []);
@@ -3528,9 +3538,9 @@ Not a doctor. No copyrighted Training Bible quotes.`;
         .filter(Boolean);
       if (!body.length) return 0;
 
-      const res = await fetch(`/api/intervals/events-bulk-delete?${intervalsQuery(creds.athleteId)}`, {
+      const res = await fetch(intervalsApiUrl('events/bulk-delete'), {
         method: 'PUT',
-        headers: { ...intervalsHeaders(), 'Content-Type': 'application/json' },
+        headers: intervalsHeaders(true),
         body: JSON.stringify(body),
       });
       const payload = await res.json().catch(() => ({}));
@@ -3610,9 +3620,9 @@ Not a doctor. No copyrighted Training Bible quotes.`;
         soreness: feel >= 4 ? 3 : 1,
       };
       try {
-        await fetch(`/api/intervals/wellness-put?${intervalsQuery(creds.athleteId, { date })}`, {
+        await fetch(intervalsApiUrl(`wellness/${encodeURIComponent(date)}`), {
           method: 'PUT',
-          headers: { ...intervalsHeaders(), 'Content-Type': 'application/json' },
+          headers: intervalsHeaders(true),
           body: JSON.stringify(body),
         });
       } catch { /* best-effort */ }
@@ -3642,7 +3652,7 @@ Not a doctor. No copyrighted Training Bible quotes.`;
       const creds = intervalsCredentials();
       if (!creds) throw new Error('Add intervals.icu credentials in Settings.');
 
-      const res = await fetch(`/api/intervals/sport-settings?${intervalsQuery(creds.athleteId, { sport: 'Ride' })}`, {
+      const res = await fetch(intervalsApiUrl('sport-settings/Ride'), {
         headers: intervalsHeaders(),
       });
       const settings = await res.json().catch(() => ({}));
@@ -3829,9 +3839,9 @@ Not a doctor. No copyrighted Training Bible quotes.`;
       const deleted = await deleteIntervalsEventsBulk(preview.toDelete);
 
       const events = preview.publish.map(({ day, week }) => buildEventForDay(day, week));
-      const res = await fetch(`/api/intervals/events-bulk?${intervalsQuery(creds.athleteId, { upsert: 'true' })}`, {
+      const res = await fetch(intervalsApiUrl('events/bulk', { upsert: 'true' }), {
         method: 'POST',
-        headers: { ...intervalsHeaders(), 'Content-Type': 'application/json' },
+        headers: intervalsHeaders(true),
         body: JSON.stringify(events),
       });
       const payload = await res.json().catch(() => ({}));
@@ -3853,7 +3863,7 @@ Not a doctor. No copyrighted Training Bible quotes.`;
       if (!creds) throw new Error('Add intervals.icu credentials in Settings.');
       if (state.intervalsWorkoutFolderId) return state.intervalsWorkoutFolderId;
 
-      const listRes = await fetch(`/api/intervals/folders?${intervalsQuery(creds.athleteId)}`, { headers: intervalsHeaders() });
+      const listRes = await fetch(intervalsApiUrl('folders'), { headers: intervalsHeaders() });
       const folders = await listRes.json().catch(() => []);
       if (listRes.ok && Array.isArray(folders)) {
         const existing = folders.find(f => f.name === 'VeloPlanner' && f.type === 'FOLDER');
@@ -3864,9 +3874,9 @@ Not a doctor. No copyrighted Training Bible quotes.`;
         }
       }
 
-      const createRes = await fetch(`/api/intervals/folders?${intervalsQuery(creds.athleteId)}`, {
+      const createRes = await fetch(intervalsApiUrl('folders'), {
         method: 'POST',
-        headers: { ...intervalsHeaders(), 'Content-Type': 'application/json' },
+        headers: intervalsHeaders(true),
         body: JSON.stringify({ name: 'VeloPlanner', type: 'FOLDER', description: 'Workouts from VeloPlanner' }),
       });
       const created = await createRes.json().catch(() => ({}));
@@ -3907,9 +3917,9 @@ Not a doctor. No copyrighted Training Bible quotes.`;
 
       if (!workouts.length) throw new Error('No structured workouts to publish.');
 
-      const res = await fetch(`/api/intervals/workouts-bulk?${intervalsQuery(creds.athleteId)}`, {
+      const res = await fetch(intervalsApiUrl('workouts/bulk'), {
         method: 'POST',
-        headers: { ...intervalsHeaders(), 'Content-Type': 'application/json' },
+        headers: intervalsHeaders(true),
         body: JSON.stringify(workouts),
       });
       const payload = await res.json().catch(() => ({}));
@@ -3921,9 +3931,9 @@ Not a doctor. No copyrighted Training Bible quotes.`;
       const creds = intervalsCredentials();
       if (!creds) throw new Error('Add intervals.icu API key and athlete ID in Settings.');
 
-      const res = await fetch(`/api/intervals/events-bulk?${intervalsQuery(creds.athleteId, { upsert: 'true' })}`, {
+      const res = await fetch(intervalsApiUrl('events/bulk', { upsert: 'true' }), {
         method: 'POST',
-        headers: { ...intervalsHeaders(), 'Content-Type': 'application/json' },
+        headers: intervalsHeaders(true),
         body: JSON.stringify([buildEventForDay(day, week)]),
       });
       const payload = await res.json().catch(() => ({}));
@@ -4172,18 +4182,16 @@ Not a doctor. No copyrighted Training Bible quotes.`;
       if (!silent) setIntervalsSyncStatus('Syncing from intervals.icu…', 'pending');
 
       try {
-        const query = intervalsQuery(athleteId, { oldest, newest: today });
         const eventsNewest = state.plan
           ? (state.plan.ftpTest?.date || state.plan.endDate)
           : addDays(today, 56);
-        const eventsQuery = intervalsQuery(athleteId, { oldest: today, newest: eventsNewest > today ? eventsNewest : addDays(today, 56) });
         const headers = intervalsHeaders();
         const [wellnessRes, activitiesRes, weatherRes, weatherCfgRes, eventsRes] = await Promise.all([
-          fetch(`/api/intervals/wellness?${query}`, { headers }),
-          fetch(`/api/intervals/activities?${query}`, { headers }),
-          fetch(`/api/intervals/weather-forecast?${intervalsQuery(athleteId)}`, { headers }),
-          fetch(`/api/intervals/weather-config?${intervalsQuery(athleteId)}`, { headers }),
-          fetch(`/api/intervals/events?${eventsQuery}`, { headers }),
+          fetch(intervalsApiUrl('wellness', { oldest, newest: today }), { headers }),
+          fetch(intervalsApiUrl('activities', { oldest, newest: today }), { headers }),
+          fetch(intervalsApiUrl('weather-forecast'), { headers }),
+          fetch(intervalsApiUrl('weather-config'), { headers }),
+          fetch(intervalsApiUrl('events', { oldest: today, newest: eventsNewest > today ? eventsNewest : addDays(today, 56) }), { headers }),
         ]);
         const wellness = await wellnessRes.json().catch(() => ({}));
         const activities = await activitiesRes.json().catch(() => ({}));
@@ -4241,7 +4249,7 @@ Not a doctor. No copyrighted Training Bible quotes.`;
         return true;
       } catch (err) {
         const msg = err.message || 'Sync failed';
-        if (!silent) setIntervalsSyncStatus(msg.includes('fetch') ? 'Sync unavailable — use npm run dev (netlify dev) locally' : msg, 'error');
+        if (!silent) setIntervalsSyncStatus(msg, 'error');
         return false;
       } finally {
         intervalsSyncInFlight = false;
