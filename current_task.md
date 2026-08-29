@@ -35,10 +35,9 @@ npm run dev   # http://localhost:4317
 
 ## Friel Coach loop
 
-1. **Copy coach context** (Dashboard / Settings)
-2. Paste into Cursor or Codex + ask question
-3. Coach replies with Verdict/Prescription + optional ` ```veloplanner-coach` JSON
-4. **Apply coach changes** in VeloPlanner
+1. **Dashboard → Today's session → Copy for coach**
+2. Paste into Cursor, Codex, or ChatGPT + ask question
+3. Expand **Paste coach reply** → **Apply coach changes**
 
 Format spec: `friel-coach-context.md` → VeloPlanner export block.
 

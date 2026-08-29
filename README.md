@@ -33,7 +33,7 @@ Plan settings moved out of the main flow into **Settings**. Generate a plan ther
 - **Training load dashboard** — CTL, ATL, and form (TSB) chart with optional baseline from intervals.icu / Strava
 - **Workout detail modal** — click any session to view Zwift-style instructions, watt targets, intensity profile, and zone breakdown
 - **Weather forecast** (intervals.icu) — hourly timeline on plan days; best dry ride window on outdoor Sundays; see [Weather forecast](#weather-forecast) below
-- **Friel Coach LLM import/export** — copy coach context to Cursor/Codex; paste `veloplanner-coach` JSON back to apply plan changes
+- **Friel Coach LLM import/export** — copy context / apply coach JSON on **Dashboard → Today's session**
 
 ## Workout detail modal
 
@@ -105,16 +105,15 @@ All logic lives in `index.html` (no separate weather module):
 
 - `syncIntervalsWellness()` — fetches wellness, activities, weather, and events directly from intervals.icu `/api/v1/` (browser CORS). State key: `state.intervalsWeatherForecast` in `localStorage`.
 
-### Friel Coach (Cursor / Codex, no API)
+### Friel Coach (Cursor / Codex / ChatGPT, no API)
 
-**Copy coach context** (Dashboard or Settings) puts on your clipboard:
+On the **Dashboard → Today's session** panel:
 
-1. **Friel coach instructions** — from `friel-coach-context.md`
-2. **Your athlete snapshot** — readiness, PMC, plan, compliance, week ahead
+1. **Copy for coach** — Friel prompt + live athlete snapshot
+2. Paste into your LLM and ask your question
+3. Expand **Paste coach reply** and **Apply coach changes**
 
-Paste into Cursor or Codex, ask your question. If the coach recommends plan changes, it should end with a **`veloplanner-coach` JSON block**. Paste the full reply back into VeloPlanner and click **Apply coach changes**.
-
-See `friel-coach-context.md` → *VeloPlanner export block* for the action schema (`adjust`, `skip`, `complete`, `revert`, `push`).
+See `friel-coach-context.md` → *VeloPlanner export block* for the JSON action schema.
 
 ## Dashboard
 
