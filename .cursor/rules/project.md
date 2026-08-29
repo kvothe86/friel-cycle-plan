@@ -25,9 +25,8 @@ No build step. App is a single `index.html` plus static assets.
 
 ## Friel Coach (LLM)
 
-- **Export:** Copy coach context → paste into Cursor/Codex.
-- **Import:** Coach reply must include a ` ```veloplanner-coach` JSON block (see `friel-coach-context.md`).
-- **Apply:** Dashboard or Settings → paste reply → **Apply coach changes**.
+- **Export:** Dashboard → Today's session → **Copy for coach**
+- **Import:** Expand **Paste coach reply** on the same panel → **Apply coach changes**
 - Keep `.cursor/skills/friel-coach/SKILL.md` and `friel-coach-context.md` in sync.
 
 ## Git identity
