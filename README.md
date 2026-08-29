@@ -168,11 +168,24 @@ No build step. Push the repo root (`index.html`, favicon files, and `.nojekyll` 
 
 Connect the repo or drag-and-drop the folder. Publish directory is the repo root. Live example: [veloplanner.netlify.app](https://veloplanner.netlify.app/).
 
-### GitHub Pages
+### GitHub Pages (recommended)
 
-1. Push to GitHub
-2. **Settings → Pages** → build from **main**, **/ (root)**
-3. Site updates on each push (~1 minute)
+Auto-deploys on every push to `main` via [`.github/workflows/deploy-pages.yml`](.github/workflows/deploy-pages.yml).
+
+1. **Connect GitHub** (one-time):
+   ```bash
+   gh auth login
+   gh auth setup-git
+   git push github main
+   ```
+2. On GitHub: **Settings → Pages → Build and deployment → Source: GitHub Actions**
+3. After the first successful workflow run, the site is live at  
+   `https://<username>.github.io/<repo-name>/`  
+   (for this repo: `https://kvothe86.github.io/friel-cycle-plan/`)
+
+Local preview: `GITHUB_PAGES_BASE=/friel-cycle-plan/ npm run prepare:pages` then serve `pages-deploy/`.
+
+**Note:** GitHub Pages is static-only. Plan generation, calendar, dashboard, and Zwift export work fully. **intervals.icu sync** needs the Netlify API proxies — use `npm run dev` locally for sync, or keep the [Netlify deploy](#netlify) for full API support.
 
 `.nojekyll` is included so GitHub Pages serves the app as-is.
 

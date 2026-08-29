@@ -6,6 +6,7 @@
     "dev": "npx --yes netlify-cli@17.38.1 dev",
     "dev:static": "npx --yes serve -l 4317 .",
     "start": "npm run dev",
-    "prepare:netlify": "node scripts/prepare-netlify-deploy.mjs"
+    "prepare:netlify": "node scripts/prepare-netlify-deploy.mjs",
+    "prepare:pages": "node scripts/prepare-github-pages.mjs"
   }
 }
