@@ -4,6 +4,11 @@ All notable changes to VeloPlanner.
 
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [3.2.0] - 2026-08-30
+
+### Added
+- **AI Plan (LLM)** — Settings → copy athlete story + constraints to an LLM, paste `veloplanner-plan` JSON back to build a custom 12-week block (presets, week overrides, date overrides)
+
 ## [3.1.9] - 2026-08-30
 
 ### Changed

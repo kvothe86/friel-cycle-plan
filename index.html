@@ -435,6 +435,34 @@
       </section>
 
       <section class="panel p-6 sm:p-8">
+        <h2 class="text-lg font-bold mb-2">AI Plan (LLM)</h2>
+        <p class="text-sm text-gray-400 mb-4">Describe your goal and weekly life — copy to Cursor, Codex, or ChatGPT — paste the plan JSON back. No API key; same flow as Friel Coach.</p>
+
+        <div class="space-y-4">
+          <div>
+            <label for="planStoryText" class="block text-sm font-medium text-gray-500 mb-2">Your story &amp; constraints</label>
+            <textarea id="planStoryText" class="input-field w-full text-sm min-h-[8rem]" placeholder="Goal event and date, current fitness, weekly constraints (e.g. table tennis Wed), injuries, hours available, what must the plan respect…"></textarea>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <button type="button" id="btnCopyPlanContext" class="btn-secondary text-sm">Copy for AI plan</button>
+          </div>
+          <p id="planCopyStatus" class="text-xs text-gray-400 hidden"></p>
+          <details class="group">
+            <summary class="text-sm text-blue-600 cursor-pointer hover:text-blue-700 select-none list-none flex items-center gap-1">
+              <span class="text-gray-400 group-open:rotate-90 transition-transform inline-block">›</span> Paste AI plan reply
+            </summary>
+            <div class="mt-3 space-y-3">
+              <textarea id="planImportText" class="input-field w-full text-sm font-mono min-h-[8rem]" placeholder="Paste LLM reply (JSON with version, focus, startDate, weeks/overrides)…"></textarea>
+              <div class="flex flex-wrap items-center gap-3">
+                <button type="button" class="btn-primary text-sm btn-apply-plan">Apply AI plan</button>
+                <p class="plan-import-status text-xs text-gray-400"></p>
+              </div>
+            </div>
+          </details>
+        </div>
+      </section>
+
+      <section class="panel p-6 sm:p-8">
         <h2 class="text-lg font-bold mb-2">Intervals.icu</h2>
         <p class="text-sm text-gray-400 mb-6">Pull wellness and training load synced from Garmin. API key and athlete ID are in <span class="text-gray-500">intervals.icu → Settings → Developer</span>.</p>
 
@@ -664,6 +692,7 @@
       intervalsSportSettings: null,
       intervalsWeatherForecast: [],
       intervalsWeatherConfig: null,
+      planStoryText: '',
       plan: null,
     };
 
@@ -1024,6 +1053,7 @@
       const ftpTest = plan.ftpTest?.date || '—';
       openNoticeModal('Plan generated', `
         <p>Your 12-week <strong class="text-gray-800">${plan.focusLabel}</strong> plan is saved on this device.</p>
+        ${plan.aiSummary ? `<p class="text-sm text-gray-500">${plan.aiSummary}</p>` : ''}
         <ul class="text-xs text-gray-500 space-y-1.5 pt-1">
           <li><span class="text-gray-400">Start</span> ${plan.startDate} <span class="text-gray-400">→</span> ${plan.endDate}</li>
           <li><span class="text-gray-400">FTP test</span> ${ftpTest}</li>
@@ -1913,6 +1943,7 @@ ${segs}
         state.intervalsSportSettings = data.intervalsSportSettings || null;
         state.intervalsWeatherForecast = Array.isArray(data.intervalsWeatherForecast) ? data.intervalsWeatherForecast : [];
         state.intervalsWeatherConfig = data.intervalsWeatherConfig || null;
+        state.planStoryText = data.planStoryText || '';
         state.plan = migratePlan(data.plan || null);
         if (state.plan) {
           state.selectedWeek = clampWeekNum(state.selectedWeek, state.plan);
@@ -2395,6 +2426,383 @@ Not a doctor. No copyrighted Training Bible quotes.`;
         }
       } catch (err) {
         setCoachImportStatus(err.message || 'Apply failed', true);
+      }
+    }
+
+    const PLAN_BUILDER_CONTEXT_URL = 'veloplanner-plan-context.md';
+    let planBuilderContextCache = null;
+    let planBuilderContextIsFallback = false;
+
+    const PLAN_BUILDER_CONTEXT_FALLBACK = `# VeloPlanner AI plan builder (abbreviated)
+
+Design a 12-week Friel block: Tue/Thu/Sat structured ~60 min, Sun endurance, Mon/Wed/Fri rest.
+Weeks 4/8/12 recovery. Fondo Sun 90–180 min; other focuses 90–150 min.
+End with a \`\`\`veloplanner-plan JSON block: version 1, summary, focus, startDate, optional weeks[] and overrides[].
+Structured slots: preset "focus.phase.index" (e.g. endurance.base.0) or custom segments (Warmup/SteadyState/IntervalsT/Cooldown; power as FTP decimal).`;
+
+    async function getPlanBuilderContext() {
+      if (planBuilderContextCache) return planBuilderContextCache;
+      try {
+        const res = await fetch(PLAN_BUILDER_CONTEXT_URL, { cache: 'no-cache' });
+        if (res.ok) {
+          planBuilderContextCache = (await res.text()).trim();
+          planBuilderContextIsFallback = false;
+          return planBuilderContextCache;
+        }
+      } catch (_) {}
+      planBuilderContextCache = PLAN_BUILDER_CONTEXT_FALLBACK;
+      planBuilderContextIsFallback = true;
+      return planBuilderContextCache;
+    }
+
+    function buildPlanPresetCatalog() {
+      const phases = ['base', 'build', 'peak'];
+      const phaseWeek = { base: 2, build: 6, peak: 10 };
+      const lines = ['## Workout preset catalog', '', 'Use `"preset": "focus.phase.index"` in structured slots.', ''];
+      for (const [focus, meta] of Object.entries(FOCUSES)) {
+        lines.push(`### ${meta.label} (\`${focus}\`)`);
+        for (const phase of phases) {
+          const templates = workoutLibrary(focus, phaseWeek[phase], false);
+          templates.forEach((t, i) => {
+            lines.push(`- \`${focus}.${phase}.${i}\` — **${t.name}**: ${t.desc}`);
+          });
+        }
+        lines.push('');
+      }
+      return lines.join('\n');
+    }
+
+    function buildPlanBuilderAthleteContext() {
+      const today = formatDate(new Date());
+      const focus = FOCUSES[state.focus] || FOCUSES.allround;
+      const loadMap = buildIntervalsLoadMap();
+      const loadToday = loadMap[today];
+      const startDate = document.getElementById('startDate')?.value || state.startDate;
+      const ftp = parseInt(document.getElementById('ftp')?.value, 10) || state.ftp;
+      const lines = [
+        '# VeloPlanner — plan builder snapshot',
+        '',
+        `Exported: ${new Date().toISOString()}`,
+        '',
+        '## Profile',
+        `- Suggested base focus: ${focus.label} (\`${state.focus}\`) — change in export if story needs it`,
+        `- Start date (Settings): ${startDate}`,
+        `- FTP: ${ftp}W`,
+      ];
+      if (loadToday) {
+        lines.push(`- CTL ${Math.round(loadToday.ctl)}, ATL ${Math.round(loadToday.atl)}, form ${loadToday.tsb >= 0 ? '+' : ''}${Math.round(loadToday.tsb)}`);
+      } else {
+        const tsb = Math.round((state.startCtl ?? 0) - (state.startAtl ?? 0));
+        lines.push(`- Baseline CTL ${state.startCtl ?? 0}, ATL ${state.startAtl ?? 0}, form ${tsb >= 0 ? '+' : ''}${tsb}`);
+      }
+      if (state.intervalsLastSync) {
+        lines.push(`- intervals.icu sync: ${formatSyncTime(state.intervalsLastSync)}`);
+      }
+      if (state.plan) {
+        lines.push('', '## Existing plan', `- ${state.plan.startDate} → ${state.plan.endDate} (${state.plan.focusLabel || focus.label})`, '- AI plan import will replace the current plan.');
+      }
+      return lines.join('\n');
+    }
+
+    function setPlanCopyStatus(msg, isError) {
+      const el = document.getElementById('planCopyStatus');
+      if (!el) return;
+      el.textContent = msg || '';
+      el.classList.toggle('hidden', !msg);
+      el.classList.toggle('text-emerald-600', !isError && !!msg);
+      el.classList.toggle('text-red-600', !!isError);
+    }
+
+    async function copyPlanBuilderContext() {
+      setPlanCopyStatus('Preparing…', false);
+      try {
+        const instructions = await getPlanBuilderContext();
+        const story = document.getElementById('planStoryText')?.value?.trim() || '';
+        if (story) state.planStoryText = story;
+        const text = [
+          instructions,
+          '',
+          '---',
+          '',
+          buildPlanBuilderAthleteContext(),
+          '',
+          '---',
+          '',
+          '## Athlete story & constraints',
+          '',
+          story || '[Describe your goal event, weekly schedule, cross-training, injuries, and available hours.]',
+          '',
+          '---',
+          '',
+          buildPlanPresetCatalog(),
+          '',
+          '---',
+          '',
+          '## Task',
+          '',
+          'Design the 12-week plan from the story above. End with a ```veloplanner-plan JSON block.',
+        ].join('\n');
+        await navigator.clipboard.writeText(text);
+        const note = planBuilderContextIsFallback
+          ? 'Copied (abbreviated instructions — use npm run dev for full spec). Paste into your LLM.'
+          : 'Copied! Paste into Cursor, Codex, or ChatGPT and send.';
+        setPlanCopyStatus(note, false);
+        setTimeout(() => setPlanCopyStatus('', false), 8000);
+      } catch (_) {
+        setPlanCopyStatus('Copy failed — allow clipboard access in your browser.', true);
+      }
+    }
+
+    function looksLikePlanExport(jsonText) {
+      if (!jsonText.includes('"version"')) return false;
+      try {
+        const data = JSON.parse(jsonText);
+        if (!data || data.version !== 1) return false;
+        if (Array.isArray(data.actions)) return false;
+        return !!(data.focus || data.startDate || Array.isArray(data.weeks) || Array.isArray(data.overrides));
+      } catch {
+        return false;
+      }
+    }
+
+    function extractPlanExportBlock(text) {
+      const s = String(text || '').trim();
+      if (!s) return null;
+
+      const tagged = s.match(/```veloplanner-plan\s*([\s\S]*?)```/i);
+      if (tagged?.[1]?.trim()) return tagged[1].trim();
+
+      const fences = s.match(/```[^\n]*\n([\s\S]*?)```/g);
+      if (fences) {
+        for (const block of fences) {
+          const inner = block.replace(/^```[^\n]*\n?/, '').replace(/```$/, '').trim();
+          if (looksLikePlanExport(inner)) return inner;
+        }
+      }
+
+      if (s.startsWith('{') && looksLikePlanExport(s)) return s;
+
+      const versionIdx = s.search(/"version"\s*:\s*1\b/);
+      if (versionIdx >= 0) {
+        for (let start = s.lastIndexOf('{', versionIdx); start >= 0; start = s.lastIndexOf('{', start - 1)) {
+          const candidate = extractBalancedJson(s, start);
+          if (candidate && looksLikePlanExport(candidate)) return candidate;
+        }
+      }
+
+      const compactStart = s.indexOf('{"version"');
+      if (compactStart >= 0) {
+        const candidate = extractBalancedJson(s, compactStart);
+        if (candidate && looksLikePlanExport(candidate)) return candidate;
+      }
+
+      return null;
+    }
+
+    function parsePlanExport(text) {
+      const raw = extractPlanExportBlock(text);
+      if (!raw) {
+        return {
+          ok: false,
+          error: 'No plan export found. Paste the full reply, or JSON with "version": 1, "focus", and "startDate".',
+        };
+      }
+      let data;
+      try {
+        data = JSON.parse(raw);
+      } catch {
+        return { ok: false, error: 'Invalid JSON in veloplanner-plan block.' };
+      }
+      if (data.version !== 1) return { ok: false, error: `Unsupported export version (${data.version}). Expected version 1.` };
+      if (!data.focus || !FOCUSES[data.focus]) {
+        return { ok: false, error: `Invalid focus "${data.focus}". Use: ${Object.keys(FOCUSES).join(', ')}.` };
+      }
+      const dateRe = /^\d{4}-\d{2}-\d{2}$/;
+      if (!dateRe.test(data.startDate || '')) return { ok: false, error: 'Missing or invalid startDate (YYYY-MM-DD).' };
+      if (!data.summary?.trim()) return { ok: false, error: 'Missing summary (one-line plan intent).' };
+      if (data.weeks != null && !Array.isArray(data.weeks)) return { ok: false, error: '"weeks" must be an array.' };
+      if (data.overrides != null && !Array.isArray(data.overrides)) return { ok: false, error: '"overrides" must be an array.' };
+      return { ok: true, data };
+    }
+
+    function resolveWorkoutPreset(presetKey, weekNum, isRecovery) {
+      const m = String(presetKey).trim().match(/^(\w+)\.(base|build|peak)\.(\d+)$/);
+      if (!m) return null;
+      const [, focus, phase, idxStr] = m;
+      if (!FOCUSES[focus]) return null;
+      const phaseWeek = phase === 'base' ? 2 : phase === 'build' ? 6 : 10;
+      const templates = workoutLibrary(focus, phaseWeek, isRecovery);
+      const idx = parseInt(idxStr, 10);
+      if (!Number.isFinite(idx) || idx < 0 || idx >= templates.length) return null;
+      return templates[idx];
+    }
+
+    function clonePlanSegments(segments) {
+      return structuredClone(segments);
+    }
+
+    function applyDaySpec(day, week, spec) {
+      if (spec.preset) {
+        const template = resolveWorkoutPreset(spec.preset, week.weekNum, week.isRecovery);
+        if (!template) throw new Error(`Unknown preset "${spec.preset}" (week ${week.weekNum})`);
+        day.type = 'structured';
+        day.name = template.name;
+        day.desc = template.desc;
+        day.segments = normalizeWorkoutSegments(clonePlanSegments(template.segments));
+        day.durationMin = Math.round(segmentDuration(day.segments) / 60);
+        day.zwift = true;
+        day.optional = false;
+        delete day.adjusted;
+        delete day.adjustmentReason;
+        delete day._original;
+        return;
+      }
+
+      if (spec.type) day.type = spec.type;
+      if (spec.name != null) day.name = spec.name;
+      if (spec.desc != null) day.desc = spec.desc;
+      if (spec.durationMin != null) day.durationMin = Math.round(Number(spec.durationMin));
+
+      if (day.type === 'structured') {
+        if (Array.isArray(spec.segments) && spec.segments.length) {
+          day.segments = normalizeWorkoutSegments(clonePlanSegments(spec.segments));
+          day.durationMin = Math.round(segmentDuration(day.segments) / 60);
+        } else if (!day.segments) {
+          throw new Error(`Structured day ${day.date} needs segments or preset`);
+        }
+        day.zwift = spec.zwift !== false;
+        day.optional = false;
+      }
+
+      if (day.type === 'endurance') {
+        day.zwift = false;
+        delete day.segments;
+        day.optional = false;
+        if (!day.name) day.name = 'Sunday Endurance Ride';
+      }
+
+      if (day.type === 'rest') {
+        day.zwift = false;
+        delete day.segments;
+        day.optional = spec.optional !== false;
+        if (day.durationMin == null) day.durationMin = week.isRecovery ? 45 : 90;
+      }
+
+      delete day.adjusted;
+      delete day.adjustmentReason;
+      delete day._original;
+    }
+
+    function findDayInPlanObject(plan, date) {
+      for (const week of plan.weeks) {
+        const day = week.days.find(d => d.date === date);
+        if (day) return { day, week };
+      }
+      return null;
+    }
+
+    function buildPlanFromExport(data) {
+      const focus = data.focus;
+      const startDate = alignToMonday(data.startDate);
+      const plan = generatePlan(focus, startDate);
+      plan.focusLabel = data.focusLabel || data.summary.slice(0, 80);
+      plan.aiSummary = data.summary;
+      plan.aiGenerated = true;
+
+      for (const weekExport of (data.weeks || [])) {
+        const weekNum = Number(weekExport.weekNum);
+        if (!Number.isFinite(weekNum) || weekNum < 1 || weekNum > 12) continue;
+        const week = plan.weeks.find(w => w.weekNum === weekNum);
+        if (!week) continue;
+
+        if (Array.isArray(weekExport.structured)) {
+          STRUCTURED_DAYS.forEach((dayName, idx) => {
+            const spec = weekExport.structured[idx];
+            if (!spec) return;
+            const day = week.days.find(d => d.dayName === dayName);
+            if (day) applyDaySpec(day, week, spec);
+          });
+        }
+
+        if (weekExport.sunday && typeof weekExport.sunday === 'object') {
+          const day = week.days.find(d => d.dayName === 'Sun');
+          if (day) applyDaySpec(day, week, { type: 'endurance', name: day.name, ...weekExport.sunday });
+        }
+      }
+
+      for (const ov of (data.overrides || [])) {
+        if (!ov?.date) continue;
+        const found = findDayInPlanObject(plan, ov.date);
+        if (!found) continue;
+        applyDaySpec(found.day, found.week, ov);
+      }
+
+      plan.weeks.forEach(week => {
+        week.days.forEach(day => {
+          day.expectedRpe = getExpectedRpe(day, week);
+        });
+      });
+
+      return plan;
+    }
+
+    function setPlanImportStatus(msg, isError) {
+      for (const el of document.querySelectorAll('.plan-import-status')) {
+        el.textContent = msg || '';
+        el.classList.toggle('text-emerald-600', !isError && !!msg);
+        el.classList.toggle('text-red-600', !!isError);
+      }
+    }
+
+    async function importPlanResponse() {
+      const text = document.getElementById('planImportText')?.value?.trim() || '';
+      if (!text) {
+        setPlanImportStatus('Paste the AI plan reply first.', true);
+        return;
+      }
+
+      const parsed = parsePlanExport(text);
+      if (!parsed.ok) {
+        setPlanImportStatus(parsed.error, true);
+        return;
+      }
+
+      const { data } = parsed;
+      const weekCount = (data.weeks || []).length;
+      const overrideCount = (data.overrides || []).length;
+      const detail = [
+        data.summary,
+        '',
+        `Focus: ${FOCUSES[data.focus].label}`,
+        `Start: ${alignToMonday(data.startDate)}`,
+        weekCount ? `${weekCount} custom week(s)` : 'Base template only',
+        overrideCount ? `${overrideCount} date override(s)` : null,
+      ].filter(Boolean).join('\n');
+
+      if (!confirm(`Apply AI plan?\n\n${detail}\n\nThis replaces your current plan.`)) return;
+
+      setPlanImportStatus('Building plan…', false);
+      try {
+        state.focus = data.focus;
+        state.startDate = alignToMonday(data.startDate);
+        document.getElementById('startDate').value = state.startDate;
+        document.querySelectorAll('[data-focus]').forEach(b => {
+          b.classList.toggle('active', b.dataset.focus === state.focus);
+          b.classList.toggle('text-gray-500', b.dataset.focus !== state.focus);
+        });
+        state.plan = buildPlanFromExport(data);
+        state.completions = {};
+        state.indoorByDate = {};
+        state.selectedWeek = 1;
+        state.calendarStart = null;
+        state.predictedFtp = state.ftp;
+        saveState();
+        renderPlan();
+        showPlanGeneratedNotice(state.plan);
+        setPlanImportStatus('AI plan applied.', false);
+        document.getElementById('planImportText').value = '';
+      } catch (err) {
+        setPlanImportStatus(err.message || 'Apply failed', true);
       }
     }
 
@@ -5511,6 +5919,15 @@ Not a doctor. No copyrighted Training Bible quotes.`;
       updateFitnessChartLegend();
       initViewRouting();
 
+      const planStoryEl = document.getElementById('planStoryText');
+      if (planStoryEl) {
+        planStoryEl.value = state.planStoryText || '';
+        planStoryEl.addEventListener('input', () => {
+          state.planStoryText = planStoryEl.value;
+          saveState();
+        });
+      }
+
       document.getElementById('startDate').addEventListener('change', (e) => {
         state.startDate = e.target.value;
         saveState();
@@ -5590,6 +6007,9 @@ Not a doctor. No copyrighted Training Bible quotes.`;
 
       document.getElementById('btnCopyCoachContext')?.addEventListener('click', copyCoachContext);
       document.querySelector('.btn-apply-coach')?.addEventListener('click', () => importCoachResponse());
+
+      document.getElementById('btnCopyPlanContext')?.addEventListener('click', copyPlanBuilderContext);
+      document.querySelector('.btn-apply-plan')?.addEventListener('click', () => importPlanResponse());
 
       document.getElementById('btnImport').addEventListener('click', () => {
         document.getElementById('fileImport').click();

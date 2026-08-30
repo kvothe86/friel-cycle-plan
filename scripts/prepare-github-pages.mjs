@@ -13,6 +13,7 @@ const outDir = join(root, 'pages-deploy');
 const includes = [
   'index.html',
   'friel-coach-context.md',
+  'veloplanner-plan-context.md',
   'favicon.ico',
   'favicon.png',
   'apple-touch-icon.png',

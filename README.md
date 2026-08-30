@@ -34,6 +34,7 @@ Plan settings moved out of the main flow into **Settings**. Generate a plan ther
 - **Workout detail modal** — click any session to view Zwift-style instructions, watt targets, intensity profile, and zone breakdown
 - **Weather forecast** (intervals.icu) — hourly timeline on plan days; best dry ride window on outdoor Sundays; see [Weather forecast](#weather-forecast) below
 - **Friel Coach LLM import/export** — copy context / apply coach JSON on **Dashboard → Today's session**
+- **AI Plan (LLM)** — copy story + constraints / apply `veloplanner-plan` JSON on **Settings** to build a custom 12-week block
 
 ## Workout detail modal
 

@@ -29,6 +29,12 @@ No build step. App is a single `index.html` plus static assets.
 - **Import:** Expand **Paste coach reply** on the same panel → **Apply coach changes**
 - Keep `.cursor/skills/friel-coach/SKILL.md` and `friel-coach-context.md` in sync.
 
+## AI Plan (LLM)
+
+- **Export:** Settings → **Copy for AI plan** (includes athlete story + workout preset catalog)
+- **Import:** Settings → **Paste AI plan reply** → **Apply AI plan**
+- Keep `veloplanner-plan-context.md` in sync with the export schema in `index.html`.
+
 ## Git identity
 
 If `git commit` fails on author identity, use `-c user.name=kvothe86 -c user.email=kvothe86@users.noreply.github.com` for that commit (do not set global git config unless the user asks).
