@@ -4,6 +4,11 @@ All notable changes to VeloPlanner.
 
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [3.2.2] - 2026-08-30
+
+### Changed
+- **LLM chat shortcuts** — official brand logos on ChatGPT, Gemini, Claude, and Mistral buttons
+
 ## [3.2.1] - 2026-08-30
 
 ### Added
