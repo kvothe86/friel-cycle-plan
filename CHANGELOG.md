@@ -4,6 +4,19 @@ All notable changes to VeloPlanner.
 
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [3.3.0] - 2026-08-30
+
+### Changed
+- **In-app LLM** — replaced copy/paste + external chat links with direct API calls (Settings → AI assistant)
+- **Friel Coach** — Dashboard → **Ask coach** with question field; manual import fallback
+- **AI Plan** — Settings → **Generate plan**; manual import fallback
+
+### Removed
+- **Copy for coach / Copy for AI plan** and ChatGPT/Gemini/Claude/Mistral shortcut links
+
+### Added
+- **Free-tier providers** — Google AI Studio (default), Groq, OpenRouter, Mistral, custom OpenAI-compatible ([free-llm.com](https://free-llm.com))
+
 ## [3.2.2] - 2026-08-30
 
 ### Changed

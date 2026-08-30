@@ -108,30 +108,27 @@ All logic lives in `index.html` (no separate weather module):
 
 - `syncIntervalsWellness()` — fetches wellness, activities, weather, and events directly from intervals.icu `/api/v1/` (browser CORS). State key: `state.intervalsWeatherForecast` in `localStorage`.
 
-## LLM workflows (no API)
+## LLM workflows (free API tiers)
 
-VeloPlanner never calls an LLM API. You copy context to your own chat, then paste structured JSON back.
+VeloPlanner calls LLM APIs directly from your browser. Add a free-tier key in **Settings → AI assistant** — see [free-llm.com](https://free-llm.com) for providers (Groq, Google AI Studio, OpenRouter, Mistral, …). Keys stay in localStorage only.
 
 ### Friel Coach — adjust today's plan
 
 **Dashboard → Today's session**
 
-1. **Copy for coach** — Friel instructions + live athlete snapshot (readiness, PMC, plan, compliance)
-2. **Open chat** — ChatGPT, Gemini, Claude, or Mistral (logo buttons below copy)
-3. Ask your question (e.g. “Should I do today?” or “Table tennis tonight — swap to recovery”)
-4. Expand **Paste coach reply** → **Apply coach changes**
+1. Type your question (e.g. “Should I do today?” or “Table tennis tonight — swap to recovery”)
+2. **Ask coach** — sends Friel instructions + live athlete snapshot (readiness, PMC, plan, compliance)
+3. Review the reply → **Apply coach changes** (or use **Manual import**)
 
 Export block: `veloplanner-coach` JSON with `actions` (adjust, skip, complete, revert, push). Spec: `friel-coach-context.md`.
 
 ### AI Plan — build a custom 12-week block
 
-**Settings → AI Plan (LLM)**
+**Settings → AI Plan**
 
 1. Write **Your story & constraints** (goal event, weekly life, cross-training, injuries)
-2. **Copy for AI plan** — plan-builder instructions + snapshot + workout preset catalog
-3. **Open chat** — same logo buttons as coach
-4. Ask the LLM to design your block; it returns a `veloplanner-plan` JSON block
-5. Expand **Paste AI plan reply** → **Apply AI plan** (replaces the current plan)
+2. **Generate plan** — sends plan-builder instructions + snapshot + workout preset catalog
+3. Review the reply → **Apply AI plan** (replaces the current plan; manual import fallback)
 
 Use static **Generate 12-Week Plan** for template plans by focus, or AI Plan when your schedule needs custom overrides (e.g. table tennis Wednesdays, shorter Sundays). Spec: `veloplanner-plan-context.md`.
 
@@ -139,8 +136,8 @@ Use static **Generate 12-Week Plan** for template plans by focus, or AI Plan whe
 
 | File | Used by |
 |------|---------|
-| `friel-coach-context.md` | Copy for coach |
-| `veloplanner-plan-context.md` | Copy for AI plan |
+| `friel-coach-context.md` | Friel Coach system prompt |
+| `veloplanner-plan-context.md` | AI Plan system prompt |
 
 Both are included in the GitHub Pages deploy bundle.
 

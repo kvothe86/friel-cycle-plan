@@ -1,6 +1,6 @@
 # VeloPlanner — project conventions
 
-**Current version:** 3.2.2
+**Current version:** 3.3.0
 
 ## Live site
 
@@ -25,24 +25,30 @@ No build step. App is a single `index.html` plus static assets and LLM context m
 - Browser calls `https://intervals.icu/api/v1/` directly (CORS supported). No server proxy.
 - API key + athlete ID in localStorage / JSON export-import.
 
+## LLM (AI assistant)
+
+- Browser calls provider APIs directly (Gemini, Groq, OpenRouter support CORS). No server proxy.
+- Free-tier providers curated from [free-llm.com](https://free-llm.com); API key + provider in localStorage / JSON export-import.
+- Default provider: Google AI Studio (Gemini) — no credit card.
+
 ## Plan generation
 
 - **Static:** Settings → focus + start date → **Generate 12-Week Plan**
 - **Sunday durations:** Fondo 1h30–3h; other focuses 1h30–2h30 (recovery weeks ~70%)
-- **AI Plan:** Settings → story + **Copy for AI plan** → LLM → **Apply AI plan** (`veloplanner-plan` JSON)
+- **AI Plan:** Settings → story + **Generate plan** → **Apply AI plan** (`veloplanner-plan` JSON)
 
 ## Friel Coach (LLM)
 
-- **Export:** Dashboard → Today's session → **Copy for coach**
-- **Import:** **Paste coach reply** → **Apply coach changes** (`veloplanner-coach` JSON)
-- **Chat shortcuts:** branded logo buttons → ChatGPT, Gemini, Claude, Mistral (new tab)
+- **Ask:** Dashboard → Today's session → question + **Ask coach**
+- **Import:** **Apply coach changes** (`veloplanner-coach` JSON) — manual import fallback
+- **API:** Settings → **AI assistant** — free-tier provider + key ([free-llm.com](https://free-llm.com))
 - Keep `.cursor/skills/friel-coach/SKILL.md` and `friel-coach-context.md` in sync.
 
 ## AI Plan (LLM)
 
-- **Export:** Settings → **Copy for AI plan** (story + athlete snapshot + preset catalog)
-- **Import:** **Paste AI plan reply** → **Apply AI plan**
-- **Chat shortcuts:** same logo buttons as coach
+- **Generate:** Settings → story + **Generate plan**
+- **Import:** **Apply AI plan**
+- **API:** same Settings → **AI assistant** section
 - Keep `veloplanner-plan-context.md` in sync with the export schema in `index.html`.
 
 ## Git identity
