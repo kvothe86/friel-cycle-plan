@@ -110,10 +110,26 @@
     input[type="range"] { accent-color: var(--primary); }
     .workout-row-clickable { cursor: pointer; }
     .workout-row-clickable:hover .day-title { color: var(--primary); }
+    #workoutModal, #noticeModal {
+      display: none;
+      pointer-events: none;
+    }
+    #workoutModal.open, #noticeModal.open {
+      display: flex !important;
+      pointer-events: auto;
+    }
     #workoutModal { transition: opacity 0.2s ease; }
-    #workoutModal.open { display: flex; }
     #noticeModal { transition: opacity 0.2s ease; }
-    #noticeModal.open { display: flex; }
+    .llm-chat-link {
+      font-size: 0.75rem;
+      font-weight: 500;
+      padding: 0.25rem 0.625rem;
+      border-radius: 9999px;
+      background: var(--muted);
+      color: #4B5563;
+      transition: background-color 0.15s ease;
+    }
+    .llm-chat-link:hover { background: #E5E7EB; color: #1F2937; }
     .modal-panel { animation: modalIn 0.28s cubic-bezier(0.32, 0.72, 0, 1); }
     @keyframes modalIn { from { opacity: 0; transform: scale(0.96) translateY(8px); } to { opacity: 1; transform: scale(1) translateY(0); } }
     .step-block { border-radius: 0.5rem; padding: 0.875rem 1rem; font-size: 0.875rem; font-weight: 500; line-height: 1.35; }
@@ -345,6 +361,7 @@
               <div class="flex flex-wrap items-center gap-2">
                 <button type="button" id="btnCopyCoachContext" class="btn-secondary text-sm">Copy for coach</button>
               </div>
+              <div id="coachLlmLinks"></div>
               <p id="coachCopyStatus" class="text-xs text-gray-400 mt-2 hidden"></p>
               <details class="mt-3 group">
                 <summary class="text-sm text-blue-600 cursor-pointer hover:text-blue-700 select-none list-none flex items-center gap-1">
@@ -446,6 +463,7 @@
           <div class="flex flex-wrap items-center gap-2">
             <button type="button" id="btnCopyPlanContext" class="btn-secondary text-sm">Copy for AI plan</button>
           </div>
+          <div id="planLlmLinks"></div>
           <p id="planCopyStatus" class="text-xs text-gray-400 hidden"></p>
           <details class="group">
             <summary class="text-sm text-blue-600 cursor-pointer hover:text-blue-700 select-none list-none flex items-center gap-1">
@@ -586,7 +604,7 @@
   <input type="file" id="fileImport" accept=".json" class="hidden" />
 
   <!-- Workout detail modal -->
-  <div id="workoutModal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 sm:p-6" role="dialog" aria-modal="true" aria-labelledby="modalWorkoutTitle">
+  <div id="workoutModal" class="fixed inset-0 z-[100] items-center justify-center p-4 sm:p-6" role="dialog" aria-modal="true" aria-labelledby="modalWorkoutTitle">
     <div class="absolute inset-0 bg-black/30" data-action="close-modal"></div>
     <div class="modal-panel relative w-full max-w-3xl max-h-[90vh] overflow-y-auto panel">
       <div class="sticky top-0 z-10 flex items-center justify-between px-5 sm:px-6 py-4 border-b border-gray-200 bg-white rounded-t-lg">
@@ -604,7 +622,7 @@
   </div>
 
   <!-- Plan / action notice modal -->
-  <div id="noticeModal" class="fixed inset-0 z-[110] hidden items-center justify-center p-4 sm:p-6" role="dialog" aria-modal="true" aria-labelledby="noticeModalTitle">
+  <div id="noticeModal" class="fixed inset-0 z-[110] items-center justify-center p-4 sm:p-6" role="dialog" aria-modal="true" aria-labelledby="noticeModalTitle">
     <div class="absolute inset-0 bg-black/30" data-action="close-notice"></div>
     <div class="modal-panel relative w-full max-w-md panel">
       <div class="px-5 py-4 border-b border-gray-200 flex items-center justify-between gap-3">
@@ -1008,6 +1026,35 @@
       return wrap(inModal ? `<div class="p-4 rounded-lg bg-gray-100 border border-gray-200 space-y-4">${acts}</div>` : acts);
     }
 
+    const LLM_CHAT_LINKS = [
+      { name: 'ChatGPT', url: 'https://chatgpt.com/' },
+      { name: 'Gemini', url: 'https://gemini.google.com/app' },
+      { name: 'Claude', url: 'https://claude.ai/new' },
+      { name: 'Mistral', url: 'https://chat.mistral.ai/chat' },
+    ];
+
+    function renderLlmChatLinksHtml() {
+      const links = LLM_CHAT_LINKS.map(l =>
+        `<a href="${l.url}" target="_blank" rel="noopener noreferrer" class="llm-chat-link">${l.name}</a>`
+      ).join('');
+      return `<div class="flex flex-wrap items-center gap-2 mt-2"><span class="text-xs text-gray-400">Open chat:</span>${links}</div>`;
+    }
+
+    function mountLlmChatLinks() {
+      for (const id of ['coachLlmLinks', 'planLlmLinks']) {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = renderLlmChatLinksHtml();
+      }
+    }
+
+    function isModalOpen(id) {
+      return document.getElementById(id)?.classList.contains('open') ?? false;
+    }
+
+    function updateBodyScrollLock() {
+      document.body.style.overflow = (isModalOpen('workoutModal') || isModalOpen('noticeModal')) ? 'hidden' : '';
+    }
+
     function openWorkoutModal(date) {
       const found = findDayInPlan(date);
       if (!found) return;
@@ -1016,18 +1063,14 @@
       document.getElementById('modalWorkoutTitle').textContent = day.name;
       document.getElementById('modalWorkoutMeta').textContent = `${day.dayName} · ${day.date}${week.weekNum ? ` · Week ${week.weekNum}` : ''}${day.type !== 'rest' ? ` · ${intervalsEventStatus(day).label}` : ''}`;
       document.getElementById('modalBody').innerHTML = renderWorkoutModalContent(day, week) + ((state.activeView === 'calendar' || isSundayEndurance(day)) ? renderCompletionControls(day, week, true) : '');
-      const modal = document.getElementById('workoutModal');
-      modal.classList.remove('hidden');
-      modal.classList.add('open');
-      document.body.style.overflow = 'hidden';
+      document.getElementById('workoutModal').classList.add('open');
+      updateBodyScrollLock();
     }
 
     function closeWorkoutModal() {
-      const modal = document.getElementById('workoutModal');
-      modal.classList.add('hidden');
-      modal.classList.remove('open');
-      document.body.style.overflow = '';
+      document.getElementById('workoutModal').classList.remove('open');
       modalOpenDate = null;
+      updateBodyScrollLock();
     }
 
     function openNoticeModal(title, bodyHtml, actions) {
@@ -1036,17 +1079,13 @@
       document.getElementById('noticeModalActions').innerHTML = actions.map(a =>
         `<button type="button" data-notice-action="${a.id}" class="px-4 py-2.5 rounded-full text-sm font-medium transition ${a.primary ? 'btn-primary px-4 py-2.5 text-sm' : 'btn-secondary px-4 py-2.5 text-sm'}">${a.label}</button>`
       ).join('');
-      const modal = document.getElementById('noticeModal');
-      modal.classList.remove('hidden');
-      modal.classList.add('open');
-      document.body.style.overflow = 'hidden';
+      document.getElementById('noticeModal').classList.add('open');
+      updateBodyScrollLock();
     }
 
     function closeNoticeModal() {
-      const modal = document.getElementById('noticeModal');
-      modal.classList.add('hidden');
-      modal.classList.remove('open');
-      if (!document.getElementById('workoutModal').classList.contains('open')) document.body.style.overflow = '';
+      document.getElementById('noticeModal').classList.remove('open');
+      updateBodyScrollLock();
     }
 
     function showPlanGeneratedNotice(plan) {
@@ -2375,6 +2414,7 @@ Not a doctor. No copyrighted Training Bible quotes.`;
 
       state.predictedFtp = recalculatePredictedFtp();
       saveState();
+      closeWorkoutModal();
       renderPlan();
       return results;
     }
@@ -2424,6 +2464,7 @@ Not a doctor. No copyrighted Training Bible quotes.`;
           const el = document.getElementById('coachImportText');
           if (el) el.value = '';
         }
+        updateBodyScrollLock();
       } catch (err) {
         setCoachImportStatus(err.message || 'Apply failed', true);
       }
@@ -2783,6 +2824,7 @@ Structured slots: preset "focus.phase.index" (e.g. endurance.base.0) or custom s
 
       setPlanImportStatus('Building plan…', false);
       try {
+        closeWorkoutModal();
         state.focus = data.focus;
         state.startDate = alignToMonday(data.startDate);
         document.getElementById('startDate').value = state.startDate;
@@ -5577,8 +5619,11 @@ Structured slots: preset "focus.phase.index" (e.g. endurance.base.0) or custom s
         insight.innerHTML = `<strong class="text-gray-600">${label}:</strong> ${loadLine}${isToday ? baselineNote : ''}`;
       }
 
-      hit.addEventListener('click', e => showDay(pickIdx(e.clientX)));
-      hit.addEventListener('mousemove', e => showDay(pickIdx(e.clientX)));
+      if (!el.dataset.chartBound) {
+        el.dataset.chartBound = '1';
+        hit.addEventListener('click', e => showDay(pickIdx(e.clientX)));
+        hit.addEventListener('mousemove', e => showDay(pickIdx(e.clientX)));
+      }
       let todayIdx = series.findIndex(d => d.date === today);
       if (todayIdx < 0) todayIdx = series.length - 1;
       showDay(todayIdx);
@@ -5918,6 +5963,10 @@ Structured slots: preset "focus.phase.index" (e.g. endurance.base.0) or custom s
       bindIntervalsSettings();
       updateFitnessChartLegend();
       initViewRouting();
+      mountLlmChatLinks();
+      document.getElementById('workoutModal').classList.remove('open');
+      document.getElementById('noticeModal').classList.remove('open');
+      updateBodyScrollLock();
 
       const planStoryEl = document.getElementById('planStoryText');
       if (planStoryEl) {
