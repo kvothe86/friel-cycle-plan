@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Prepare a static folder for GitHub Pages (pages-deploy/).
- * Strips Netlify-only scripts and injects <base href> for project pages.
+ * Injects <base href> for project pages when needed.
  */
 import { cpSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'fs';
 import { dirname, join } from 'path';
@@ -20,8 +20,6 @@ const includes = [
 ];
 
 const baseHref = process.env.GITHUB_PAGES_BASE || '/';
-const netlifyHud =
-  /<script async src="\/\.netlify\/scripts\/hud[^"]*"[^>]*><\/script>\s*/g;
 
 rmSync(outDir, { recursive: true, force: true });
 mkdirSync(outDir, { recursive: true });
@@ -32,10 +30,9 @@ for (const rel of includes) {
     console.error(`Missing required file: ${rel}`);
     process.exit(1);
   }
-  if (rel === 'index.html') {
+  if (rel === 'index.html' && baseHref !== '/') {
     let html = readFileSync(src, 'utf8');
-    html = html.replace(netlifyHud, '');
-    if (baseHref !== '/' && !html.includes('<base ')) {
+    if (!html.includes('<base ')) {
       html = html.replace('<head>', `<head>\n  <base href="${baseHref}">`);
     }
     writeFileSync(join(outDir, rel), html);

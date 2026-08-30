@@ -63,7 +63,7 @@ After you change location in intervals.icu or when the forecast updates, use **S
 
 ### Best ride window logic
 
-The Sunday advice picks a **contiguous dry window** long enough for the planned ride (default 3 hours, or your configured endurance duration):
+The Sunday advice picks a **contiguous dry window** long enough for that day's planned ride (typically 1h30–3h on Fondo, 1h30–2h30 on other focuses):
 
 1. Sort slots by time for that day.
 2. Prefer windows with **low rain probability** and **moderate wind** (wind is a tie-breaker).
@@ -203,24 +203,4 @@ Each 4-week block ends with a recovery week (weeks 4, 8, 12).
 
 ## Changelog
 
-### v2 — Multi-view app (current)
-
-- **List / Calendar / Dashboard / Settings** navigation
-- **4-week calendar** with colour-coded workout pills and in-modal completion
-- **Dashboard** with CTL / ATL / form chart, weekly TSS bars, and plan timeline
-- **Training load baseline** in Settings (CTL, ATL, TSB from intervals.icu or Strava)
-- **Flat UI redesign** — Outfit font, design tokens, embedded artwork
-- **Self-contained build** — inlined Tailwind, built-in ZIP export, no runtime CDN deps
-- **QHD scaling** — responsive root font-size up to 140% on 2560px+ displays
-
-### Workout modal fixes
-
-- **Close button** — modal dismiss wired to ×, backdrop, and Escape
-- **Watt display** — warmup, cooldown, intervals, and steady blocks show calculated watts alongside % FTP
-- **Profile chart** — time-proportional bars, shared baseline, solid Zwift zone colours, stepped ramps
-
-### Workout duration fixes
-
-- **Interval repeats preserved** — 3×12 and 3×15 threshold sessions no longer drop to 2 repeats
-- **~60 min sessions** — short workouts get Z2 filler; long ones trim cooldown/recovery first (never interval count)
-- **Zwift cooldown ramp** — cooldown exports as stepped SteadyState blocks (compatible with Zwift and intervals.icu)
+See [CHANGELOG.md](CHANGELOG.md).

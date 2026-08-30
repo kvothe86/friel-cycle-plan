@@ -4,6 +4,12 @@ All notable changes to VeloPlanner.
 
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [3.1.9] - 2026-08-30
+
+### Changed
+- **Sunday endurance durations** — Fondo plan 1h30–3h (was up to 4h); other focuses capped at 1h30–2h30
+- **Repo cleanup** — removed unused Netlify proxy functions and deploy scripts (GitHub Pages + direct intervals.icu API only)
+
 ## [3.1.8] - 2026-08-29
 
 ### Added

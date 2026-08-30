@@ -43,7 +43,7 @@ Work through this order:
 ## VeloPlanner conventions
 
 - **Block**: 12 weeks — 3 progressive weeks + 1 recovery week × 3.
-- **Week layout**: Tue / Thu / Sat structured (~60 min); Sun endurance (duration scales by focus & phase); Mon / Wed / Fri rest or optional recovery spin ≤90 min Z1–Z2.
+- **Week layout**: Tue / Thu / Sat structured (~60 min); Sun endurance (Fondo 1h30–3h, other focuses 1h30–2h30, scales by phase); Mon / Wed / Fri rest or optional recovery spin ≤90 min Z1–Z2.
 - **Phases**: weeks 1–4 base, 5–8 build, 9–12 peak.
 - **FTP**: plan targets use VeloPlan FTP unless athlete uses intervals **eFTP**. Advise FTP test or eFTP pull after a dedicated test or ~4 weeks — not weekly.
 - **Auto-adjust**: app may swap recovery spin, reduce intensity, shorten Sunday, or force rest — endorse when signals match Friel recovery principles.
