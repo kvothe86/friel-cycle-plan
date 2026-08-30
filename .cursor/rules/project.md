@@ -1,5 +1,7 @@
 # VeloPlanner — project conventions
 
+**Current version:** 3.2.2
+
 ## Live site
 
 - **Production:** GitHub Pages — https://kvothe86.github.io/friel-cycle-plan/
@@ -12,27 +14,35 @@ When the user says **“commit to GitHub”** (or similar), they mean: **commit 
 ## Local dev
 
 ```bash
-npm run dev          # static server on http://localhost:4317
+npm run dev            # static server on http://localhost:4317
 npm run prepare:pages  # preview GitHub Pages bundle in pages-deploy/
 ```
 
-No build step. App is a single `index.html` plus static assets.
+No build step. App is a single `index.html` plus static assets and LLM context markdown files.
 
 ## intervals.icu
 
 - Browser calls `https://intervals.icu/api/v1/` directly (CORS supported). No server proxy.
 - API key + athlete ID in localStorage / JSON export-import.
 
+## Plan generation
+
+- **Static:** Settings → focus + start date → **Generate 12-Week Plan**
+- **Sunday durations:** Fondo 1h30–3h; other focuses 1h30–2h30 (recovery weeks ~70%)
+- **AI Plan:** Settings → story + **Copy for AI plan** → LLM → **Apply AI plan** (`veloplanner-plan` JSON)
+
 ## Friel Coach (LLM)
 
 - **Export:** Dashboard → Today's session → **Copy for coach**
-- **Import:** Expand **Paste coach reply** on the same panel → **Apply coach changes**
+- **Import:** **Paste coach reply** → **Apply coach changes** (`veloplanner-coach` JSON)
+- **Chat shortcuts:** branded logo buttons → ChatGPT, Gemini, Claude, Mistral (new tab)
 - Keep `.cursor/skills/friel-coach/SKILL.md` and `friel-coach-context.md` in sync.
 
 ## AI Plan (LLM)
 
-- **Export:** Settings → **Copy for AI plan** (includes athlete story + workout preset catalog)
-- **Import:** Settings → **Paste AI plan reply** → **Apply AI plan**
+- **Export:** Settings → **Copy for AI plan** (story + athlete snapshot + preset catalog)
+- **Import:** **Paste AI plan reply** → **Apply AI plan**
+- **Chat shortcuts:** same logo buttons as coach
 - Keep `veloplanner-plan-context.md` in sync with the export schema in `index.html`.
 
 ## Git identity

@@ -12,8 +12,9 @@ The app has four main views, switched from the header navigation:
 |------|---------|
 | **List** | Week-by-week plan with prev/next navigation and session rows |
 | **Calendar** | 4-week rolling grid; click workouts to open details and mark complete |
-| **Dashboard** | CTL / ATL / form chart, weekly TSS bars, and plan timeline |
-| **Settings** | Generate or clear plan; set FTP; seed training-load baseline |
+| **Dashboard** | CTL / ATL / form chart, readiness, Friel Coach, weekly TSS bars, plan timeline |
+| **Guide** | Methodology, zones, and readiness reference |
+| **Settings** | Generate or AI-import plan; FTP; intervals.icu; training-load baseline |
 
 Plan settings moved out of the main flow into **Settings**. Generate a plan there, then use List or Calendar to follow it.
 
@@ -22,7 +23,7 @@ Plan settings moved out of the main flow into **Settings**. Generate a plan ther
 - **Training focuses:** Endurance (Fondo), Sprint, TT, Hills/Climbs, All-Round (FTP)
 - **Fixed schedule:**
   - **Tue / Thu / Sat** — structured workouts (≤60 min)
-  - **Sunday** — endurance ride (duration recommendation only)
+  - **Sunday** — outdoor endurance (duration only; Fondo 1h30–3h, other focuses 1h30–2h30)
   - **Mon / Wed / Fri** — rest or optional recovery spin (≤90 min)
 - **Auto-save** to browser `localStorage` (`veloplanner-v2`)
 - **Export / import** full plan + progress as JSON (header buttons)
@@ -33,8 +34,9 @@ Plan settings moved out of the main flow into **Settings**. Generate a plan ther
 - **Training load dashboard** — CTL, ATL, and form (TSB) chart with optional baseline from intervals.icu / Strava
 - **Workout detail modal** — click any session to view Zwift-style instructions, watt targets, intensity profile, and zone breakdown
 - **Weather forecast** (intervals.icu) — hourly timeline on plan days; best dry ride window on outdoor Sundays; see [Weather forecast](#weather-forecast) below
-- **Friel Coach LLM import/export** — copy context / apply coach JSON on **Dashboard → Today's session**
-- **AI Plan (LLM)** — copy story + constraints / apply `veloplanner-plan` JSON on **Settings** to build a custom 12-week block
+- **Friel Coach (LLM)** — day-to-day adjustments: copy snapshot, paste coach JSON, apply on **Dashboard → Today's session**
+- **AI Plan (LLM)** — custom 12-week block from your story: copy on **Settings**, paste `veloplanner-plan` JSON, apply
+- **LLM chat shortcuts** — branded buttons (ChatGPT, Gemini, Claude, Mistral) open your preferred chat in a new tab; no API key in the app
 
 ## Workout detail modal
 
@@ -106,15 +108,41 @@ All logic lives in `index.html` (no separate weather module):
 
 - `syncIntervalsWellness()` — fetches wellness, activities, weather, and events directly from intervals.icu `/api/v1/` (browser CORS). State key: `state.intervalsWeatherForecast` in `localStorage`.
 
-### Friel Coach (Cursor / Codex / ChatGPT, no API)
+## LLM workflows (no API)
 
-On the **Dashboard → Today's session** panel:
+VeloPlanner never calls an LLM API. You copy context to your own chat, then paste structured JSON back.
 
-1. **Copy for coach** — Friel prompt + live athlete snapshot
-2. Paste into your LLM and ask your question
-3. Expand **Paste coach reply** and **Apply coach changes**
+### Friel Coach — adjust today's plan
 
-See `friel-coach-context.md` → *VeloPlanner export block* for the JSON action schema.
+**Dashboard → Today's session**
+
+1. **Copy for coach** — Friel instructions + live athlete snapshot (readiness, PMC, plan, compliance)
+2. **Open chat** — ChatGPT, Gemini, Claude, or Mistral (logo buttons below copy)
+3. Ask your question (e.g. “Should I do today?” or “Table tennis tonight — swap to recovery”)
+4. Expand **Paste coach reply** → **Apply coach changes**
+
+Export block: `veloplanner-coach` JSON with `actions` (adjust, skip, complete, revert, push). Spec: `friel-coach-context.md`.
+
+### AI Plan — build a custom 12-week block
+
+**Settings → AI Plan (LLM)**
+
+1. Write **Your story & constraints** (goal event, weekly life, cross-training, injuries)
+2. **Copy for AI plan** — plan-builder instructions + snapshot + workout preset catalog
+3. **Open chat** — same logo buttons as coach
+4. Ask the LLM to design your block; it returns a `veloplanner-plan` JSON block
+5. Expand **Paste AI plan reply** → **Apply AI plan** (replaces the current plan)
+
+Use static **Generate 12-Week Plan** for template plans by focus, or AI Plan when your schedule needs custom overrides (e.g. table tennis Wednesdays, shorter Sundays). Spec: `veloplanner-plan-context.md`.
+
+### Context files (served with the app)
+
+| File | Used by |
+|------|---------|
+| `friel-coach-context.md` | Copy for coach |
+| `veloplanner-plan-context.md` | Copy for AI plan |
+
+Both are included in the GitHub Pages deploy bundle.
 
 ## Dashboard
 
@@ -129,13 +157,14 @@ Seed the chart from your real fitness data in **Settings → Training load basel
 
 ## Tech stack
 
-The app logic lives in a **single `index.html`** file, plus small static favicon assets at the repo root:
+The app logic lives in a **single `index.html`** file, plus static assets at the repo root:
 
 - **Outfit** font (Google Fonts)
 - **Inlined Tailwind CSS** subset — no CDN or build step at runtime
 - **Self-contained ZIP builder** for Zwift export (no JSZip dependency)
 - **Embedded artwork** (logo and summary illustration as data URIs)
-- **Favicons** — `favicon.ico`, `favicon.png`, and `apple-touch-icon.png` (cyclist logo) for tab and bookmark icons
+- **Favicons** — `favicon.ico`, `favicon.png`, and `apple-touch-icon.png`
+- **LLM context** — `friel-coach-context.md`, `veloplanner-plan-context.md` (loaded by copy buttons)
 
 Open `index.html` directly in a browser, or serve the folder locally. No `npm install` required.
 
@@ -201,6 +230,8 @@ Plans follow classic periodization across three phases:
 | 9–12  | Peak  | Race-ready sharpening |
 
 Each 4-week block ends with a recovery week (weeks 4, 8, 12).
+
+Sunday endurance progresses by phase; recovery weeks reduce duration ~30%. Regenerate or use **AI Plan** to customize.
 
 ## Changelog
 
