@@ -1,6 +1,6 @@
 {
   "name": "veloplanner",
-  "version": "3.2.0",
+  "version": "3.2.1",
   "description": "Your personal 12-week cycling plan generator with calendar, dashboard, Zwift export, and training-load tracking",
   "scripts": {
     "dev": "npx --yes serve -l 4317 .",

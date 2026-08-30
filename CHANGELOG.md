@@ -4,6 +4,14 @@ All notable changes to VeloPlanner.
 
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [3.2.1] - 2026-08-30
+
+### Added
+- **LLM chat shortcuts** — ChatGPT, Gemini, Claude, and Mistral links below Copy for coach / Copy for AI plan
+
+### Fixed
+- **Grey overlay after apply** — modal scroll-lock no longer sticks after coach or AI plan import
+
 ## [3.2.0] - 2026-08-30
 
 ### Added
