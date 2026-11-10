@@ -185,12 +185,16 @@ export function useLevels(today: IsoDate): Levels {
   const log = usePlanLog();
   const episodes = useSicknessEpisodes();
   const activities = useActivities(addDays(today, -LEVEL_HISTORY_DAYS), today);
-  return useMemo(() => {
+  const computed = useMemo(() => {
     const rides = activities
       .filter((a) => isCycling(a.type))
       .map((a) => ({ date: a.date, load: a.icu_training_load ?? 0, seconds: a.moving_time ?? 0 }));
     return computeLevels(settings.experience, log, rides, today, episodes);
   }, [settings.experience, log, activities, today, episodes]);
+  // Same values → same object, so the plan doesn't recompute (and re-log) for nothing.
+  const json = JSON.stringify(computed);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  return useMemo(() => computed, [json]);
 }
 
 // ---- M4: intervals.icu push ----
