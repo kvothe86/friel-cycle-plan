@@ -1,12 +1,15 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useMemo } from 'react';
-import { addDays, toIsoDate, type IsoDate } from '../lib/dates';
+import { addDays, startOfWeek, toIsoDate, type IsoDate } from '../lib/dates';
 import { buildPmcSeries, dailyLoads, type PmcPoint } from '../engine/pmc';
 import { computeReadiness, HRV_BASELINE_DAYS, type Readiness } from '../engine/readiness';
 import type { IcuSportSettings } from '../integrations/intervals/types';
-import { db, type StoredEvent } from './db';
+import { db, type StoredActivity, type StoredEvent } from './db';
 import type { BlockedRange } from '../engine/availability';
 import { planSeason, type SeasonPlan } from '../engine/macro';
+import { resolveRange } from '../engine/availability';
+import { isCycling } from '../engine/sports';
+import { isHardActivity, planHorizon, type DayPlan, type DoneActivity } from '../engine/week';
 import {
   DEFAULT_AVAILABILITY, DEFAULT_PLAN_SETTINGS,
   type AvailabilityOverride, type AvailabilityTemplate, type Goal, type PlanSettings,
@@ -107,4 +110,38 @@ export function useSeasonPlan(today: IsoDate): SeasonPlan | undefined {
       planSeason({ today, goals, currentCtl, template: availability.template, overrides, blocked, settings }),
     [today, goals, currentCtl, availability, overrides, blocked, settings],
   );
+}
+
+// ---- M3: 14-day plan ----
+
+export const PLAN_HORIZON_DAYS = 14;
+
+export function toDoneActivities(activities: readonly StoredActivity[]): DoneActivity[] {
+  return activities.map((a) => ({
+    date: a.date,
+    name: a.name ?? a.type ?? 'Activity',
+    load: a.icu_training_load ?? 0,
+    hard: isHardActivity({ cycling: isCycling(a.type), load: a.icu_training_load, intensity: a.icu_intensity, rpe: a.icu_rpe }),
+    cycling: isCycling(a.type),
+  }));
+}
+
+/** The 14-day plan, re-derived whenever data, goals or availability change. */
+export function usePlanHorizon(today: IsoDate): DayPlan[] | undefined {
+  const plan = useSeasonPlan(today);
+  const availability = useAvailability();
+  const overrides = useOverrides();
+  const blocked = useBlockedRanges();
+  const settings = usePlanSettings();
+  const activities = useActivities(addDays(startOfWeek(today), -1), today);
+  return useMemo(() => {
+    if (!plan || !availability) return undefined;
+    const days = resolveRange(today, PLAN_HORIZON_DAYS, availability.template, overrides, blocked);
+    return planHorizon({ today, plan, days, done: toDoneActivities(activities), experience: settings.experience });
+  }, [plan, availability, overrides, blocked, settings.experience, activities, today]);
+}
+
+export function useFtp(): number | undefined {
+  const athlete = useAthlete();
+  return rideSettings(athlete?.sportSettings)?.ftp ?? undefined;
 }

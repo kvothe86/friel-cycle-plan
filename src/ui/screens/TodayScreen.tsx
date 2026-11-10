@@ -1,4 +1,5 @@
-import { rideSettings, useAthlete, useCredentials, usePmc, useReadiness, useToday, useWellness } from '../../store/hooks';
+import { rideSettings, useAthlete, useCredentials, usePlanHorizon, usePmc, useReadiness, useToday, useWellness } from '../../store/hooks';
+import { DayDetail } from '../workout/DayDetail';
 import type { SignalKey } from '../../engine/readiness';
 import { NotConnected } from '../components/NotConnected';
 import { formatNumber, formatSigned } from '../format';
@@ -22,7 +23,8 @@ export function TodayScreen() {
   const [wellness] = useWellness(today, today);
   const now = pmc.at(-1);
   const weekAgo = pmc[0];
-  const ftp = rideSettings(athlete?.sportSettings)?.ftp;
+  const ftp = rideSettings(athlete?.sportSettings)?.ftp ?? undefined;
+  const todayPlan = usePlanHorizon(today)?.[0];
 
   return (
     <section>
@@ -95,7 +97,12 @@ export function TodayScreen() {
             </div>
           </div>
 
-          <p className="muted">Today's planned session arrives in M3.</p>
+          {todayPlan && (
+            <>
+              <h2 className="section-title">Today's session</h2>
+              <DayDetail day={todayPlan} ftp={ftp} />
+            </>
+          )}
         </>
       )}
     </section>
