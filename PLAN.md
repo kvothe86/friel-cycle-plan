@@ -1,11 +1,14 @@
-# Adaptive Cycling Coach — Product & Architecture Plan
+# CyclingHub — Product & Architecture Plan
 
-> Working title. A ground-up rebuild. The previous app (VeloPlanner, single-file
+> A ground-up rebuild. The previous app (VeloPlanner, single-file
 > fixed 12-week plans) lives on in git history (`main` / commit `7d215ba`).
 
 **One-line pitch:** *Tell it when you can ride and what you're aiming for — it
 plans every ride, re-plans every day from your real health and performance
 data, syncs with intervals.icu, and can run the workout on your smart trainer.*
+
+**Scope:** personal app for one athlete (me), desktop browser only (Chrome/Edge).
+No mobile, no accounts, no backend.
 
 Think JOIN-style adaptive planning, driven by intervals.icu data:
 CTL/ATL/TSB, HRV, resting HR, sleep, eFTP, power curve and how well you
@@ -57,7 +60,8 @@ A goal is one of:
 - Several goals are allowed. One **A goal** shapes the macro plan; **B/C
   events** get a mini-taper (B) or are trained through (C).
 - Races added in intervals.icu (categories `RACE_A/B/C`) are picked up
-  automatically as goals.
+  automatically as goals. `SICK`, `INJURED` and `HOLIDAY` events there are
+  also read: sick/injured trigger sickness mode, holiday means 0 availability.
 
 ### 2.3 Availability
 - **Weekly template:** minutes per weekday, plus an indoor/outdoor
@@ -67,11 +71,12 @@ A goal is one of:
 - Optional per-day flags: *indoor only*, *outdoor only*, *must be easy*
   (for example the day after a late shift).
 - Changing availability triggers an immediate re-plan.
+- Being sick is not an availability change. It has its own mode (§2.5).
 
 ### 2.4 Plan views
 - **Today:** the session, its intensity profile, the "why", a readiness
   badge and quick actions: *Ride in app*, *Done outside*, *Swap*, *Make
-  easier*, *Skip*.
+  easier*, *Skip*, *I'm sick*.
 - **14-day view:** the next two weeks. Day 1 is committed; days 2–14 are
   shown as *tentative* (dimmed or with a dashed border).
 - **Season view:** phases, weekly TSS targets vs. actual, and the
@@ -79,7 +84,47 @@ A goal is one of:
 - **History / analysis:** compliance per session (planned vs. actual
   TSS, IF, time in zone), plus HRV and RHR trends.
 
-### 2.5 Sync with intervals.icu
+### 2.5 Sickness mode (JOIN-style)
+One button: **"I'm sick"**. Pick a severity, then set the end date, or
+leave it open and confirm "I'm better" later.
+
+| Severity | Meaning | During sickness |
+|----------|---------|-----------------|
+| **Mild** (above the neck: runny nose, sore throat, no fever) | "Neck check" passes | Rest, with an optional ≤ 45 min Z1 spin. Nothing structured |
+| **Severe** (fever, aches, chest, GI, COVID/flu) | Systemic illness | **Rest every day**. The return can only start after 2 symptom-free days (48 h without fever) |
+
+What happens when you mark sick:
+1. Every planned session from today until you are better (or for at
+   least 3 days if no end date is set) becomes **rest**. The app's
+   intervals.icu workouts in that window are deleted, and a `SICK` event
+   is pushed so intervals.icu knows too.
+2. Key sessions are **not** moved. Missed load is written off.
+3. Readiness is flagged as "sick", so no other signal can schedule
+   intensity during this time.
+
+**Return-to-training protocol** (starts the day after "I'm better"):
+
+| Stage | Length | Content |
+|-------|--------|---------|
+| **Re-entry** | mild: 2 days · severe: `min(max(sick days, 3), 7)` days | Endurance only (Z1–Z2), short: ~60–75 % of normal duration. No key sessions |
+| **Reload** | ~same length as re-entry | Endurance + one tempo/sweet-spot session. Still no threshold or VO2 |
+| **Back to plan** | — | Normal planning. The first threshold or VO2 session uses lowered progression levels |
+
+- Each stage only moves on if readiness stays at or above normal (HRV and RHR
+  back near baseline). Otherwise that stage is extended by a day.
+- **Progression levels** drop with the length of the break: about −0.5
+  per sick day, more for severe illness, capped.
+- **Macro plan:** the CTL path is re-anchored from the real (lower) CTL.
+  If the A goal is now out of reach at a safe ramp rate, the app shows a
+  warning and lowers the goal CTL rather than ramping harder.
+- **Auto-detect suggestion:** if HRV crashes and resting HR is ≥ 5–7 bpm above
+  baseline for two days, the app asks "Are you getting sick?". It never
+  marks sickness by itself.
+- A `SICK` or `INJURED` event created in intervals.icu itself has the
+  same effect. Injury uses the same flow, without the illness-specific
+  rules.
+
+### 2.6 Sync with intervals.icu
 - **Push:** planned workouts become intervals.icu `WORKOUT` events with
   structured workout text, so they show up on Garmin, Wahoo, Zwift and
   others through intervals.icu's own sync.
@@ -89,7 +134,7 @@ A goal is one of:
   `external_id` (`acc-<date>-<slot>`). Workouts the user adds by hand in
   intervals.icu are treated as **fixed constraints**, not overwritten.
 
-### 2.6 Local player (indoor ERG)
+### 2.7 Local player (indoor ERG)
 - Connect a smart trainer over **Bluetooth (FTMS)**, plus an optional HR
   strap and power meter.
 - **ERG mode:** the app sets target watts per interval, with ramps and
@@ -126,6 +171,12 @@ can be unit-tested and simulated.
 - **Load model:** Banister/PMC. CTL uses a 42-day constant, ATL a 7-day
   constant, TSB = CTL − ATL. Values come from intervals.icu where
   available and are projected forward with planned TSS.
+- **Other sports count.** Running, gym, hiking and other non-cycling
+  activities from intervals.icu add their training load to ATL/CTL/TSB.
+  They also affect readiness and the day allocator: a hard run or a leg
+  session (high load, or RPE ≥ 7) the day before counts as a hard day, so
+  no back-to-back intensity follows it. The app never *plans* other sports. It only
+  accounts for them.
 - **FTP:** intervals.icu FTP setting, eFTP from the power curve, and
   in-app ramp/20-min tests. Raising FTP needs confirmation; lowering it
   only after a sustained trend.
@@ -214,8 +265,11 @@ This is a small constraint problem: greedy placement, then local search.
   - intervals.icu workout text (push)
   - the player's ERG step list
   - optionally `.zwo` and `.fit` workout files for export
-- Outdoor sessions get a simpler format: time in zone or a target
-  duration/TSS with a few efforts.
+- **Outdoor sessions get zone guidance, not intervals.** Examples: "2h30 Z2,
+  keep ≥ 80 % of the time in Z2, max 10 % above Z3, stay out of Z5+", or
+  "1h30 endurance with 30–40 min tempo on the climbs". They are pushed as
+  a target duration, TSS and HR/power range. Compliance is judged on time
+  in zone and TSS, not on matching intervals.
 
 ### 3.6 Daily adjuster and dynamic re-planning
 Triggers: an app start or sync with new data, a completed or skipped
@@ -223,12 +277,14 @@ session, or an availability change.
 
 | Situation | Action |
 |-----------|--------|
-| Readiness low (< 40) or illness flag | Today → recovery or rest. Key session moves to the next suitable day |
+| Marked **sick** | Sickness mode (§2.5): rest, then the return-to-training protocol |
+| Readiness low (< 40) | Today → recovery or rest. Key session moves to the next suitable day |
 | Readiness reduced (40–60) | Downgrade: fewer reps or lower %, or swap to endurance |
 | Readiness high + TSB positive + levels lagging | Allow a small step up (+1 level) |
 | Session **skipped** | Key session: move it to the next free slot within 3 days if that doesn't create back-to-back hard days, otherwise drop it. Endurance: drop it. **Never cram the missed load** |
 | Session **partially done / failed** | Lower the progression level for that energy system. Repeat the same type at a similar level next time |
 | Unplanned ride uploaded | Count its TSS and intensity. Reshuffle the next days (a hard group ride replaces a key session) |
+| Other sport uploaded (run, gym, …) | Add its load to fatigue. A hard session the day before blocks intensity today |
 | Week behind on TSS | Spread a small part of the deficit (≤ 10 %) over the remaining days. Never add an extra hard day |
 
 Re-planning = run steps 3.3–3.6 again from *tomorrow* over the
@@ -259,6 +315,7 @@ this).
 | Read events (planned, races, notes) | `GET /athlete/{id}/events?oldest=&newest=` |
 | Create/update workouts in bulk | `POST /athlete/{id}/events/bulk?upsert=true` (with `external_id`) |
 | Delete a stale workout | `DELETE /athlete/{id}/events/{eventId}` |
+| Mark sickness | `POST /athlete/{id}/events` with category `SICK` (read `SICK`/`INJURED`/`HOLIDAY` back on pull) |
 | Upload a recorded FIT ride | `POST /athlete/{id}/activities` (multipart) |
 
 Sync strategy:
@@ -294,7 +351,7 @@ Cooldown
 | Protocol | **FTMS** (Fitness Machine Service `0x1826`). Most current trainers support it (Wahoo, Tacx, Elite, Saris, Zwift Hub, Wattbike) |
 | Control | Control Point `0x2AD9`: `0x00` request control → `0x07` start → `0x05` set target power (sint16 W) |
 | Data | Indoor Bike Data `0x2AD2` (power, cadence, speed), plus the optional Cycling Power Service `0x1818` and Heart Rate `0x180D` |
-| API | **Web Bluetooth**: works in Chrome/Edge on desktop and Android. **Not in iOS Safari.** iOS needs a native wrapper (Capacitor + BLE plugin) or the Bluefy browser |
+| API | **Web Bluetooth** in desktop Chrome/Edge (Windows/macOS/Linux). That's the only target |
 | Fallback | Tacx FE-C over BLE for older trainers (later) |
 | Recording | 1 Hz samples → FIT file (activity, session, laps per interval, records) → upload to intervals.icu |
 | Reliability | Screen Wake Lock, auto-reconnect, local save every 10 s (IndexedDB), resume after a crash |
@@ -304,13 +361,14 @@ Cooldown
 
 ## 6. Architecture & tech stack
 
-**v1: a client-only PWA**, no backend. This is a single-user app; the
-API key stays on the device.
+**A client-only web app** for one user, running in desktop Chrome/Edge. No
+backend, no accounts. The API key and all data stay in the browser
+(IndexedDB), with JSON export/import as backup.
 
 | Layer | Choice | Why |
 |-------|--------|-----|
 | Language | TypeScript (strict) | One language across engine, UI and BLE |
-| UI | React + Vite, as an installable PWA | Fast, offline-capable, hosted on GitHub Pages |
+| UI | React + Vite, desktop layout | Fast, hosted on GitHub Pages |
 | State | Zustand | Simple |
 | Storage | IndexedDB (Dexie) | Cached activities and wellness, plan state, recorded rides |
 | Charts | uPlot (live player) + a light chart lib for PMC | uPlot handles 1 Hz live data well |
@@ -335,9 +393,9 @@ tests/
   engine/  sim/
 ```
 
-**Later (v2+), only if needed:** a small backend (for example Cloudflare
-Workers + D1) for multi-user use, OAuth with intervals.icu, a nightly
-re-plan cron and push notifications. Capacitor wrapper for iOS BLE.
+**Out of scope:** mobile and iOS, multiple users, a backend and OAuth.
+Because there is no server, re-planning happens when the app is opened.
+That's fine for a personal desktop app.
 
 ---
 
@@ -345,26 +403,24 @@ re-plan cron and push notifications. Capacitor wrapper for iOS BLE.
 
 | Milestone | Content | Done when |
 |-----------|---------|-----------|
-| **M0 Scaffold** | Vite/React/TS, lint, Vitest, CI, Pages deploy, PWA shell | Empty app is deployed |
+| **M0 Scaffold** | Vite/React/TS, lint, Vitest, CI, Pages deploy | Empty app is deployed |
 | **M1 Connect & data** | intervals.icu client, settings, pull wellness/activities/profile, IndexedDB cache, PMC + readiness display | Real CTL/HRV visible in the app |
 | **M2 Engine: macro + availability** | Goals UI, availability template + overrides, phase timeline, target CTL path, Season view | Goal → phases + weekly TSS shown |
 | **M3 Engine: sessions** | Workout library (~30 templates), week planner, day allocator, session builder, 14-day view with "why" | Availability → 14 days of concrete workouts |
 | **M4 Push/pull** | Push to intervals.icu with `external_id` upsert/diff, pull manual events/races as constraints, activity ↔ plan matching | Workouts appear in the intervals.icu calendar, completed rides get matched |
-| **M5 Dynamic** | Daily adjuster, skip/partial handling, progression levels, re-plan triggers, simulation test suite | Skipping a day visibly reshapes the next days |
+| **M5 Dynamic** | Daily adjuster, skip/partial handling, progression levels, other-sport load, **sickness mode + return protocol**, re-plan triggers, simulation test suite | Skipping a day or marking sick visibly reshapes the next days |
 | **M6 Player** | Web Bluetooth FTMS + HR, ERG execution, live UI, FIT recording + upload | Full indoor ride in ERG → appears in intervals.icu |
 | **M7 Polish** | FTP test protocols, export `.zwo`/`.fit`, B/C race mini-tapers, onboarding, explanations | |
 
 ---
 
-## 8. Open decisions
+## 8. Decisions
 
-1. **iOS:** is Android/desktop Chrome enough for the player in v1, or is
-   iPhone/iPad required from the start (→ Capacitor)?
-2. **Single user (just you) or multi-user?** That decides whether a
-   backend/OAuth is needed.
-3. **Outdoor rides:** structured intervals or mainly duration + zone
-   guidance?
-4. **Strength/other sports:** cycling only, or should non-cycling load
-   from intervals.icu (running, gym) count towards fatigue? (Proposal:
-   count TSS, don't plan it.)
-5. **Name** for the new app.
+| Topic | Decision |
+|-------|----------|
+| Platform | Desktop Chrome/Edge only. No mobile or iOS |
+| Users | Just me. No backend, no accounts |
+| Outdoor rides | Zone guidance (time in zone, duration, TSS), no structured intervals |
+| Other sports | Count towards load, fatigue and readiness. Never planned |
+| Sickness | JOIN-style sickness mode with a return-to-training protocol (§2.5) |
+| Name | **CyclingHub** |
