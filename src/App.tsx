@@ -1,4 +1,8 @@
+import { useEffect } from 'react';
 import { NavLink, Navigate, Route, Routes } from 'react-router-dom';
+import { useSyncStore } from './store/sync';
+import { SyncBar } from './ui/components/SyncBar';
+import { HistoryScreen } from './ui/screens/HistoryScreen';
 import { TodayScreen } from './ui/screens/TodayScreen';
 import { PlanScreen } from './ui/screens/PlanScreen';
 import { SeasonScreen } from './ui/screens/SeasonScreen';
@@ -10,12 +14,18 @@ const NAV = [
   { to: '/today', label: 'Today' },
   { to: '/plan', label: '14 days' },
   { to: '/season', label: 'Season' },
+  { to: '/history', label: 'History' },
   { to: '/goals', label: 'Goals' },
   { to: '/player', label: 'Ride' },
   { to: '/settings', label: 'Settings' },
 ] as const;
 
 export function App() {
+  const autoSync = useSyncStore((s) => s.autoSync);
+  useEffect(() => {
+    void autoSync();
+  }, [autoSync]);
+
   return (
     <div className="shell">
       <aside className="sidebar">
@@ -30,6 +40,7 @@ export function App() {
             </NavLink>
           ))}
         </nav>
+        <SyncBar />
         <footer className="sidebar-footer">v{__APP_VERSION__}</footer>
       </aside>
       <main className="content">
@@ -38,6 +49,7 @@ export function App() {
           <Route path="/today" element={<TodayScreen />} />
           <Route path="/plan" element={<PlanScreen />} />
           <Route path="/season" element={<SeasonScreen />} />
+          <Route path="/history" element={<HistoryScreen />} />
           <Route path="/goals" element={<GoalsScreen />} />
           <Route path="/player" element={<PlayerScreen />} />
           <Route path="/settings" element={<SettingsScreen />} />
