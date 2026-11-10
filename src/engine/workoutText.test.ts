@@ -37,3 +37,9 @@ describe('intervals.icu workout text', () => {
     }
   });
 });
+
+describe('free blocks in workout text', () => {
+  it('sends the 20-minute test block as a range', () => {
+    expect(toIntervalsText(buildWorkout('ftp_test', 75, ctx, 1))).toContain('Test\n- 20m 95-105%');
+  });
+});

@@ -12,6 +12,8 @@ export interface Segment {
   from: number;
   to: number;
   label: string;
+  /** ERG off for this step (rider sets the pace). */
+  free?: boolean;
 }
 
 export type SessionStatus = 'ready' | 'running' | 'paused' | 'finished';
@@ -43,7 +45,7 @@ export function buildSegments(workout: Workout): Segment[] {
   return flatten(workout.blocks).map((s) => {
     const seg: Segment =
       s.kind === 'steady'
-        ? { start: t, end: t + s.seconds, from: s.power, to: s.power, label: s.label ?? '' }
+        ? { start: t, end: t + s.seconds, from: s.power, to: s.power, label: s.label ?? '', ...(s.free && { free: true }) }
         : { start: t, end: t + s.seconds, from: s.from, to: s.to, label: s.label ?? '' };
     t += s.seconds;
     return seg;
@@ -153,6 +155,11 @@ export function updateCadenceGuard(guard: CadenceGuard, cadence: number | undefi
   const low = cadence > 0 && cadence < LOW_CADENCE_RPM;
   const lowSeconds = low ? guard.lowSeconds + 1 : 0;
   return { lowSeconds, active: lowSeconds >= LOW_CADENCE_SECONDS };
+}
+
+/** ERG is off when the rider switched it off or the current step is a free (test) block. */
+export function ergActive(s: Session): boolean {
+  return s.erg && !position(s)?.segment.free;
 }
 
 export function targetWatts(s: Session, ftp: number, guard: CadenceGuard): number {

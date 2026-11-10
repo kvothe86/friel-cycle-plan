@@ -2,6 +2,8 @@ import { useState, type FormEvent } from 'react';
 import { rideSettings, useAthlete, useCredentials, useLastSync } from '../../store/hooks';
 import { useSyncStore } from '../../store/sync';
 import { formatNumber, formatRelativeTime } from '../format';
+import { FtpCard } from '../settings/FtpCard';
+import { BackupCard } from '../settings/BackupCard';
 
 export function SettingsScreen() {
   const creds = useCredentials();
@@ -34,8 +36,6 @@ export function SettingsScreen() {
             <dl className="facts">
               <dt>Athlete</dt>
               <dd>{athlete?.name ?? '–'} ({creds.athleteId})</dd>
-              <dt>FTP</dt>
-              <dd>{formatNumber(ride?.ftp)} W</dd>
               <dt>LTHR / max HR</dt>
               <dd>{formatNumber(ride?.lthr)} / {formatNumber(ride?.max_hr)} bpm</dd>
               <dt>Weight</dt>
@@ -76,6 +76,10 @@ export function SettingsScreen() {
           </form>
         )}
         {status === 'error' && error && <p className="error" role="alert">{error}</p>}
+      </div>
+      <div className="two-col">
+        <FtpCard />
+        <BackupCard />
       </div>
     </section>
   );

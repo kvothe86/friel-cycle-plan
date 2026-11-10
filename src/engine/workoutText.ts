@@ -49,7 +49,9 @@ export function icuDuration(seconds: number): string {
 const pct = (p: number) => Math.round(p * 100);
 
 export function icuStep(s: Step): string {
-  const power = s.kind === 'ramp' ? `ramp ${pct(s.from)}-${pct(s.to)}%` : `${pct(s.power)}%`;
+  // A free (ERG-off) block is sent as a ±5 % range so devices don't lock the rider to one number.
+  const power =
+    s.kind === 'ramp' ? `ramp ${pct(s.from)}-${pct(s.to)}%` : s.free ? `${pct(s.power) - 5}-${pct(s.power) + 5}%` : `${pct(s.power)}%`;
   const cadence = s.kind === 'steady' && s.cadence ? ` ${s.cadence}rpm` : '';
   return `- ${icuDuration(s.seconds)} ${power}${cadence}`;
 }

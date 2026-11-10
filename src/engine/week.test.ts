@@ -227,3 +227,17 @@ describe('M5: daily adjustments', () => {
     expect(threshold?.workout?.level).toBeGreaterThanOrEqual(8);
   });
 });
+
+describe('M7: scheduled FTP test', () => {
+  it('puts the preferred test on the day and keeps intensity away from it', () => {
+    const thu = addDays(MONDAY, 3);
+    const p = plan({ dayStatus: new Map([[thu, { kind: 'limit', limit: 'test', reason: 'x' }]]) });
+    const d = p.find((x) => x.date === thu)!;
+    expect(d.workout?.templateId).toBe('ramp_test');
+    expect(d.key).toBe(true);
+    expect(p.find((x) => x.date === addDays(MONDAY, 2))!.workout?.intensity).not.toBe('hard');
+    // 75 min on Thursday is enough for the 20-min protocol only if preferred (needs 60 + 25 min margin → falls back to ramp).
+    const p20 = plan({ ftpTest: 'ftp20', dayStatus: new Map([[addDays(MONDAY, 5), { kind: 'limit', limit: 'test', reason: 'x' }]]) });
+    expect(p20.find((x) => x.date === addDays(MONDAY, 5))!.workout?.templateId).toBe('ftp20');
+  });
+});

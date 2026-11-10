@@ -3,7 +3,7 @@ import type { DayPlan } from '../../engine/week';
 import { useDayActions } from '../../store/hooks';
 import { useHealthStore } from '../../store/health';
 
-const LABEL: Record<DayAction, string> = { skip: 'skipped', easier: 'made easier', endurance: 'swapped to endurance' };
+const LABEL: Record<DayAction, string> = { skip: 'skipped', easier: 'made easier', endurance: 'swapped to endurance', test: 'scheduled an FTP test on' };
 
 /** Quick actions for a day: skip it, make it easier, or swap to endurance (and undo). */
 export function DayActions({ day }: { day: DayPlan }) {
@@ -26,6 +26,9 @@ export function DayActions({ day }: { day: DayPlan }) {
       <button type="button" onClick={() => void setDayAction(day.date, 'easier')}>Make easier</button>
       {day.workout?.type !== 'endurance' && day.workout?.type !== 'recovery' && (
         <button type="button" onClick={() => void setDayAction(day.date, 'endurance')}>Swap to endurance</button>
+      )}
+      {day.workout?.type !== 'ftp_test' && day.availableMinutes >= 35 && (
+        <button type="button" onClick={() => void setDayAction(day.date, 'test')}>FTP test instead</button>
       )}
     </div>
   );

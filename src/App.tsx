@@ -1,9 +1,11 @@
 import { useEffect } from 'react';
-import { NavLink, Navigate, Route, Routes } from 'react-router-dom';
+import { NavLink, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { useSyncStore } from './store/sync';
 import { SyncBar } from './ui/components/SyncBar';
 import { AutoPush } from './ui/components/AutoPush';
 import { PlanLogger } from './ui/components/PlanLogger';
+import { ErrorBoundary } from './ui/components/ErrorBoundary';
+import { GuideScreen } from './ui/screens/GuideScreen';
 import { HistoryScreen } from './ui/screens/HistoryScreen';
 import { TodayScreen } from './ui/screens/TodayScreen';
 import { PlanScreen } from './ui/screens/PlanScreen';
@@ -19,11 +21,13 @@ const NAV = [
   { to: '/history', label: 'History' },
   { to: '/goals', label: 'Goals' },
   { to: '/player', label: 'Ride' },
+  { to: '/guide', label: 'Guide' },
   { to: '/settings', label: 'Settings' },
 ] as const;
 
 export function App() {
   const autoSync = useSyncStore((s) => s.autoSync);
+  const location = useLocation();
   useEffect(() => {
     void autoSync();
   }, [autoSync]);
@@ -48,17 +52,20 @@ export function App() {
         <footer className="sidebar-footer">v{__APP_VERSION__}</footer>
       </aside>
       <main className="content">
-        <Routes>
-          <Route path="/" element={<Navigate to="/today" replace />} />
-          <Route path="/today" element={<TodayScreen />} />
-          <Route path="/plan" element={<PlanScreen />} />
-          <Route path="/season" element={<SeasonScreen />} />
-          <Route path="/history" element={<HistoryScreen />} />
-          <Route path="/goals" element={<GoalsScreen />} />
-          <Route path="/player" element={<PlayerScreen />} />
-          <Route path="/settings" element={<SettingsScreen />} />
-          <Route path="*" element={<Navigate to="/today" replace />} />
-        </Routes>
+        <ErrorBoundary resetKey={location.pathname}>
+          <Routes>
+            <Route path="/" element={<Navigate to="/today" replace />} />
+            <Route path="/today" element={<TodayScreen />} />
+            <Route path="/plan" element={<PlanScreen />} />
+            <Route path="/season" element={<SeasonScreen />} />
+            <Route path="/history" element={<HistoryScreen />} />
+            <Route path="/goals" element={<GoalsScreen />} />
+            <Route path="/player" element={<PlayerScreen />} />
+            <Route path="/settings" element={<SettingsScreen />} />
+            <Route path="/guide" element={<GuideScreen />} />
+            <Route path="*" element={<Navigate to="/today" replace />} />
+          </Routes>
+        </ErrorBoundary>
       </main>
     </div>
   );

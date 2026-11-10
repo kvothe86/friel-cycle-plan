@@ -11,6 +11,8 @@ export interface SteadyStep {
   power: number;
   label?: string;
   cadence?: number;
+  /** ERG off: the rider sets the pace (e.g. the 20-min FTP test block). */
+  free?: boolean;
 }
 
 export interface RampStep {

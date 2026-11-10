@@ -190,8 +190,9 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
     const g = E.updateCadenceGuard(guard, live.cadence);
     const desired = E.targetWatts(session, recording.ftp, g);
     const target = E.smoothTarget(sentTarget, desired);
+    const erg = E.ergActive(session);
     if (trainer) {
-      const p = next.erg ? trainer.setTargetPower(target) : trainer.setFreeRide();
+      const p = erg ? trainer.setTargetPower(target) : trainer.setFreeRide();
       p.catch((err) => set({ error: `Trainer: ${message(err)}` }));
     }
 
@@ -199,7 +200,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
       t: Date.now(),
       elapsed: session.elapsed,
       segment: E.segmentIndexAt(session.segments, session.elapsed),
-      target: next.erg ? target : undefined,
+      target: erg ? target : undefined,
       ...live,
     };
     const samples = [...recording.samples, sample];

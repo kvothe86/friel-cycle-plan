@@ -4,7 +4,7 @@ import type { Specialty } from './types';
 /** Session families the session builder (M3) will draw from. */
 export type SessionType =
   | 'recovery' | 'endurance' | 'long' | 'tempo' | 'sweetspot' | 'threshold'
-  | 'overunder' | 'vo2' | 'anaerobic' | 'sprint' | 'race_sim' | 'openers';
+  | 'overunder' | 'vo2' | 'anaerobic' | 'sprint' | 'race_sim' | 'openers' | 'ftp_test';
 
 export interface PhaseFocus {
   summary: string;

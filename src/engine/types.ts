@@ -45,9 +45,11 @@ export interface PlanSettings {
   experience: Experience;
   /** Weeks per cycle including the recovery week: 4 = 3:1, 3 = 2:1. */
   cycleWeeks: 3 | 4;
+  /** Preferred FTP test protocol. */
+  ftpTest?: 'ramp' | 'ftp20';
 }
 
-export const DEFAULT_PLAN_SETTINGS: PlanSettings = { experience: 'intermediate', cycleWeeks: 4 };
+export const DEFAULT_PLAN_SETTINGS: PlanSettings = { experience: 'intermediate', cycleWeeks: 4, ftpTest: 'ramp' };
 
 export const DEFAULT_AVAILABILITY: AvailabilityTemplate = [
   { minutes: 0, mode: 'any' },

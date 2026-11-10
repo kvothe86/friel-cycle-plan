@@ -1,6 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useMemo } from 'react';
-import { addDays, startOfWeek, toIsoDate, type IsoDate } from '../lib/dates';
+import { addDays, daysBetween, startOfWeek, toIsoDate, type IsoDate } from '../lib/dates';
+import { TEST_DUE_DAYS } from '../engine/ftpTest';
 import { buildPmcSeries, dailyLoads, type PmcPoint } from '../engine/pmc';
 import { computeReadiness, HRV_BASELINE_DAYS, type Readiness } from '../engine/readiness';
 import type { IcuSportSettings } from '../integrations/intervals/types';
@@ -150,8 +151,8 @@ export function usePlanHorizon(today: IsoDate): DayPlan[] | undefined {
       today, dates: days.map((d) => d.date), episodes, actions,
       readiness: { score: readiness.score, label: readiness.label },
     });
-    return planHorizon({ today, plan, days, done: toDoneActivities(activities), experience: settings.experience, fixed, dayStatus, levels });
-  }, [plan, availability, overrides, blocked, settings.experience, activities, today, fixed, episodes, actions, readiness.score, readiness.label, levels]);
+    return planHorizon({ today, plan, days, done: toDoneActivities(activities), experience: settings.experience, fixed, dayStatus, levels, ftpTest: settings.ftpTest });
+  }, [plan, availability, overrides, blocked, settings.experience, settings.ftpTest, activities, today, fixed, episodes, actions, readiness.score, readiness.label, levels]);
 }
 
 // ---- M5: health, day actions, progression ----
@@ -222,7 +223,23 @@ export function useTodayPlannedEvent(today: IsoDate) {
   );
 }
 
-export function useFtp(): number | undefined {
+export function useFtpInfo() {
   const athlete = useAthlete();
-  return rideSettings(athlete?.sportSettings)?.ftp ?? undefined;
+  const local = useLiveQuery(() => db.getMeta('ftp'), [], undefined);
+  const intervals = rideSettings(athlete?.sportSettings)?.ftp ?? undefined;
+  return { ftp: local?.watts ?? intervals, local, intervals };
+}
+
+/** FTP used for watt targets: a test/manual value set in the app, else intervals.icu's. */
+export function useFtp(): number | undefined {
+  return useFtpInfo().ftp;
+}
+
+/** An FTP test is due when the last one is older than 8 weeks (or there never was one). */
+export function useFtpTestDue(today: IsoDate): { due: boolean; lastTest?: IsoDate } {
+  const { local } = useFtpInfo();
+  const snoozed = useLiveQuery(() => db.getMeta('ftpTestSnoozedUntil'), [], undefined);
+  const lastTest = local && local.source !== 'manual' ? local.date : undefined;
+  const stale = !lastTest || daysBetween(lastTest, today) > TEST_DUE_DAYS;
+  return { due: stale && !(snoozed && snoozed >= today), lastTest };
 }

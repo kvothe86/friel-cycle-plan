@@ -21,7 +21,7 @@ describe('App shell', () => {
   it('shows all main navigation entries', () => {
     renderAt('/today');
     const nav = screen.getByRole('navigation', { name: 'Main' });
-    for (const label of ['Today', '14 days', 'Season', 'History', 'Goals', 'Ride', 'Settings']) {
+    for (const label of ['Today', '14 days', 'Season', 'History', 'Goals', 'Ride', 'Guide', 'Settings']) {
       expect(nav).toHaveTextContent(label);
     }
   });
