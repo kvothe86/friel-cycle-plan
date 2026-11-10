@@ -1,6 +1,8 @@
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { App } from './App';
+import { toIsoDate } from './lib/dates';
+import { db } from './store/db';
 
 function renderAt(path: string) {
   return render(
@@ -24,11 +26,17 @@ describe('App shell', () => {
     }
   });
 
-  it('renders a 14-day horizon with only today committed', () => {
+  it('renders a 14-day horizon with only today committed', async () => {
+    const today = toIsoDate(new Date());
+    await db.setMeta('credentials', { athleteId: 'i1', apiKey: 'k' });
+    await db.setMeta('lastSync', { date: today, at: new Date().toISOString() });
     renderAt('/plan');
-    const items = screen.getByRole('list', { name: 'Plan horizon' }).querySelectorAll('li');
+    const list = await screen.findByRole('list', { name: 'Plan horizon' });
+    const items = list.querySelectorAll(':scope > li');
     expect(items).toHaveLength(14);
     expect(items[0]).toHaveClass('committed');
     expect(items[1]).toHaveClass('tentative');
+    expect(screen.getByText(/^Why:/)).toBeInTheDocument();
+    await db.clearAll();
   });
 });

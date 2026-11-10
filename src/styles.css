@@ -142,3 +142,30 @@ input.narrow { width: 5.5rem; }
 .table.weeks tr.phase-race td:first-child { box-shadow: inset 3px 0 0 #22c55e; }
 .table.weeks tr.phase-recovery td { color: var(--muted); }
 .limited { cursor: help; }
+
+/* M3: plan & workouts */
+.day-grid.plan .day { padding: 0; min-height: 132px; }
+.day-btn {
+  all: unset; box-sizing: border-box; cursor: pointer; display: flex; flex-direction: column; gap: 0.25rem;
+  width: 100%; height: 100%; padding: 0.7rem; border-radius: 10px;
+}
+.day-btn:focus-visible { outline: 2px solid var(--accent); }
+.day.selected { box-shadow: 0 0 0 2px var(--accent); }
+.day.tentative { opacity: 0.85; }
+.day.kind-rest .day-btn { opacity: 0.6; }
+.day-title { font-weight: 600; font-size: 0.9rem; line-height: 1.2; }
+.tag.key { background: rgba(249, 115, 22, 0.2); color: var(--accent); }
+.profile { width: 100%; height: 90px; display: block; background: var(--bg); border-radius: 6px; margin: 0.5rem 0; }
+.profile.mini { height: 28px; margin: auto 0 0; background: transparent; }
+.profile .ftp-line { stroke: #64748b; stroke-dasharray: 3 3; }
+.day-detail .why { background: var(--bg); border-left: 3px solid var(--accent); padding: 0.6rem 0.8rem; border-radius: 6px; }
+.day-detail h2 .tag { margin-left: 0.6rem; }
+.workout-head { display: flex; align-items: baseline; gap: 1rem; flex-wrap: wrap; }
+.workout-head h3 { margin: 0.5rem 0; }
+.steps { padding-left: 1.2rem; display: grid; gap: 0.4rem; }
+.steps ul { margin: 0.2rem 0 0; padding-left: 1rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.block-label { font-weight: 600; }
+.zone-bar { display: flex; height: 22px; border-radius: 6px; overflow: hidden; margin-top: 0.75rem; }
+.zone-bar span { display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 700; color: #0b1120; }
+.outdoor { background: var(--bg); border-radius: 8px; padding: 0.75rem 1rem; }
+.outdoor p { margin: 0.3rem 0; }

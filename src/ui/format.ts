@@ -25,5 +25,4 @@ export function formatRelativeTime(iso: string | undefined, now = Date.now()): s
   return `${Math.round(hours / 24)} d ago`;
 }
 
-const CYCLING_TYPES = new Set(['Ride', 'VirtualRide', 'GravelRide', 'MountainBikeRide', 'EBikeRide', 'TrackRide']);
-export const isCycling = (type: string | null | undefined) => !!type && CYCLING_TYPES.has(type);
+export { isCycling } from '../engine/sports';

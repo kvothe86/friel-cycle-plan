@@ -1,21 +1,60 @@
-import { dateRange, toIsoDate, weekdayShort } from '../../lib/dates';
-import { Placeholder } from '../Placeholder';
-
-export const PLAN_HORIZON_DAYS = 14;
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { startOfWeek } from '../../lib/dates';
+import { useAvailability, useCredentials, useFtp, usePlanHorizon, useSeasonPlan, useToday } from '../../store/hooks';
+import { NotConnected } from '../components/NotConnected';
+import { DayCard } from '../workout/DayCard';
+import { DayDetail } from '../workout/DayDetail';
 
 export function PlanScreen() {
-  const days = dateRange(toIsoDate(new Date()), PLAN_HORIZON_DAYS);
+  const today = useToday();
+  const creds = useCredentials();
+  const availability = useAvailability();
+  const plan = useSeasonPlan(today);
+  const days = usePlanHorizon(today);
+  const ftp = useFtp();
+  const [selected, setSelected] = useState(today);
+
+  if (!creds) {
+    return (
+      <section>
+        <h1>Next 14 days</h1>
+        <NotConnected />
+      </section>
+    );
+  }
+  if (!days || !plan) return <section><h1>Next 14 days</h1></section>;
+
+  const current = days.find((d) => d.date === selected) ?? days[0]!;
+  const weeks = [...new Set(days.map((d) => startOfWeek(d.date)))]
+    .map((start) => {
+      const inView = days.filter((d) => startOfWeek(d.date) === start);
+      const planned = inView.reduce((s, d) => s + (d.workout?.tss ?? 0), 0);
+      return { start, target: plan.weeks.find((x) => x.start === start)?.targetTss, planned, count: inView.length };
+    })
+    .filter((w) => w.count >= 3);
+
   return (
-    <Placeholder title="Next 14 days" milestone="M3">
-      <ol className="day-grid" aria-label="Plan horizon">
-        {days.map((iso, i) => (
-          <li key={iso} className={i === 0 ? 'day committed' : 'day tentative'}>
-            <span className="day-name">{weekdayShort(iso)}</span>
-            <span className="day-date">{iso.slice(5)}</span>
-            <span className="day-body">{i === 0 ? 'Today' : 'Tentative'}</span>
-          </li>
+    <section>
+      <h1>Next 14 days</h1>
+      <p className="muted">
+        Today is fixed; the rest is a forecast and re-plans when you ride, skip, or change your availability.
+        {availability?.isDefault && (
+          <>
+            {' '}
+            <Link to="/goals">Set your weekly availability</Link> first: the plan uses a default week.
+          </>
+        )}
+      </p>
+      <ol className="day-grid plan" aria-label="Plan horizon">
+        {days.map((d) => (
+          <DayCard key={d.date} day={d} selected={d.date === current.date} onSelect={() => setSelected(d.date)} isToday={d.date === today} />
         ))}
       </ol>
-    </Placeholder>
+      <p className="muted small">
+        {weeks.map((w) => `Week of ${w.start}: ${w.planned} TSS planned from here${w.target !== undefined ? ` (week target ${w.target}, incl. what's done)` : ''}`).join(' · ')}
+      </p>
+      <DayDetail day={current} ftp={ftp} />
+    </section>
   );
 }

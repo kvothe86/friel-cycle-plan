@@ -15,7 +15,7 @@ export type Phase = 'base' | 'build' | 'peak' | 'race';
 export const RAMP_PER_WEEK: Record<Experience, number> = { novice: 3, intermediate: 5, advanced: 7 };
 export const BASE_RAMP_FACTOR = 0.8;
 /** Upper bound of training load per available hour (mixed endurance/intensity). */
-export const TSS_PER_HOUR = 70;
+export const TSS_PER_HOUR = 65;
 /** Share of available time that is realistically used. */
 export const USABLE_FRACTION = 0.9;
 export const RECOVERY_WEEK_LOAD = 0.6;
