@@ -1,4 +1,6 @@
-import { rideSettings, useAthlete, useCredentials, usePlanHorizon, usePmc, useReadiness, useToday, useWellness } from '../../store/hooks';
+import { rideSettings, useActivities, useAthlete, useCredentials, usePlanHorizon, usePmc, useReadiness, useToday, useTodayPlannedEvent, useWellness } from '../../store/hooks';
+import { compliance } from '../../engine/compliance';
+import { isCycling } from '../../engine/sports';
 import { DayDetail } from '../workout/DayDetail';
 import type { SignalKey } from '../../engine/readiness';
 import { NotConnected } from '../components/NotConnected';
@@ -25,6 +27,18 @@ export function TodayScreen() {
   const weekAgo = pmc[0];
   const ftp = rideSettings(athlete?.sportSettings)?.ftp ?? undefined;
   const todayPlan = usePlanHorizon(today)?.[0];
+  const planned = useTodayPlannedEvent(today);
+  const rides = useActivities(today, today).filter((a) => isCycling(a.type));
+  const todayCompliance =
+    todayPlan?.kind === 'done' && planned && rides.length > 0
+      ? {
+          ...compliance(
+            { load: planned.icu_training_load ?? 0, seconds: planned.moving_time ?? 0 },
+            { load: rides.reduce((s, a) => s + (a.icu_training_load ?? 0), 0), seconds: rides.reduce((s, a) => s + (a.moving_time ?? 0), 0) },
+          ),
+          plannedName: planned.name ?? 'planned session',
+        }
+      : undefined;
 
   return (
     <section>
@@ -100,7 +114,7 @@ export function TodayScreen() {
           {todayPlan && (
             <>
               <h2 className="section-title">Today's session</h2>
-              <DayDetail day={todayPlan} ftp={ftp} />
+              <DayDetail day={todayPlan} ftp={ftp} compliance={todayCompliance} />
             </>
           )}
         </>

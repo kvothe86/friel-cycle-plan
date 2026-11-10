@@ -10,6 +10,7 @@ import { planSeason, type SeasonPlan } from '../engine/macro';
 import { resolveRange } from '../engine/availability';
 import { isCycling } from '../engine/sports';
 import { isHardActivity, planHorizon, type DayPlan, type DoneActivity } from '../engine/week';
+import { fixedWorkouts, type PushedRecord } from '../engine/push';
 import {
   DEFAULT_AVAILABILITY, DEFAULT_PLAN_SETTINGS,
   type AvailabilityOverride, type AvailabilityTemplate, type Goal, type PlanSettings,
@@ -134,11 +135,37 @@ export function usePlanHorizon(today: IsoDate): DayPlan[] | undefined {
   const blocked = useBlockedRanges();
   const settings = usePlanSettings();
   const activities = useActivities(addDays(startOfWeek(today), -1), today);
+  const fixed = useFixedWorkouts(today);
   return useMemo(() => {
     if (!plan || !availability) return undefined;
     const days = resolveRange(today, PLAN_HORIZON_DAYS, availability.template, overrides, blocked);
-    return planHorizon({ today, plan, days, done: toDoneActivities(activities), experience: settings.experience });
-  }, [plan, availability, overrides, blocked, settings.experience, activities, today]);
+    return planHorizon({ today, plan, days, done: toDoneActivities(activities), experience: settings.experience, fixed });
+  }, [plan, availability, overrides, blocked, settings.experience, activities, today, fixed]);
+}
+
+// ---- M4: intervals.icu push ----
+
+export const usePushed = () => useLiveQuery(() => db.pushed.toArray(), [], [] as PushedRecord[]);
+export const usePushSettings = () => useLiveQuery(() => db.getMeta('pushSettings'), [], undefined) ?? { auto: false };
+export const useLastPush = () => useLiveQuery(() => db.getMeta('lastPush'), [], undefined);
+
+/** WORKOUT events in the horizon (the user's own, and app ones they edited). */
+export function useFixedWorkouts(today: IsoDate) {
+  const end = addDays(today, PLAN_HORIZON_DAYS - 1);
+  const events = useLiveQuery(
+    () => db.events.where('date').between(today, end, true, true).filter((e) => e.category === 'WORKOUT').toArray(),
+    [today, end],
+    [] as StoredEvent[],
+  );
+  const pushed = usePushed();
+  return useMemo(() => fixedWorkouts(events, pushed), [events, pushed]);
+}
+
+export function useTodayPlannedEvent(today: IsoDate) {
+  return useLiveQuery(
+    () => db.events.where('date').equals(today).filter((e) => e.category === 'WORKOUT' && !!e.external_id?.startsWith('cyclinghub-')).first(),
+    [today],
+  );
 }
 
 export function useFtp(): number | undefined {

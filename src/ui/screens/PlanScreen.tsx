@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { startOfWeek } from '../../lib/dates';
-import { useAvailability, useCredentials, useFtp, usePlanHorizon, useSeasonPlan, useToday } from '../../store/hooks';
+import { useAvailability, useCredentials, useFtp, usePlanHorizon, usePushed, useSeasonPlan, useToday } from '../../store/hooks';
+import { contentHash, eventFor, externalIdFor } from '../../engine/push';
+import { PushBar } from '../workout/PushBar';
 import { NotConnected } from '../components/NotConnected';
 import { DayCard } from '../workout/DayCard';
 import { DayDetail } from '../workout/DayDetail';
@@ -14,6 +16,7 @@ export function PlanScreen() {
   const days = usePlanHorizon(today);
   const ftp = useFtp();
   const [selected, setSelected] = useState(today);
+  const pushed = usePushed();
 
   if (!creds) {
     return (
@@ -26,6 +29,11 @@ export function PlanScreen() {
   if (!days || !plan) return <section><h1>Next 14 days</h1></section>;
 
   const current = days.find((d) => d.date === selected) ?? days[0]!;
+  const pushedHash = new Map(pushed.map((r) => [r.externalId, r.hash]));
+  const inSync = (d: (typeof days)[number]) => {
+    const e = eventFor(d);
+    return !!e && pushedHash.get(externalIdFor(d.date)) === contentHash(e);
+  };
   const weeks = [...new Set(days.map((d) => startOfWeek(d.date)))]
     .map((start) => {
       const inView = days.filter((d) => startOfWeek(d.date) === start);
@@ -46,9 +54,10 @@ export function PlanScreen() {
           </>
         )}
       </p>
+      <PushBar days={days} />
       <ol className="day-grid plan" aria-label="Plan horizon">
         {days.map((d) => (
-          <DayCard key={d.date} day={d} selected={d.date === current.date} onSelect={() => setSelected(d.date)} isToday={d.date === today} />
+          <DayCard key={d.date} day={d} synced={inSync(d)} selected={d.date === current.date} onSelect={() => setSelected(d.date)} isToday={d.date === today} />
         ))}
       </ol>
       <p className="muted small">

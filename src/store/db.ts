@@ -1,6 +1,7 @@
 import Dexie, { type EntityTable } from 'dexie';
 import type { IcuActivity, IcuAthlete, IcuEvent, IcuWellness } from '../integrations/intervals/types';
 import type { AvailabilityOverride, AvailabilityTemplate, Goal, PlanSettings } from '../engine/types';
+import type { PushedRecord } from '../engine/push';
 import type { IntervalsCredentials } from '../integrations/intervals/client';
 import type { IsoDate } from '../lib/dates';
 
@@ -22,6 +23,22 @@ interface MetaMap {
   lastSync: SyncInfo;
   availability: AvailabilityTemplate;
   planSettings: PlanSettings;
+  pushSettings: PushSettings;
+  lastPush: PushSummary;
+}
+
+export interface PushSettings {
+  /** Push automatically whenever the plan changes. */
+  auto: boolean;
+}
+
+export interface PushSummary {
+  at: string;
+  created: number;
+  updated: number;
+  deleted: number;
+  userEdited: number;
+  unchanged: number;
 }
 
 /** intervals.icu event as stored locally, with an indexed local start date. */
@@ -43,6 +60,7 @@ export class CyclingHubDb extends Dexie {
   events!: EntityTable<StoredEvent, 'id'>;
   goals!: EntityTable<Goal, 'id'>;
   overrides!: EntityTable<AvailabilityOverride, 'date'>;
+  pushed!: EntityTable<PushedRecord, 'externalId'>;
 
   constructor(name = 'cyclinghub') {
     super(name);
@@ -56,6 +74,7 @@ export class CyclingHubDb extends Dexie {
       goals: '&id, date',
       overrides: '&date',
     });
+    this.version(3).stores({ pushed: '&externalId, date' });
   }
 
   async getMeta<K extends MetaKey>(key: K): Promise<MetaMap[K] | undefined> {
@@ -69,9 +88,10 @@ export class CyclingHubDb extends Dexie {
 
   /** Removes intervals.icu credentials and everything synced from it; keeps local goals and availability. */
   async clearSynced(): Promise<void> {
-    await this.transaction('rw', [this.meta, this.wellness, this.activities, this.events, this.goals], async () => {
+    await this.transaction('rw', [this.meta, this.wellness, this.activities, this.events, this.goals, this.pushed], async () => {
       await Promise.all([
-        this.meta.bulkDelete(['credentials', 'athlete', 'lastSync']),
+        this.meta.bulkDelete(['credentials', 'athlete', 'lastSync', 'lastPush']),
+        this.pushed.clear(),
         this.wellness.clear(),
         this.activities.clear(),
         this.events.clear(),
@@ -82,8 +102,9 @@ export class CyclingHubDb extends Dexie {
 
   /** Removes everything. */
   async clearAll(): Promise<void> {
-    await this.transaction('rw', [this.meta, this.wellness, this.activities, this.events, this.goals, this.overrides], async () => {
-      await Promise.all([this.meta, this.wellness, this.activities, this.events, this.goals, this.overrides].map((t) => t.clear()));
+    const tables = [this.meta, this.wellness, this.activities, this.events, this.goals, this.overrides, this.pushed];
+    await this.transaction('rw', tables, async () => {
+      await Promise.all(tables.map((t) => t.clear()));
     });
   }
 }

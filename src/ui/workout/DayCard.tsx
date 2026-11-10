@@ -8,9 +8,11 @@ interface Props {
   selected: boolean;
   onSelect: () => void;
   isToday: boolean;
+  /** This exact session is in intervals.icu. */
+  synced?: boolean;
 }
 
-export function DayCard({ day, selected, onSelect, isToday }: Props) {
+export function DayCard({ day, selected, onSelect, isToday, synced = false }: Props) {
   const cls = ['day', day.tentative ? 'tentative' : 'committed', `kind-${day.kind}`, selected ? 'selected' : ''].join(' ');
   return (
     <li className={cls}>
@@ -18,6 +20,7 @@ export function DayCard({ day, selected, onSelect, isToday }: Props) {
         <span className="day-name">
           {isToday ? 'Today' : weekdayShort(day.date)} <span className="day-date">{day.date.slice(5)}</span>
           {day.key && day.kind === 'workout' && <span className="tag key">key</span>}
+          {synced && <span className="tag synced" title="This session is in your intervals.icu calendar">↑</span>}
         </span>
         {day.kind === 'workout' && day.workout && (
           <>
@@ -29,6 +32,12 @@ export function DayCard({ day, selected, onSelect, isToday }: Props) {
           </>
         )}
         {day.kind === 'rest' && <span className="day-title muted">Rest</span>}
+        {day.kind === 'fixed' && day.fixed && (
+          <>
+            <span className="day-title">{day.fixed.name}</span>
+            <span className="day-body">Your workout in intervals.icu{day.fixed.load ? ` · ${Math.round(day.fixed.load)} TSS` : ''}</span>
+          </>
+        )}
         {day.kind === 'event' && day.event && <span className={`day-title prio prio-${day.event.priority}`}>{day.event.priority}: {day.event.name}</span>}
         {day.kind === 'done' && (
           <>

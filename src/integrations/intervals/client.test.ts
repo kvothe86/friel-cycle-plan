@@ -36,3 +36,27 @@ describe('IntervalsClient', () => {
     await expect(client.getAthlete()).rejects.toMatchObject({ status: 0 });
   });
 });
+
+describe('IntervalsClient writes', () => {
+  it('bulk-upserts events with a JSON body', async () => {
+    const f = vi.fn(async () => new Response(JSON.stringify([{ id: 5, category: 'WORKOUT', start_date_local: '2026-11-12T00:00:00' }]), { status: 200 }));
+    const client = new IntervalsClient({ athleteId: 'i1', apiKey: 'k' }, f);
+    const input = { category: 'WORKOUT' as const, start_date_local: '2026-11-12T00:00:00', type: 'Ride', name: 'x', description: '- 10m 65%', external_id: 'cyclinghub-2026-11-12', moving_time: 600, icu_training_load: 7 };
+    const out = await client.createEventsBulk([input]);
+    const [url, init] = f.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toBe('https://intervals.icu/api/v1/athlete/i1/events/bulk?upsert=true');
+    expect(init.method).toBe('POST');
+    expect(JSON.parse(init.body as string)).toEqual([input]);
+    expect((init.headers as Record<string, string>)['Content-Type']).toBe('application/json');
+    expect(out[0]!.id).toBe(5);
+  });
+
+  it('deletes an event and tolerates an empty response body', async () => {
+    const f = vi.fn(async () => new Response(null, { status: 200 }));
+    const client = new IntervalsClient({ athleteId: 'i1', apiKey: 'k' }, f);
+    await client.deleteEvent(42);
+    const [url, init] = f.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toBe('https://intervals.icu/api/v1/athlete/i1/events/42');
+    expect(init.method).toBe('DELETE');
+  });
+});

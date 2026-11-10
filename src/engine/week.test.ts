@@ -157,3 +157,19 @@ describe('load fitting', () => {
     expect(totalTss(p)).toBeGreaterThan(470 * 0.9);
   });
 });
+
+describe('fixed workouts from intervals.icu', () => {
+  it('keeps the user’s own workout, counts its load and avoids intensity next to a hard one', () => {
+    const thu = addDays(MONDAY, 3);
+    const p = plan({ fixed: [{ date: thu, name: 'Club chaingang', load: 110, hard: true }] });
+    const day = p.find((d) => d.date === thu)!;
+    expect(day.kind).toBe('fixed');
+    expect(day.reason).toMatch(/Club chaingang/);
+    const wed = p.find((d) => d.date === addDays(MONDAY, 2))!;
+    expect(wed.workout?.intensity).not.toBe('hard');
+    expect(totalTss(p) + 110).toBeLessThan(420 * 1.2);
+    // The chaingang counts as one of the build week's interval key sessions.
+    const intervalKeys = (q: DayPlan[]) => q.filter((d) => d.key && d.kind === 'workout' && d.workout?.type !== 'long').length;
+    expect(intervalKeys(p)).toBe(intervalKeys(plan()) - 1);
+  });
+});
