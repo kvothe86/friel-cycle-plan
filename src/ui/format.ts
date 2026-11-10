@@ -26,3 +26,12 @@ export function formatRelativeTime(iso: string | undefined, now = Date.now()): s
 }
 
 export { isCycling } from '../engine/sports';
+
+/** "1:05:09" / "4:07" for timers. */
+export function formatClock(sec: number): string {
+  const s = Math.max(0, Math.round(sec));
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const ss = String(s % 60).padStart(2, '0');
+  return h ? `${h}:${String(m).padStart(2, '0')}:${ss}` : `${m}:${ss}`;
+}

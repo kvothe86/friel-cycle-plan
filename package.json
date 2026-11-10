@@ -1,7 +1,7 @@
 {
   "name": "cyclinghub",
   "private": true,
-  "version": "0.6.1",
+  "version": "0.7.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -13,6 +13,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@garmin/fitsdk": "^21.221.0",
     "dexie": "^4.4.7",
     "dexie-react-hooks": "^4.4.0",
     "react": "^19.3.1",
@@ -27,6 +28,7 @@
     "@types/node": "^26.6.6",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
+    "@types/web-bluetooth": "^0.0.22",
     "@vitejs/plugin-react": "^6.3.0",
     "eslint": "^10.14.0",
     "eslint-plugin-react-hooks": "^7.1.1",
