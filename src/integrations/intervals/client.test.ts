@@ -60,3 +60,18 @@ describe('IntervalsClient writes', () => {
     expect(init.method).toBe('DELETE');
   });
 });
+
+describe('uploadActivity', () => {
+  it('posts the FIT as multipart with name and pairing', async () => {
+    const f = vi.fn(async () => new Response(JSON.stringify({ id: 'i99' }), { status: 200 }));
+    const client = new IntervalsClient({ athleteId: 'i1', apiKey: 'k' }, f);
+    const res = await client.uploadActivity(new Uint8Array([1, 2, 3]), 'ride.fit', { name: 'Sweet spot', pairedEventId: 42 });
+    const [url, init] = f.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toBe('https://intervals.icu/api/v1/athlete/i1/activities?name=Sweet+spot&paired_event_id=42');
+    expect(init.method).toBe('POST');
+    expect(init.body).toBeInstanceOf(FormData);
+    expect((init.headers as Record<string, string>)['Content-Type']).toBeUndefined();
+    expect(((init.body as FormData).get('file') as File).name).toBe('ride.fit');
+    expect(res.id).toBe('i99');
+  });
+});

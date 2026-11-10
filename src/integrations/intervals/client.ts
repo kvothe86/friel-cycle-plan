@@ -66,6 +66,18 @@ export class IntervalsClient {
     return this.request('DELETE', `/events/${eventId}`);
   }
 
+  /**
+   * Uploads a recorded ride (FIT). `paired_event_id` links it to the planned
+   * workout so intervals.icu shows planned vs actual.
+   */
+  uploadActivity(fit: Uint8Array, filename: string, opts: { name: string; pairedEventId?: number }): Promise<{ id?: string }> {
+    const form = new FormData();
+    form.append('file', new Blob([fit as BlobPart], { type: 'application/octet-stream' }), filename);
+    const query: Record<string, string> = { name: opts.name };
+    if (opts.pairedEventId !== undefined) query.paired_event_id = String(opts.pairedEventId);
+    return this.request('POST', '/activities', query, form);
+  }
+
   private get<T>(path: string, query?: Record<string, string>): Promise<T> {
     return this.request<T>('GET', path, query);
   }
@@ -78,14 +90,16 @@ export class IntervalsClient {
       Authorization: `Basic ${btoa(`API_KEY:${this.creds.apiKey}`)}`,
       Accept: 'application/json',
     };
-    if (body !== undefined) headers['Content-Type'] = 'application/json';
+    const isForm = typeof FormData !== 'undefined' && body instanceof FormData;
+    // FormData sets its own multipart boundary header.
+    if (body !== undefined && !isForm) headers['Content-Type'] = 'application/json';
 
     let res: Response;
     try {
       res = await this.fetchFn(url.toString(), {
         method,
         headers,
-        ...(body !== undefined && { body: JSON.stringify(body) }),
+        ...(body !== undefined && { body: isForm ? (body as FormData) : JSON.stringify(body) }),
       });
     } catch (err) {
       throw new IntervalsError(0, `Network error reaching intervals.icu: ${(err as Error).message}`);

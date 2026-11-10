@@ -5,6 +5,7 @@ import type { PushedRecord } from '../engine/push';
 import type { SicknessEpisode } from '../engine/sickness';
 import type { DayActionRecord } from '../engine/adjust';
 import type { PlanLogEntry } from '../engine/progression';
+import type { Recording } from '../player/recording';
 import type { IntervalsCredentials } from '../integrations/intervals/client';
 import type { IsoDate } from '../lib/dates';
 
@@ -67,6 +68,7 @@ export class CyclingHubDb extends Dexie {
   sickness!: EntityTable<SicknessEpisode, 'id'>;
   dayActions!: EntityTable<DayActionRecord, 'date'>;
   planLog!: EntityTable<PlanLogEntry, 'date'>;
+  rides!: EntityTable<Recording, 'id'>;
 
   constructor(name = 'cyclinghub') {
     super(name);
@@ -82,6 +84,7 @@ export class CyclingHubDb extends Dexie {
     });
     this.version(3).stores({ pushed: '&externalId, date' });
     this.version(4).stores({ sickness: '&id, start', dayActions: '&date', planLog: '&date' });
+    this.version(5).stores({ rides: '&id, startedAt' });
   }
 
   async getMeta<K extends MetaKey>(key: K): Promise<MetaMap[K] | undefined> {
@@ -109,7 +112,7 @@ export class CyclingHubDb extends Dexie {
 
   /** Removes everything. */
   async clearAll(): Promise<void> {
-    const tables = [this.meta, this.wellness, this.activities, this.events, this.goals, this.overrides, this.pushed, this.sickness, this.dayActions, this.planLog];
+    const tables = [this.meta, this.wellness, this.activities, this.events, this.goals, this.overrides, this.pushed, this.sickness, this.dayActions, this.planLog, this.rides];
     await this.transaction('rw', tables, async () => {
       await Promise.all(tables.map((t) => t.clear()));
     });
