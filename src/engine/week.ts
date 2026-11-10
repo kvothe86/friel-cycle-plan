@@ -4,8 +4,10 @@ import { phaseFocus, type SessionType } from './focus';
 import { buildWorkout, canRideOutdoor, enduranceTssPerHour, MAX_ENDURANCE_POWER, minMinutesFor } from './library';
 import type { PlanWeek, SeasonPlan } from './macro';
 import type { Experience, RideMode, Specialty } from './types';
+import { REENTRY_DURATION_SHARE, REENTRY_MAX_MINUTES } from './sickness';
 import { isHard, type Workout } from './workout';
 import type { FixedWorkout } from './push';
+import { SYSTEM_OF, type Levels } from './progression';
 
 /**
  * Week planner + day allocator (PLAN §3.3–3.4): turns a week's load target
@@ -20,6 +22,20 @@ export const MIN_SESSION_MINUTES = 20;
 export const LONG_RIDE_MIN_MINUTES = 90;
 /** Share of the remaining weekly load the long ride aims for. */
 export const LONG_RIDE_LOAD_SHARE = 0.4;
+/** A missed session's load may be spread over the rest of the week by at most this much (PLAN §3.6). */
+export const DEFICIT_SPREAD = 0.1;
+/** Key sessions aim slightly above the current level: progressive overload. */
+export const LEVEL_STEP = 0.5;
+export const EASIER_LEVEL_DROP = 2;
+export const EASIER_DURATION = 0.75;
+export const RECOVERY_DAY_MAX_MINUTES = 45;
+
+/** Session types that count as hard (no intensity when readiness is reduced or during reload). */
+export const HARD_TYPES: readonly SessionType[] = ['threshold', 'overunder', 'vo2', 'anaerobic', 'race_sim', 'sprint'];
+
+/** Day-level adjustments from health, readiness or the user (PLAN §3.6). */
+export type DayLimit = 'recovery' | 'no-hard' | 'reentry' | 'reload' | 'easier';
+export type DayStatus = { kind: 'rest'; reason: string } | { kind: 'limit'; limit: DayLimit; reason: string };
 
 /** A completed activity, reduced to what planning needs. */
 export interface DoneActivity {
@@ -48,6 +64,8 @@ export interface DayPlan {
   done?: DoneActivity[];
   /** The user's own workout in intervals.icu, planned around. */
   fixed?: FixedWorkout;
+  /** Why the day differs from the normal plan (illness, readiness, your choice). */
+  adjustment?: string;
   phase: PlanWeek['phase'];
   recoveryWeek: boolean;
 }
@@ -65,6 +83,10 @@ export interface WeekPlanInput {
   weeksIntoPhase: number;
   /** Workouts in intervals.icu the plan must respect. */
   fixed?: readonly FixedWorkout[];
+  /** Per-day adjustments (sickness, readiness, skip/easier/endurance). */
+  dayStatus?: ReadonlyMap<IsoDate, DayStatus>;
+  /** Progression levels per energy system; without them levels follow the phase. */
+  levels?: Levels;
 }
 
 /** Hard-day rule for completed activities (cycling and other sports). */
@@ -82,14 +104,22 @@ function dayScore(d: ResolvedDay, isLong: boolean): number {
   return d.minutes + (preferred ? 0.5 : 0);
 }
 
-function levelFor(input: WeekPlanInput): number {
-  const base = BASE_LEVEL[input.experience] + Math.floor(input.weeksIntoPhase / 2);
+function levelFor(input: WeekPlanInput, type: SessionType, key: boolean): number {
+  const system = SYSTEM_OF[type] ?? 'endurance';
+  const base = input.levels
+    ? input.levels[system] + (key ? LEVEL_STEP : 0)
+    : BASE_LEVEL[input.experience] + Math.floor(input.weeksIntoPhase / 2);
   return Math.min(10, Math.max(1, input.week.recovery ? base - 2 : base));
 }
 
 export function planWeek(input: WeekPlanInput): DayPlan[] {
   const { week, days, today, specialty, done } = input;
-  const level = levelFor(input);
+  const level = levelFor(input, 'endurance', false);
+  const statusOf = (date: IsoDate) => input.dayStatus?.get(date);
+  const limitOf = (date: IsoDate): DayLimit | undefined => {
+    const st = statusOf(date);
+    return st?.kind === 'limit' ? st.limit : undefined;
+  };
   const weekEnd = addDays(week.start, 6);
   const doneInWeek = done.filter((d) => d.date >= week.start && d.date <= weekEnd);
   const doneByDate = new Map<IsoDate, DoneActivity[]>();
@@ -104,7 +134,17 @@ export function planWeek(input: WeekPlanInput): DayPlan[] {
 
   const doneLoad = doneInWeek.reduce((s, d) => s + d.load, 0);
   const fixedLoad = days.reduce((s, d) => s + (fixedByDate.get(d.date)?.load ?? 0), 0);
-  let remaining = Math.max(0, week.targetTss - doneLoad - fixedLoad);
+  // Never cram: the load still to plan is capped by the share of the week's time that is left
+  // (sick and re-entry days count less), plus a small allowance for a deficit.
+  const budgetMinutes = days.reduce((s, d) => {
+    const st = statusOf(d.date);
+    if (st?.kind === 'rest') return s;
+    return s + (st?.kind === 'limit' && (st.limit === 'reentry' || st.limit === 'recovery') ? d.minutes * 0.5 : d.minutes);
+  }, 0);
+  const prorated = week.availableMinutes > 0
+    ? week.targetTss * Math.min(1, budgetMinutes / week.availableMinutes) * (1 + DEFICIT_SPREAD)
+    : Infinity;
+  let remaining = Math.max(0, Math.min(week.targetTss - doneLoad - fixedLoad, prorated - fixedLoad));
 
   const plans = new Map<IsoDate, DayPlan>();
   const base = (d: ResolvedDay): Omit<DayPlan, 'kind' | 'reason' | 'key'> => ({
@@ -116,8 +156,11 @@ export function planWeek(input: WeekPlanInput): DayPlan[] {
   for (const d of days) {
     const ev = eventsByDate.get(d.date);
     const doneToday = d.date === today ? doneByDate.get(d.date) : undefined;
+    const st = statusOf(d.date);
     if (doneToday?.some((a) => a.cycling)) {
       plans.set(d.date, { ...base(d), kind: 'done', key: false, done: doneToday, reason: 'Already ridden today.' });
+    } else if (st?.kind === 'rest') {
+      plans.set(d.date, { ...base(d), kind: 'rest', key: false, reason: st.reason, adjustment: st.reason });
     } else if (fixedByDate.has(d.date)) {
       const f = fixedByDate.get(d.date)!;
       plans.set(d.date, {
@@ -134,7 +177,21 @@ export function planWeek(input: WeekPlanInput): DayPlan[] {
     }
   }
 
-  const ctx = (d: ResolvedDay) => ({ level, specialty, outdoor: d.mode === 'outdoor' });
+  const ctx = (d: ResolvedDay, type: SessionType = 'endurance', key = false) => {
+    const easier = limitOf(d.date) === 'easier' ? EASIER_LEVEL_DROP : 0;
+    return { level: levelFor(input, type, key) - easier, specialty, outdoor: d.mode === 'outdoor' };
+  };
+  const adjustmentOf = (date: IsoDate) => {
+    const st = statusOf(date);
+    return st ? { adjustment: st.reason } : {};
+  };
+  /** Whether a key session of this type may go on the day, given its limit. */
+  const allowsKey = (date: IsoDate, type: SessionType) => {
+    const limit = limitOf(date);
+    if (limit === 'recovery' || limit === 'reentry') return false;
+    if ((limit === 'no-hard' || limit === 'reload') && HARD_TYPES.includes(type)) return false;
+    return true;
+  };
   const isFree = (d: ResolvedDay) => !plans.has(d.date);
   // A hard day the day before, after, or the same day (e.g. a hard run this morning) rules out intensity.
   const nextToHard = (date: IsoDate) => hardDates.has(addDays(date, -1)) || hardDates.has(date) || hardDates.has(addDays(date, 1));
@@ -143,7 +200,7 @@ export function planWeek(input: WeekPlanInput): DayPlan[] {
   for (const e of week.events.filter((x) => x.priority !== 'C')) {
     const d = candidates.find((c) => c.date === addDays(e.date, -1));
     if (d && isFree(d) && d.minutes >= minMinutesFor('openers')) {
-      const w = buildWorkout('openers', Math.min(d.minutes, 45), ctx(d));
+      const w = buildWorkout('openers', Math.min(d.minutes, 45), ctx(d, 'openers'));
       plans.set(d.date, { ...base(d), kind: 'workout', workout: w, key: false, reason: `Openers: ${e.name} is tomorrow.` });
       remaining = Math.max(0, remaining - w.tss);
     }
@@ -178,18 +235,20 @@ export function planWeek(input: WeekPlanInput): DayPlan[] {
       .filter((d) => d.minutes >= (isLong ? LONG_RIDE_MIN_MINUTES : minMinutesFor(type, d.mode === 'outdoor')))
       .filter((d) => (d.mode === 'outdoor' ? canRideOutdoor(type) : true))
       .filter((d) => isLong || !nextToHard(d.date))
+      .filter((d) => allowsKey(d.date, type))
       .sort((a, b) => dayScore(b, isLong) - dayScore(a, isLong) || (a.date < b.date ? -1 : 1));
     const d = options[0];
     if (!d) continue;
 
     const cap = week.recovery ? RECOVERY_WEEK_MAX_MINUTES : MAX_KEY_MINUTES;
+    const shorter = limitOf(d.date) === 'easier' ? EASIER_DURATION : 1;
     const minutes = isLong
-      ? round5(Math.min(d.minutes, Math.max(LONG_RIDE_MIN_MINUTES, ((remaining * LONG_RIDE_LOAD_SHARE) / enduranceTssPerHour(level)) * 60)))
-      : round5(Math.min(d.minutes, cap));
-    const w = buildWorkout(type, minutes, ctx(d), week.index);
+      ? round5(Math.min(d.minutes, Math.max(LONG_RIDE_MIN_MINUTES, ((remaining * LONG_RIDE_LOAD_SHARE) / enduranceTssPerHour(level)) * 60)) * shorter)
+      : round5(Math.min(d.minutes, cap) * shorter);
+    const w = buildWorkout(type, minutes, ctx(d, type, true), week.index);
     keyNo++;
     plans.set(d.date, {
-      ...base(d), kind: 'workout', workout: w, key: true,
+      ...base(d), kind: 'workout', workout: w, key: true, ...adjustmentOf(d.date),
       reason: isLong
         ? `Long ride on your longest${d.mode === 'outdoor' ? ' outdoor' : ''} day (${week.phase} phase).`
         : `Key session ${keyNo} of ${totalKeys}: ${focus.summary.toLowerCase()} (${week.phase}${week.recovery ? ', recovery week' : ''}). Placed on your longest free day with no hard day next to it.`,
@@ -201,7 +260,24 @@ export function planWeek(input: WeekPlanInput): DayPlan[] {
     remaining = Math.max(0, remaining - w.tss);
   }
 
-  // 4. Remaining days: endurance or recovery to reach the weekly load.
+  // 4a. Days limited to recovery or re-entry get a fixed, easy ride.
+  for (const d of candidates.filter(isFree)) {
+    const limit = limitOf(d.date);
+    if (limit !== 'recovery' && limit !== 'reentry') continue;
+    const minutes = limit === 'recovery'
+      ? round5(Math.min(d.minutes, RECOVERY_DAY_MAX_MINUTES))
+      : round5(Math.min(d.minutes * REENTRY_DURATION_SHARE, REENTRY_MAX_MINUTES));
+    if (minutes < MIN_SESSION_MINUTES) {
+      plans.set(d.date, { ...base(d), kind: 'rest', key: false, reason: statusOf(d.date)!.reason, ...adjustmentOf(d.date) });
+      continue;
+    }
+    const type: SessionType = limit === 'recovery' ? 'recovery' : 'endurance';
+    const w = buildWorkout(type, minutes, { ...ctx(d), level: Math.max(1, level - 1) });
+    plans.set(d.date, { ...base(d), kind: 'workout', workout: w, key: false, reason: statusOf(d.date)!.reason, ...adjustmentOf(d.date) });
+    remaining = Math.max(0, remaining - w.tss);
+  }
+
+  // 4b. Remaining days: endurance or recovery to reach the weekly load.
   const rest = candidates.filter(isFree);
   const restMinutes = rest.reduce((s, d) => s + d.minutes, 0);
   // If plain Z2 can't reach the weekly load in the time left, ride upper Z2 instead.
@@ -217,7 +293,7 @@ export function planWeek(input: WeekPlanInput): DayPlan[] {
     if (afterHard) minutes = Math.min(minutes, 60);
     if (minutes < 30) {
       plans.set(d.date, {
-        ...base(d), kind: 'rest', key: false,
+        ...base(d), kind: 'rest', key: false, ...adjustmentOf(d.date),
         reason: share < 1 ? 'Rest: the weekly load target is already covered.' : 'Rest: too little load left for a useful ride. Recover instead.',
       });
       continue;
@@ -225,7 +301,7 @@ export function planWeek(input: WeekPlanInput): DayPlan[] {
     const type: SessionType = afterHard && minutes <= 45 ? 'recovery' : 'endurance';
     const w = buildWorkout(type, minutes, { ...ctx(d), ...(type === 'endurance' && endurancePower && { endurancePower }) });
     plans.set(d.date, {
-      ...base(d), kind: 'workout', workout: w, key: false,
+      ...base(d), kind: 'workout', workout: w, key: false, ...adjustmentOf(d.date),
       reason: afterHard
         ? 'Easy day after a hard session: recover while adding aerobic volume.'
         : `Endurance to build the weekly load (target ${week.targetTss} TSS).`,
@@ -253,10 +329,12 @@ export interface HorizonInput {
   done: readonly DoneActivity[];
   experience: Experience;
   fixed?: readonly FixedWorkout[];
+  dayStatus?: ReadonlyMap<IsoDate, DayStatus>;
+  levels?: Levels;
 }
 
 /** Plans each week overlapping the horizon (PLAN §3.6: re-run on every change). */
-export function planHorizon({ today, plan, days, done, experience, fixed = [] }: HorizonInput): DayPlan[] {
+export function planHorizon({ today, plan, days, done, experience, fixed = [], dayStatus, levels }: HorizonInput): DayPlan[] {
   const out: DayPlan[] = [];
   for (const week of plan.weeks) {
     const weekEnd = addDays(week.start, 6);
@@ -269,6 +347,8 @@ export function planHorizon({ today, plan, days, done, experience, fixed = [] }:
       done: done.filter((d) => d.date >= addDays(week.start, -1) && d.date <= weekEnd),
       weeksIntoPhase,
       fixed: fixed.filter((f) => f.date >= week.start && f.date <= weekEnd),
+      dayStatus,
+      levels,
     }));
   }
   return out;

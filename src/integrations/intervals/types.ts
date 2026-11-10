@@ -97,3 +97,13 @@ export interface IcuEventInput {
   moving_time: number;
   icu_training_load: number;
 }
+
+/** Body for a SICK/INJURED marker (end date exclusive, at midnight). */
+export interface IcuMarkerInput {
+  category: 'SICK' | 'INJURED';
+  start_date_local: string;
+  end_date_local: string;
+  name: string;
+  description: string;
+  external_id: string;
+}
