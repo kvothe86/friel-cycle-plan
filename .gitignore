@@ -1,2 +1,5 @@
-agent-tools/
-pages-deploy/
+node_modules/
+dist/
+.env*
+*.local
+.DS_Store
