@@ -12,7 +12,7 @@ See **[PLAN.md](PLAN.md)** for the full product and architecture plan.
 | Milestone | Status |
 |-----------|--------|
 | M0 Scaffold (Vite + React + TS, lint, tests, CI, Pages deploy) | ✅ |
-| M1 Connect & data (intervals.icu) | ❌ |
+| M1 Connect & data (intervals.icu: profile, wellness, activities, PMC, readiness) | ✅ |
 | M2–M7 | ❌ |
 
 ## Development
