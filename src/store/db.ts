@@ -1,5 +1,6 @@
 import Dexie, { type EntityTable } from 'dexie';
-import type { IcuActivity, IcuAthlete, IcuWellness } from '../integrations/intervals/types';
+import type { IcuActivity, IcuAthlete, IcuEvent, IcuWellness } from '../integrations/intervals/types';
+import type { AvailabilityOverride, AvailabilityTemplate, Goal, PlanSettings } from '../engine/types';
 import type { IntervalsCredentials } from '../integrations/intervals/client';
 import type { IsoDate } from '../lib/dates';
 
@@ -19,6 +20,13 @@ interface MetaMap {
   credentials: IntervalsCredentials;
   athlete: IcuAthlete;
   lastSync: SyncInfo;
+  availability: AvailabilityTemplate;
+  planSettings: PlanSettings;
+}
+
+/** intervals.icu event as stored locally, with an indexed local start date. */
+export interface StoredEvent extends IcuEvent {
+  date: IsoDate;
 }
 
 export type MetaKey = keyof MetaMap;
@@ -32,6 +40,9 @@ export class CyclingHubDb extends Dexie {
   meta!: EntityTable<MetaRow, 'key'>;
   wellness!: EntityTable<IcuWellness, 'id'>;
   activities!: EntityTable<StoredActivity, 'id'>;
+  events!: EntityTable<StoredEvent, 'id'>;
+  goals!: EntityTable<Goal, 'id'>;
+  overrides!: EntityTable<AvailabilityOverride, 'date'>;
 
   constructor(name = 'cyclinghub') {
     super(name);
@@ -39,6 +50,11 @@ export class CyclingHubDb extends Dexie {
       meta: '&key',
       wellness: '&id',
       activities: '&id, date',
+    });
+    this.version(2).stores({
+      events: '&id, date, category',
+      goals: '&id, date',
+      overrides: '&date',
     });
   }
 
@@ -51,10 +67,23 @@ export class CyclingHubDb extends Dexie {
     await this.meta.put({ key, value });
   }
 
-  /** Removes everything: credentials and cached data. */
+  /** Removes intervals.icu credentials and everything synced from it; keeps local goals and availability. */
+  async clearSynced(): Promise<void> {
+    await this.transaction('rw', [this.meta, this.wellness, this.activities, this.events, this.goals], async () => {
+      await Promise.all([
+        this.meta.bulkDelete(['credentials', 'athlete', 'lastSync']),
+        this.wellness.clear(),
+        this.activities.clear(),
+        this.events.clear(),
+        this.goals.where('id').startsWith('icu-').delete(),
+      ]);
+    });
+  }
+
+  /** Removes everything. */
   async clearAll(): Promise<void> {
-    await this.transaction('rw', this.meta, this.wellness, this.activities, async () => {
-      await Promise.all([this.meta.clear(), this.wellness.clear(), this.activities.clear()]);
+    await this.transaction('rw', [this.meta, this.wellness, this.activities, this.events, this.goals, this.overrides], async () => {
+      await Promise.all([this.meta, this.wellness, this.activities, this.events, this.goals, this.overrides].map((t) => t.clear()));
     });
   }
 }

@@ -1,4 +1,4 @@
-import type { IcuActivity, IcuAthlete, IcuWellness } from './types';
+import type { IcuActivity, IcuAthlete, IcuEvent, IcuWellness } from './types';
 import type { IsoDate } from '../../lib/dates';
 
 export const INTERVALS_BASE_URL = 'https://intervals.icu/api/v1';
@@ -48,6 +48,10 @@ export class IntervalsClient {
 
   getActivities(oldest: IsoDate, newest: IsoDate): Promise<IcuActivity[]> {
     return this.get<IcuActivity[]>('/activities', { oldest, newest });
+  }
+
+  getEvents(oldest: IsoDate, newest: IsoDate): Promise<IcuEvent[]> {
+    return this.get<IcuEvent[]>('/events', { oldest, newest });
   }
 
   private async get<T>(path: string, query?: Record<string, string>): Promise<T> {

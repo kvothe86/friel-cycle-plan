@@ -11,9 +11,25 @@ export interface ChartSeries {
   format?: (v: number) => string;
 }
 
+export interface ChartBand {
+  from: number;
+  /** Inclusive index. */
+  to: number;
+  color: string;
+  label?: string;
+}
+
+export interface ChartMarker {
+  index: number;
+  label: string;
+  color: string;
+}
+
 interface Props {
   dates: string[];
   series: ChartSeries[];
+  bands?: ChartBand[];
+  markers?: ChartMarker[];
   height?: number;
   title: string;
 }
@@ -32,7 +48,7 @@ function extent(series: ChartSeries[], zero: boolean): [number, number] {
 }
 
 /** Small dependency-free SVG time-series chart with a hover readout. */
-export function LineChart({ dates, series, height = 220, title }: Props) {
+export function LineChart({ dates, series, bands = [], markers = [], height = 220, title }: Props) {
   const [hover, setHover] = useState<number | null>(null);
   const n = dates.length;
   const left = series.filter((s) => !s.right);
@@ -98,6 +114,19 @@ export function LineChart({ dates, series, height = 220, title }: Props) {
         onMouseMove={onMove}
         onMouseLeave={() => setHover(null)}
       >
+        {bands.map((b) => {
+          const half = n > 1 ? (W - PAD.left - PAD.right) / (n - 1) / 2 : 0;
+          const x0 = Math.max(PAD.left, x(b.from) - half);
+          const x1 = Math.min(W - PAD.right, x(b.to) + half);
+          return (
+            <g key={`${b.from}-${b.to}`}>
+              <rect x={x0} y={PAD.top} width={Math.max(0, x1 - x0)} height={height - PAD.top - PAD.bottom} fill={b.color} />
+              {b.label && x1 - x0 > 28 && (
+                <text x={(x0 + x1) / 2} y={PAD.top + 12} textAnchor="middle" className="band-label">{b.label}</text>
+              )}
+            </g>
+          );
+        })}
         {ticks(lMin, lMax).map((t) => (
           <g key={`l${t}`}>
             <line x1={PAD.left} x2={W - PAD.right} y1={yL(t)} y2={yL(t)} className="grid" />
@@ -131,6 +160,12 @@ export function LineChart({ dates, series, height = 220, title }: Props) {
             <path key={s.label} d={path(s)} fill="none" stroke={s.color} strokeWidth={2} />
           ),
         )}
+        {markers.map((m) => (
+          <g key={`${m.index}-${m.label}`}>
+            <line x1={x(m.index)} x2={x(m.index)} y1={PAD.top} y2={height - PAD.bottom} stroke={m.color} strokeWidth={2} strokeDasharray="4 3" />
+            <text x={x(m.index) - 4} y={PAD.top + 26} textAnchor="end" className="marker-label" fill={m.color}>{m.label}</text>
+          </g>
+        ))}
         {hover !== null && <line x1={x(hover)} x2={x(hover)} y1={PAD.top} y2={height - PAD.bottom} className="cursor" />}
       </svg>
     </figure>

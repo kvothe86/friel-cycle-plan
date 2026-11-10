@@ -4,7 +4,13 @@ import { addDays, toIsoDate, type IsoDate } from '../lib/dates';
 import { buildPmcSeries, dailyLoads, type PmcPoint } from '../engine/pmc';
 import { computeReadiness, HRV_BASELINE_DAYS, type Readiness } from '../engine/readiness';
 import type { IcuSportSettings } from '../integrations/intervals/types';
-import { db } from './db';
+import { db, type StoredEvent } from './db';
+import type { BlockedRange } from '../engine/availability';
+import { planSeason, type SeasonPlan } from '../engine/macro';
+import {
+  DEFAULT_AVAILABILITY, DEFAULT_PLAN_SETTINGS,
+  type AvailabilityOverride, type AvailabilityTemplate, type Goal, type PlanSettings,
+} from '../engine/types';
 
 export const useCredentials = () => useLiveQuery(() => db.getMeta('credentials'), [], undefined);
 export const useAthlete = () => useLiveQuery(() => db.getMeta('athlete'), [], undefined);
@@ -46,4 +52,59 @@ export function useReadiness(date: IsoDate): Readiness {
 
 export function rideSettings(settings: IcuSportSettings[] | undefined): IcuSportSettings | undefined {
   return settings?.find((s) => s.types?.includes('Ride')) ?? settings?.[0];
+}
+
+// ---- M2: goals, availability, season plan ----
+
+export const useGoals = () => useLiveQuery(() => db.goals.toArray(), [], [] as Goal[]);
+export const useOverrides = () => useLiveQuery(() => db.overrides.orderBy('date').toArray(), [], [] as AvailabilityOverride[]);
+
+/** undefined while loading; `isDefault` when the user never saved a template. */
+export function useAvailability(): { template: AvailabilityTemplate; isDefault: boolean } | undefined {
+  return useLiveQuery(async () => {
+    const t = await db.getMeta('availability');
+    return { template: t ?? DEFAULT_AVAILABILITY, isDefault: !t };
+  }, []);
+}
+
+export function usePlanSettings(): PlanSettings {
+  return useLiveQuery(() => db.getMeta('planSettings'), [], undefined) ?? DEFAULT_PLAN_SETTINGS;
+}
+
+/**
+ * HOLIDAY events from intervals.icu block training. All-day multi-day
+ * events end at 00:00 on the day after, so that end is treated as exclusive.
+ */
+export function holidayRanges(events: readonly StoredEvent[]): BlockedRange[] {
+  return events
+    .filter((e) => e.category === 'HOLIDAY')
+    .map((e) => {
+      let end = e.date;
+      if (e.end_date_local) {
+        const endDate = e.end_date_local.slice(0, 10);
+        const midnight = e.end_date_local.slice(11, 19) === '00:00:00';
+        end = midnight && endDate > e.date ? addDays(endDate, -1) : endDate;
+      }
+      return { start: e.date, end, reason: e.name?.trim() || 'Holiday (intervals.icu)' };
+    });
+}
+
+export function useBlockedRanges(): BlockedRange[] {
+  const events = useLiveQuery(() => db.events.where('category').equals('HOLIDAY').toArray(), [], [] as StoredEvent[]);
+  return useMemo(() => holidayRanges(events), [events]);
+}
+
+export function useSeasonPlan(today: IsoDate): SeasonPlan | undefined {
+  const goals = useGoals();
+  const availability = useAvailability();
+  const overrides = useOverrides();
+  const blocked = useBlockedRanges();
+  const settings = usePlanSettings();
+  const currentCtl = usePmc(today, 1).at(-1)?.ctl ?? 0;
+  return useMemo(
+    () =>
+      availability &&
+      planSeason({ today, goals, currentCtl, template: availability.template, overrides, blocked, settings }),
+    [today, goals, currentCtl, availability, overrides, blocked, settings],
+  );
 }

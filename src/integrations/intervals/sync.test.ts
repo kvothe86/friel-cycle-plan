@@ -7,7 +7,9 @@ function fakeClient(data: { wellness?: unknown[]; activities?: unknown[] }) {
   const f = vi.fn(async (url: string) => {
     calls.push(url);
     const path = new URL(url).pathname;
-    const body = path.endsWith('/wellness')
+    const body = path.endsWith('/events')
+      ? []
+      : path.endsWith('/wellness')
       ? (data.wellness ?? [])
       : path.endsWith('/activities')
         ? (data.activities ?? [])
@@ -59,5 +61,51 @@ describe('syncIntervals', () => {
     expect(await db.activities.get('gone')).toBeUndefined();
     expect(await db.activities.get('old')).toBeDefined();
     expect(await db.activities.get('kept')).toMatchObject({ name: 'edited' });
+  });
+});
+
+describe('reconcileRaceGoals', () => {
+  it('mirrors races, keeps local edits and drops removed races', async () => {
+    const { reconcileRaceGoals } = await import('./sync');
+    const existing = [
+      { id: 'icu-1', kind: 'event', name: 'Old', date: '2027-04-18', priority: 'A', specialty: 'climbing', eventType: 'hill_climb', source: 'intervals', icuEventId: 1 },
+      { id: 'icu-9', kind: 'event', name: 'Gone', date: '2027-05-01', priority: 'B', specialty: 'allround', source: 'intervals', icuEventId: 9 },
+      { id: 'local-1', kind: 'specialty', name: 'Mine', priority: 'A', specialty: 'tt', source: 'local' },
+    ] as const;
+    const { put, remove } = reconcileRaceGoals(
+      [
+        { id: 1, category: 'RACE_A', start_date_local: '2027-04-19T00:00:00', name: 'Renamed' },
+        { id: 2, category: 'RACE_C', start_date_local: '2027-03-01T00:00:00', name: 'Club TT' },
+        { id: 3, category: 'HOLIDAY', start_date_local: '2026-12-20T00:00:00' },
+      ],
+      existing.map((g) => ({ ...g })),
+    );
+    expect(remove).toEqual(['icu-9']);
+    expect(put).toHaveLength(2);
+    expect(put[0]).toMatchObject({ id: 'icu-1', name: 'Renamed', date: '2027-04-19', specialty: 'climbing', eventType: 'hill_climb' });
+    expect(put[1]).toMatchObject({ id: 'icu-2', priority: 'C', specialty: 'allround' });
+  });
+});
+
+describe('syncIntervals events', () => {
+  it('stores events and creates race goals, keeping local goals', async () => {
+    const db = new CyclingHubDb(`test-${Math.random()}`);
+    await db.goals.put({ id: 'local-1', kind: 'specialty', name: 'Mine', priority: 'A', specialty: 'tt', source: 'local' });
+    const f = vi.fn(async (url: string) => {
+      const path = new URL(url).pathname;
+      const body = path.endsWith('/events')
+        ? [{ id: 7, category: 'RACE_A', start_date_local: '2027-04-18T00:00:00', name: 'Big race' }, { id: 8, category: 'HOLIDAY', start_date_local: '2026-12-21T00:00:00', end_date_local: '2026-12-27T00:00:00' }]
+        : path.endsWith('/wellness') || path.endsWith('/activities') ? [] : { id: 'i1' };
+      return new Response(JSON.stringify(body), { status: 200 });
+    });
+    const client = new IntervalsClient({ athleteId: 'i1', apiKey: 'k' }, f as unknown as typeof fetch);
+    const res = await syncIntervals(db, client, '2026-11-10');
+    expect(res.events).toBe(2);
+    expect(f.mock.calls.some(([u]) => String(u).includes('/events?oldest=2026-09-11&newest=2027-12-15'))).toBe(true);
+    expect(await db.events.where('category').equals('HOLIDAY').count()).toBe(1);
+    expect((await db.goals.toArray()).map((g) => g.id).sort()).toEqual(['icu-7', 'local-1']);
+    await db.clearSynced();
+    expect((await db.goals.toArray()).map((g) => g.id)).toEqual(['local-1']);
+    await db.delete();
   });
 });
