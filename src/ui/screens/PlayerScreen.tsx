@@ -7,6 +7,7 @@ import { formatDuration } from '../format';
 import { DevicePanel } from '../player/DevicePanel';
 import { RideSummary } from '../player/RideSummary';
 import { RideView } from '../player/RideView';
+import { PageHeader } from '../components/PageHeader';
 
 export const DEFAULT_FTP = 200;
 
@@ -33,8 +34,8 @@ export function PlayerScreen() {
   const ftp = Number(ftpInput ?? athleteFtp ?? DEFAULT_FTP) || DEFAULT_FTP;
 
   return (
-    <section>
-      <h1>Ride</h1>
+    <section className="screen">
+      <PageHeader eyebrow="Indoor · ERG player" title="Ride" />
 
       {leftover && (
         <div className="banner warn">

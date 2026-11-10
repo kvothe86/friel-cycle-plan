@@ -4,13 +4,13 @@ import type { Phase, SeasonPlan } from '../../engine/macro';
 
 export const PHASE_LABELS: Record<Phase, string> = { base: 'Base', build: 'Build', peak: 'Peak', race: 'Race' };
 export const PHASE_COLORS: Record<Phase | 'recovery', string> = {
-  base: 'rgba(56, 189, 248, 0.10)',
-  build: 'rgba(249, 115, 22, 0.13)',
-  peak: 'rgba(234, 179, 8, 0.16)',
-  race: 'rgba(34, 197, 94, 0.20)',
-  recovery: 'rgba(148, 163, 184, 0.06)',
+  base: 'rgba(108, 184, 255, 0.08)',
+  build: 'rgba(255, 138, 61, 0.10)',
+  peak: 'rgba(228, 255, 58, 0.10)',
+  race: 'rgba(61, 220, 151, 0.16)',
+  recovery: 'rgba(255, 255, 255, 0.025)',
 };
-const PRIORITY_COLORS = { A: '#22c55e', B: '#eab308', C: '#94a3b8' } as const;
+const PRIORITY_COLORS = { A: '#3DDC97', B: '#FFB547', C: '#7D828C' } as const;
 
 /** Daily target CTL from today, linearly interpolated within each plan week. */
 export function dailyTargetCtl(plan: SeasonPlan, today: IsoDate): Map<IsoDate, number> {

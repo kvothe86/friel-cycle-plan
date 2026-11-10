@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { NavLink, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { useSyncStore } from './store/sync';
 import { SyncBar } from './ui/components/SyncBar';
+import { Icon } from './ui/components/Icon';
 import { AutoPush } from './ui/components/AutoPush';
 import { PlanLogger } from './ui/components/PlanLogger';
 import { ErrorBoundary } from './ui/components/ErrorBoundary';
@@ -15,14 +16,14 @@ import { PlayerScreen } from './ui/screens/PlayerScreen';
 import { SettingsScreen } from './ui/screens/SettingsScreen';
 
 const NAV = [
-  { to: '/today', label: 'Today' },
-  { to: '/plan', label: '14 days' },
-  { to: '/season', label: 'Season' },
-  { to: '/history', label: 'History' },
-  { to: '/goals', label: 'Goals' },
-  { to: '/player', label: 'Ride' },
-  { to: '/guide', label: 'Guide' },
-  { to: '/settings', label: 'Settings' },
+  { to: '/today', label: 'Today', icon: 'today' },
+  { to: '/plan', label: '14 days', icon: 'plan' },
+  { to: '/season', label: 'Season', icon: 'season' },
+  { to: '/history', label: 'History', icon: 'history' },
+  { to: '/goals', label: 'Goals', icon: 'goals' },
+  { to: '/player', label: 'Ride', icon: 'ride' },
+  { to: '/guide', label: 'Guide', icon: 'guide' },
+  { to: '/settings', label: 'Settings', icon: 'settings' },
 ] as const;
 
 export function App() {
@@ -38,13 +39,18 @@ export function App() {
       <PlanLogger />
       <aside className="sidebar">
         <div className="brand">
-          <img src="./favicon.svg" alt="" width={28} height={28} />
-          <span>CyclingHub</span>
+          <span className="brand-mark" aria-hidden="true">
+            <Icon name="bolt" size={16} />
+          </span>
+          <span className="brand-name">
+            Cycling<strong>Hub</strong>
+          </span>
         </div>
         <nav aria-label="Main">
           {NAV.map((item) => (
             <NavLink key={item.to} to={item.to} className="nav-link">
-              {item.label}
+              <Icon name={item.icon} />
+              <span>{item.label}</span>
             </NavLink>
           ))}
         </nav>

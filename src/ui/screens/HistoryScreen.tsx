@@ -3,6 +3,7 @@ import { addDays } from '../../lib/dates';
 import { useActivities, useCredentials, useToday } from '../../store/hooks';
 import { NotConnected } from '../components/NotConnected';
 import { formatDuration, formatNumber, isCycling } from '../format';
+import { PageHeader } from '../components/PageHeader';
 
 const RANGES = [14, 30, 90] as const;
 
@@ -24,8 +25,8 @@ export function HistoryScreen() {
   );
 
   return (
-    <section>
-      <h1>History</h1>
+    <section className="screen">
+      <PageHeader eyebrow="Completed activities" title="History" />
       {!creds ? (
         <NotConnected />
       ) : (

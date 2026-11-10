@@ -1,4 +1,5 @@
 import { zoneOf } from '../../engine/workout';
+import { C } from '../theme';
 import type { Segment } from '../../player/engine';
 import type { Sample } from '../../player/recording';
 
@@ -47,9 +48,9 @@ export function SessionProfile({ segments, elapsed, samples, ftp, intensity }: P
       })}
       <line x1={0} x2={W} y1={y(ftp)} y2={y(ftp)} className="ftp-line" />
       {traces.map((t, i) => (
-        <polyline key={i} points={t.join(' ')} fill="none" stroke="#f8fafc" strokeWidth={2} vectorEffect="non-scaling-stroke" />
+        <polyline key={i} points={t.join(' ')} fill="none" stroke={C.text} strokeWidth={2} vectorEffect="non-scaling-stroke" />
       ))}
-      <line x1={x(elapsed)} x2={x(elapsed)} y1={0} y2={H} stroke="#f97316" strokeWidth={3} vectorEffect="non-scaling-stroke" />
+      <line x1={x(elapsed)} x2={x(elapsed)} y1={0} y2={H} stroke={C.accent} strokeWidth={3} vectorEffect="non-scaling-stroke" />
     </svg>
   );
 }

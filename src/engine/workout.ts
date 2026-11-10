@@ -60,13 +60,13 @@ export interface Workout {
 
 /** Coggan power zones as fractions of FTP (upper bounds). */
 export const POWER_ZONES = [
-  { zone: 1, name: 'Active recovery', max: 0.55, color: '#94a3b8' },
-  { zone: 2, name: 'Endurance', max: 0.75, color: '#38bdf8' },
-  { zone: 3, name: 'Tempo', max: 0.9, color: '#22c55e' },
-  { zone: 4, name: 'Threshold', max: 1.05, color: '#eab308' },
-  { zone: 5, name: 'VO2max', max: 1.2, color: '#f97316' },
-  { zone: 6, name: 'Anaerobic', max: 1.5, color: '#ef4444' },
-  { zone: 7, name: 'Neuromuscular', max: Infinity, color: '#a855f7' },
+  { zone: 1, name: 'Active recovery', max: 0.55, color: '#7D828C' },
+  { zone: 2, name: 'Endurance', max: 0.75, color: '#4DA3FF' },
+  { zone: 3, name: 'Tempo', max: 0.9, color: '#3DDC97' },
+  { zone: 4, name: 'Threshold', max: 1.05, color: '#FFD23F' },
+  { zone: 5, name: 'VO2max', max: 1.2, color: '#FF8A3D' },
+  { zone: 6, name: 'Anaerobic', max: 1.5, color: '#FF4D5E' },
+  { zone: 7, name: 'Neuromuscular', max: Infinity, color: '#B18CFF' },
 ] as const;
 
 /** Lower bound (fraction of FTP) of each zone. */
