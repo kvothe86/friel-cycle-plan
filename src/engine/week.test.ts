@@ -2,7 +2,7 @@ import { addDays, dateRange } from '../lib/dates';
 import type { ResolvedDay } from './availability';
 import { planSeason, type PlanWeek } from './macro';
 import { DEFAULT_PLAN_SETTINGS, type AvailabilityTemplate, type RideMode } from './types';
-import { isHardActivity, planHorizon, planWeek, type DayPlan, type DoneActivity, type WeekPlanInput } from './week';
+import { HARD_TYPES, isHardActivity, planHorizon, planWeek, type DayPlan, type DayStatus, type DoneActivity, type WeekPlanInput } from './week';
 
 const MONDAY = '2026-11-16';
 const day = (date: string, minutes: number, mode: RideMode = 'any', extra: Partial<ResolvedDay> = {}): ResolvedDay => ({
@@ -171,5 +171,59 @@ describe('fixed workouts from intervals.icu', () => {
     // The chaingang counts as one of the build week's interval key sessions.
     const intervalKeys = (q: DayPlan[]) => q.filter((d) => d.key && d.kind === 'workout' && d.workout?.type !== 'long').length;
     expect(intervalKeys(p)).toBe(intervalKeys(plan()) - 1);
+  });
+});
+
+describe('M5: daily adjustments', () => {
+  const TUE = addDays(MONDAY, 1);
+  const status = (entries: [string, DayStatus][]) => new Map(entries);
+  const keyDates = (p: DayPlan[]) => p.filter((d) => d.key && d.kind === 'workout' && d.workout?.type !== 'long').map((d) => d.date);
+
+  it('low readiness: recovery today and the key session moves', () => {
+    const today = TUE;
+    const days = WEEK_DAYS().slice(1);
+    const normal = plan({ today, days });
+    expect(keyDates(normal)).toContain(TUE);
+    const low = plan({ today, days, dayStatus: status([[TUE, { kind: 'limit', limit: 'recovery', reason: 'Readiness low (30)' }]]) });
+    expect(low[0]!.workout?.type).toBe('recovery');
+    expect(low[0]!.workout!.seconds).toBeLessThanOrEqual(45 * 60);
+    expect(low[0]!.adjustment).toMatch(/Readiness low/);
+    expect(keyDates(low)).not.toContain(TUE);
+    expect(keyDates(low).length).toBeGreaterThan(0);
+  });
+
+  it('reduced readiness / swap: no hard type that day', () => {
+    const p = plan({ today: TUE, days: WEEK_DAYS().slice(1), dayStatus: status([[TUE, { kind: 'limit', limit: 'no-hard', reason: 'x' }]]) });
+    expect(HARD_TYPES).not.toContain(p[0]!.workout?.type);
+  });
+
+  it('easier: same day, lower level and shorter', () => {
+    const normal = plan({ today: TUE, days: WEEK_DAYS().slice(1) });
+    const easier = plan({ today: TUE, days: WEEK_DAYS().slice(1), dayStatus: status([[TUE, { kind: 'limit', limit: 'easier', reason: 'x' }]]) });
+    expect(easier[0]!.workout!.type).toBe(normal[0]!.workout!.type);
+    expect(easier[0]!.workout!.level).toBeLessThan(normal[0]!.workout!.level);
+    expect(easier[0]!.workout!.seconds).toBeLessThan(normal[0]!.workout!.seconds);
+  });
+
+  it('skip / sick: rest with the reason', () => {
+    const p = plan({ dayStatus: status([[TUE, { kind: 'rest', reason: 'Skipped by you.' }]]) });
+    expect(p[1]!.kind).toBe('rest');
+    expect(p[1]!.reason).toBe('Skipped by you.');
+  });
+
+  it('never crams: a missed session’s load is not piled onto the rest of the week', () => {
+    // Wednesday, nothing done Mon–Tue (Tue was a planned key session).
+    const wed = addDays(MONDAY, 2);
+    const p = plan({ today: wed, days: WEEK_DAYS().slice(2) });
+    const full = plan();
+    const plannedFromWed = full.filter((d) => d.date >= wed).reduce((s, d) => s + (d.workout?.tss ?? 0), 0);
+    expect(totalTss(p)).toBeLessThanOrEqual(plannedFromWed * 1.1 + 1);
+  });
+
+  it('uses per-system progression levels for key sessions', () => {
+    const levels = { endurance: 4, tempo: 4, sweetspot: 4, threshold: 8, vo2: 2, anaerobic: 4 };
+    const p = plan({ levels });
+    const threshold = p.find((d) => d.workout?.type === 'threshold' || d.workout?.type === 'overunder');
+    expect(threshold?.workout?.level).toBeGreaterThanOrEqual(8);
   });
 });

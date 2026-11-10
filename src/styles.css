@@ -179,3 +179,12 @@ input.narrow { width: 5.5rem; }
 .compliance.completed { color: var(--ok); }
 .compliance.partial { color: var(--warn); }
 .compliance.missed { color: #f87171; }
+
+/* M5: health & adjustments */
+.cards.four { grid-template-columns: 1.3fr 1fr 1fr 1fr; }
+.check.indent { margin-left: 1.5rem; }
+.banner.adjustment { margin: 0.5rem 0; }
+.health .big-text { font-size: 1.1rem; }
+.levels li { grid-template-columns: 140px 1fr 40px; }
+.signals li { grid-template-columns: 96px minmax(50px, 1fr) auto; }
+.tag.adjusted { background: rgba(234, 179, 8, 0.2); color: var(--warn); }

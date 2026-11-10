@@ -2,6 +2,9 @@ import { rideSettings, useActivities, useAthlete, useCredentials, usePlanHorizon
 import { compliance } from '../../engine/compliance';
 import { isCycling } from '../../engine/sports';
 import { DayDetail } from '../workout/DayDetail';
+import { HealthCard } from '../health/HealthCard';
+import { DayActions } from '../health/DayActions';
+import { useHealthStore } from '../../store/health';
 import type { SignalKey } from '../../engine/readiness';
 import { NotConnected } from '../components/NotConnected';
 import { formatNumber, formatSigned } from '../format';
@@ -27,6 +30,7 @@ export function TodayScreen() {
   const weekAgo = pmc[0];
   const ftp = rideSettings(athlete?.sportSettings)?.ftp ?? undefined;
   const todayPlan = usePlanHorizon(today)?.[0];
+  const markSick = useHealthStore((s) => s.markSick);
   const planned = useTodayPlannedEvent(today);
   const rides = useActivities(today, today).filter((a) => isCycling(a.type));
   const todayCompliance =
@@ -49,12 +53,12 @@ export function TodayScreen() {
         <>
           {readiness.sickSuspected && (
             <div className="banner warn" role="alert">
-              HRV has been well below your baseline and resting HR raised for two days. Are you getting sick?
-              Sickness mode arrives in M5. For now, consider taking it easy.
+              HRV has been well below your baseline and resting HR raised for two days. Are you getting sick?{' '}
+              <button type="button" className="danger small-btn" onClick={() => void markSick('mild')}>Yes, mark me sick</button>
             </div>
           )}
 
-          <div className="cards">
+          <div className="cards four">
             <div className={`card readiness ${readiness.label ?? 'none'}`}>
               <h2>Readiness</h2>
               <div className="big">{readiness.score ?? '–'}</div>
@@ -109,12 +113,15 @@ export function TodayScreen() {
                 <p className="muted">No wellness entry for today yet.</p>
               )}
             </div>
+
+            <HealthCard />
           </div>
 
           {todayPlan && (
             <>
               <h2 className="section-title">Today's session</h2>
               <DayDetail day={todayPlan} ftp={ftp} compliance={todayCompliance} />
+              <DayActions day={todayPlan} />
             </>
           )}
         </>

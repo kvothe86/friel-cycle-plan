@@ -24,6 +24,7 @@ export function DayDetail({ day, ftp, compliance }: Props) {
           {day.tentative && <span className="tag">tentative</span>}
         </h2>
       </div>
+      {day.adjustment && <p className="banner warn adjustment">{day.adjustment}</p>}
       <p className="why">
         <strong>Why: </strong>
         {day.reason}

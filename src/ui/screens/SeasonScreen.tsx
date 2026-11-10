@@ -7,6 +7,7 @@ import { LineChart } from '../components/LineChart';
 import { NotConnected } from '../components/NotConnected';
 import { formatDuration } from '../format';
 import { PHASE_LABELS, dailyTargetCtl, eventMarkers, phaseBands } from '../season/phases';
+import { LevelsCard } from '../season/LevelsCard';
 
 export const SEASON_HISTORY_DAYS = 120;
 /** History shown left of today on the plan chart. */
@@ -146,6 +147,8 @@ export function SeasonScreen() {
           </table>
         </>
       )}
+
+      <LevelsCard />
 
       <h2 className="section-title">History</h2>
       <LineChart

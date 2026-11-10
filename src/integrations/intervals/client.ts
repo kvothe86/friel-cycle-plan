@@ -1,4 +1,4 @@
-import type { IcuActivity, IcuAthlete, IcuEvent, IcuEventInput, IcuWellness } from './types';
+import type { IcuActivity, IcuAthlete, IcuEvent, IcuEventInput, IcuMarkerInput, IcuWellness } from './types';
 import type { IsoDate } from '../../lib/dates';
 
 export const INTERVALS_BASE_URL = 'https://intervals.icu/api/v1';
@@ -58,7 +58,7 @@ export class IntervalsClient {
    * Creates or updates planned events. With `upsert`, events whose
    * `external_id` already exists are updated instead of duplicated.
    */
-  createEventsBulk(events: IcuEventInput[]): Promise<IcuEvent[]> {
+  createEventsBulk(events: (IcuEventInput | IcuMarkerInput)[]): Promise<IcuEvent[]> {
     return this.request<IcuEvent[]>('POST', '/events/bulk', { upsert: 'true' }, events);
   }
 

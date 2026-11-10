@@ -10,7 +10,10 @@ import { planSeason, type SeasonPlan } from '../engine/macro';
 import { resolveRange } from '../engine/availability';
 import { isCycling } from '../engine/sports';
 import { isHardActivity, planHorizon, type DayPlan, type DoneActivity } from '../engine/week';
-import { fixedWorkouts, type PushedRecord } from '../engine/push';
+import { fixedWorkouts, isOurs, type PushedRecord } from '../engine/push';
+import { dayStatuses, type DayActionRecord } from '../engine/adjust';
+import { computeLevels, type Levels, type PlanLogEntry } from '../engine/progression';
+import type { SicknessEpisode } from '../engine/sickness';
 import {
   DEFAULT_AVAILABILITY, DEFAULT_PLAN_SETTINGS,
   type AvailabilityOverride, type AvailabilityTemplate, type Goal, type PlanSettings,
@@ -136,11 +139,58 @@ export function usePlanHorizon(today: IsoDate): DayPlan[] | undefined {
   const settings = usePlanSettings();
   const activities = useActivities(addDays(startOfWeek(today), -1), today);
   const fixed = useFixedWorkouts(today);
+  const episodes = useSicknessEpisodes();
+  const actions = useDayActions();
+  const readiness = useReadiness(today);
+  const levels = useLevels(today);
   return useMemo(() => {
     if (!plan || !availability) return undefined;
     const days = resolveRange(today, PLAN_HORIZON_DAYS, availability.template, overrides, blocked);
-    return planHorizon({ today, plan, days, done: toDoneActivities(activities), experience: settings.experience, fixed });
-  }, [plan, availability, overrides, blocked, settings.experience, activities, today, fixed]);
+    const dayStatus = dayStatuses({
+      today, dates: days.map((d) => d.date), episodes, actions,
+      readiness: { score: readiness.score, label: readiness.label },
+    });
+    return planHorizon({ today, plan, days, done: toDoneActivities(activities), experience: settings.experience, fixed, dayStatus, levels });
+  }, [plan, availability, overrides, blocked, settings.experience, activities, today, fixed, episodes, actions, readiness.score, readiness.label, levels]);
+}
+
+// ---- M5: health, day actions, progression ----
+
+export const useDayActions = () => useLiveQuery(() => db.dayActions.toArray(), [], [] as DayActionRecord[]);
+export const usePlanLog = () => useLiveQuery(() => db.planLog.toArray(), [], [] as PlanLogEntry[]);
+
+/** Sickness from the app plus SICK/INJURED events entered in intervals.icu (not our own markers). */
+export function sicknessFromEvents(events: readonly StoredEvent[]): SicknessEpisode[] {
+  return events
+    .filter((e) => (e.category === 'SICK' || e.category === 'INJURED') && !isOurs(e))
+    .map((e) => {
+      const range = holidayRanges([{ ...e, category: 'HOLIDAY' }])[0]!;
+      return {
+        id: `icu-${e.id}`, start: range.start, end: range.end, severity: 'mild' as const, source: 'intervals' as const,
+        kind: e.category === 'INJURED' ? ('injury' as const) : ('illness' as const),
+      };
+    });
+}
+
+export function useSicknessEpisodes(): SicknessEpisode[] {
+  const local = useLiveQuery(() => db.sickness.toArray(), [], [] as SicknessEpisode[]);
+  const events = useLiveQuery(() => db.events.where('category').anyOf('SICK', 'INJURED').toArray(), [], [] as StoredEvent[]);
+  return useMemo(() => [...local, ...sicknessFromEvents(events)], [local, events]);
+}
+
+export const LEVEL_HISTORY_DAYS = 120;
+
+export function useLevels(today: IsoDate): Levels {
+  const settings = usePlanSettings();
+  const log = usePlanLog();
+  const episodes = useSicknessEpisodes();
+  const activities = useActivities(addDays(today, -LEVEL_HISTORY_DAYS), today);
+  return useMemo(() => {
+    const rides = activities
+      .filter((a) => isCycling(a.type))
+      .map((a) => ({ date: a.date, load: a.icu_training_load ?? 0, seconds: a.moving_time ?? 0 }));
+    return computeLevels(settings.experience, log, rides, today, episodes);
+  }, [settings.experience, log, activities, today, episodes]);
 }
 
 // ---- M4: intervals.icu push ----
