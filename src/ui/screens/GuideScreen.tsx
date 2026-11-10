@@ -1,10 +1,11 @@
 import { POWER_ZONES, ZONE_FLOOR } from '../../engine/workout';
+import { PageHeader } from '../components/PageHeader';
 
 /** How CyclingHub plans, in plain words. */
 export function GuideScreen() {
   return (
     <section className="guide">
-      <h1>How CyclingHub plans</h1>
+      <PageHeader eyebrow="Guide" title="How CyclingHub plans" />
 
       <div className="card">
         <h2>1. The season</h2>

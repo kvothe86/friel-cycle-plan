@@ -17,7 +17,8 @@ export function RideSummary({ connected }: { connected: boolean }) {
   const applied = !!estimate && local?.watts === estimate && local.date === rideDate;
   return (
     <section>
-      <h1>Ride done: {recording.workoutName}</h1>
+      <div className="eyebrow">Ride done</div>
+      <h1>{recording.workoutName}</h1>
       <div className="tiles">
         {[
           ['Duration', clock(s.seconds)],

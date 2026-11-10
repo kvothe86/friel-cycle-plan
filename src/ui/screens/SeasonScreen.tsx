@@ -8,6 +8,8 @@ import { NotConnected } from '../components/NotConnected';
 import { formatDuration } from '../format';
 import { PHASE_LABELS, dailyTargetCtl, eventMarkers, phaseBands } from '../season/phases';
 import { LevelsCard } from '../season/LevelsCard';
+import { C } from '../theme';
+import { PageHeader } from '../components/PageHeader';
 
 export const SEASON_HISTORY_DAYS = 120;
 /** History shown left of today on the plan chart. */
@@ -24,7 +26,7 @@ export function SeasonScreen() {
   if (!creds) {
     return (
       <section>
-        <h1>Season</h1>
+        <PageHeader eyebrow={plan?.goal ? `Towards ${plan.goal.name}` : 'Season plan'} title="Season" />
         <NotConnected />
       </section>
     );
@@ -43,8 +45,8 @@ export function SeasonScreen() {
   const weeksToGo = goal?.date ? Math.ceil(daysBetween(today, goal.date) / 7) : null;
 
   return (
-    <section>
-      <h1>Season</h1>
+    <section className="screen">
+      <PageHeader eyebrow={plan?.goal ? `Towards ${plan.goal.name}` : 'Season plan'} title="Season" />
 
       {plan && (
         <>
@@ -99,8 +101,8 @@ export function SeasonScreen() {
             bands={phaseBands(plan, chartDates)}
             markers={eventMarkers(plan, chartDates)}
             series={[
-              { label: 'Actual CTL', color: '#38bdf8', values: chartDates.map((d) => actual.get(d) ?? null) },
-              { label: 'Target CTL', color: '#f97316', values: chartDates.map((d) => target.get(d) ?? null) },
+              { label: 'Actual CTL', color: C.info, values: chartDates.map((d) => actual.get(d) ?? null) },
+              { label: 'Target CTL', color: C.accent, values: chartDates.map((d) => target.get(d) ?? null) },
             ]}
             height={280}
           />
@@ -155,9 +157,9 @@ export function SeasonScreen() {
         title={`Fitness, fatigue & form (last ${SEASON_HISTORY_DAYS} days)`}
         dates={historyDates}
         series={[
-          { label: 'Form', color: '#eab308', values: pmc.map((p) => p.tsb), area: true },
-          { label: 'Fitness', color: '#38bdf8', values: pmc.map((p) => p.ctl) },
-          { label: 'Fatigue', color: '#c084fc', values: pmc.map((p) => p.atl) },
+          { label: 'Form', color: C.warn, values: pmc.map((p) => p.tsb), area: true },
+          { label: 'Fitness', color: C.info, values: pmc.map((p) => p.ctl) },
+          { label: 'Fatigue', color: C.violet, values: pmc.map((p) => p.atl) },
         ]}
         height={240}
       />
@@ -165,8 +167,8 @@ export function SeasonScreen() {
         title="HRV & resting HR"
         dates={historyDates}
         series={[
-          { label: 'HRV (ms)', color: '#22c55e', values: historyDates.map((d) => byDate.get(d)?.hrv ?? null) },
-          { label: 'Resting HR', color: '#f87171', right: true, values: historyDates.map((d) => byDate.get(d)?.restingHR ?? null) },
+          { label: 'HRV (ms)', color: C.good, values: historyDates.map((d) => byDate.get(d)?.hrv ?? null) },
+          { label: 'Resting HR', color: C.bad, right: true, values: historyDates.map((d) => byDate.get(d)?.restingHR ?? null) },
         ]}
       />
     </section>

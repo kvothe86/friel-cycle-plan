@@ -7,6 +7,7 @@ import { PushBar } from '../workout/PushBar';
 import { NotConnected } from '../components/NotConnected';
 import { DayCard } from '../workout/DayCard';
 import { DayDetail } from '../workout/DayDetail';
+import { PageHeader } from '../components/PageHeader';
 
 export function PlanScreen() {
   const today = useToday();
@@ -21,12 +22,12 @@ export function PlanScreen() {
   if (!creds) {
     return (
       <section>
-        <h1>Next 14 days</h1>
+        <PageHeader eyebrow="Rolling plan · only today is fixed" title="Next 14 days" />
         <NotConnected />
       </section>
     );
   }
-  if (!days || !plan) return <section><h1>Next 14 days</h1></section>;
+  if (!days || !plan) return <section className="screen"><PageHeader eyebrow="Rolling plan · only today is fixed" title="Next 14 days" /></section>;
 
   const current = days.find((d) => d.date === selected) ?? days[0]!;
   const pushedHash = new Map(pushed.map((r) => [r.externalId, r.hash]));
@@ -43,8 +44,8 @@ export function PlanScreen() {
     .filter((w) => w.count >= 3);
 
   return (
-    <section>
-      <h1>Next 14 days</h1>
+    <section className="screen">
+      <PageHeader eyebrow="Rolling plan · only today is fixed" title="Next 14 days" />
       <p className="muted">
         Today is fixed; the rest is a forecast and re-plans when you ride, skip, or change your availability.
         {availability?.isDefault && (

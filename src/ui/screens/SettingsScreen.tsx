@@ -4,6 +4,7 @@ import { useSyncStore } from '../../store/sync';
 import { formatNumber, formatRelativeTime } from '../format';
 import { FtpCard } from '../settings/FtpCard';
 import { BackupCard } from '../settings/BackupCard';
+import { PageHeader } from '../components/PageHeader';
 
 export function SettingsScreen() {
   const creds = useCredentials();
@@ -26,8 +27,8 @@ export function SettingsScreen() {
   const busy = status === 'syncing';
 
   return (
-    <section>
-      <h1>Settings</h1>
+    <section className="screen">
+      <PageHeader eyebrow="Account & data" title="Settings" />
 
       <div className="card">
         <h2>intervals.icu</h2>

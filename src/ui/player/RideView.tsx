@@ -22,7 +22,10 @@ export function RideView() {
   return (
     <section className="ride">
       <div className="ride-head">
-        <h1>{recording.workoutName}</h1>
+        <div>
+          <div className="eyebrow">{session.status === 'running' ? 'Riding' : session.status === 'paused' ? 'Paused' : 'Ready'} · ERG {E.ergActive(session) ? 'on' : 'off'}</div>
+          <h1>{recording.workoutName}</h1>
+        </div>
         <span className="muted">
           {pos.segment.label || 'Step'} {pos.index + 1}/{session.segments.length}
           {pos.next && ` · next: ${pos.next.label || 'step'} ${nextTarget} W`}
