@@ -57,7 +57,7 @@ describe('connect flow', () => {
     await connect();
 
     expect(await screen.findByText(/Test Rider/)).toBeInTheDocument();
-    expect(screen.getByText('280 W')).toBeInTheDocument();
+    expect(screen.getAllByText('280 W').length).toBeGreaterThan(0); // FTP card
     expect(await db.getMeta('credentials')).toEqual({ athleteId: 'i777', apiKey: 'key' });
     unmount();
 

@@ -212,3 +212,11 @@ button.primary { background: var(--accent); border-color: var(--accent); color: 
 .ride-controls { display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap; margin-top: 1rem; }
 .ride-controls button { padding: 0.6rem 1.1rem; }
 .intensity { display: flex; align-items: center; gap: 0.4rem; font-variant-numeric: tabular-nums; }
+
+/* M7: polish */
+.banner.info { background: rgba(56, 189, 248, 0.1); border: 1px solid #38bdf8; }
+.getting-started .check-cell { width: 2rem; }
+.ftp-result .big-text { font-size: 2.4rem; }
+.guide p { line-height: 1.55; max-width: 75ch; }
+.zone-dot { display: inline-block; width: 0.8rem; height: 0.8rem; border-radius: 50%; margin-right: 0.4rem; vertical-align: middle; }
+.crash { border-color: #f87171; }

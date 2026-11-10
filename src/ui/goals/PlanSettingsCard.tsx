@@ -26,6 +26,13 @@ export function PlanSettingsCard() {
             <option value={3}>2:1 (masters / high life stress)</option>
           </select>
         </label>
+        <label>
+          FTP test
+          <select value={settings.ftpTest ?? 'ramp'} onChange={(e) => save({ ftpTest: e.target.value as 'ramp' | 'ftp20' })}>
+            <option value="ramp">Ramp test (35 min, until you drop)</option>
+            <option value="ftp20">20-minute test (60 min, paced effort)</option>
+          </select>
+        </label>
       </div>
     </div>
   );

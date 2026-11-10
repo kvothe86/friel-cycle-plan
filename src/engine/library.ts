@@ -41,6 +41,8 @@ interface MainSet {
 
 interface Template {
   id: string;
+  /** Builds the whole workout (own warm-up/cool-down, fixed length). */
+  selfContained?: boolean;
   type: SessionType;
   /** Shortest total duration (minutes) this template makes sense for. */
   minMinutes: number;
@@ -222,6 +224,34 @@ const TEMPLATES: Template[] = [
     },
   },
   {
+    // Ramp test: +6 % FTP every minute until you can't hold it. FTP ≈ 75 % of the best minute.
+    id: 'ramp_test', type: 'ftp_test', minMinutes: 35, indoorOnly: true, selfContained: true,
+    main: () => ({
+      name: 'FTP ramp test',
+      description: 'Ramp test: the target rises every minute. Keep going until you cannot hold it any more, then end the ride. FTP ≈ 75 % of your best minute.',
+      blocks: [
+        { label: 'Warm-up', repeat: 1, steps: [steady(5, 0.45, 'Easy')] },
+        { label: 'Ramp', repeat: 1, steps: Array.from({ length: 20 }, (_, i) => steady(1, round2(0.5 + 0.06 * i), `Ramp ${i + 1}`)) },
+        { label: 'Cool-down', repeat: 1, steps: [ramp(10, 0.5, 0.4, 'Cool-down')] },
+      ],
+    }),
+  },
+  {
+    // Classic 20-minute test: FTP ≈ 95 % of the 20-minute average. ERG is off for the test block.
+    id: 'ftp20', type: 'ftp_test', minMinutes: 60, indoorOnly: true, selfContained: true,
+    main: () => ({
+      name: 'FTP 20-minute test',
+      description: '20-minute test: after the warm-up, ride the 20 minutes as hard as you can sustain evenly. ERG is off for that block. FTP ≈ 95 % of the 20-minute average.',
+      blocks: [
+        { label: 'Warm-up', repeat: 1, steps: [ramp(15, 0.5, 0.75, 'Warm-up')] },
+        intervalSet('Openers', 3, steady(1, 1.05, 'Opener'), steady(1, 0.55, 'Easy')),
+        { label: 'Easy', repeat: 1, steps: [steady(9, 0.55, 'Easy')] },
+        { label: 'Test', repeat: 1, steps: [{ ...steady(20, 1.0, 'All-out 20 min'), free: true }] },
+        { label: 'Cool-down', repeat: 1, steps: [ramp(10, 0.55, 0.4, 'Cool-down')] },
+      ],
+    }),
+  },
+  {
     id: 'openers', type: 'openers', minMinutes: 30, indoorOnly: false,
     main: () => ({
       name: 'Race openers',
@@ -273,7 +303,9 @@ export function buildWorkout(type: SessionType, minutes: number, ctx: BuildConte
   let name: string;
   let description: string;
 
-  if (tpl.id === 'recovery' || tpl.id === 'endurance' || tpl.id === 'long') {
+  if (tpl.selfContained) {
+    ({ name, description, blocks } = tpl.main(total, c));
+  } else if (tpl.id === 'recovery' || tpl.id === 'endurance' || tpl.id === 'long') {
     ({ name, description, blocks } = tpl.main(total, c));
   } else {
     const wu = warmupMinutes(total);

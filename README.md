@@ -18,7 +18,7 @@ See **[PLAN.md](PLAN.md)** for the full product and architecture plan.
 | M4 Push/pull planned workouts with intervals.icu, fixed days, compliance | ✅ |
 | M5 Dynamic: readiness adjustments, skip/easier/swap, no cramming, sickness mode, progression levels | ✅ |
 | M6 Bluetooth ERG player (FTMS trainer, HR, power meter, demo), FIT recording + upload | ✅ |
-| M7 Polish | ❌ |
+| M7 Polish: FTP tests, Zwift export, backup, getting started, guide, crash screen | ✅ |
 
 ## Development
 

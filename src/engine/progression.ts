@@ -25,6 +25,7 @@ export const SYSTEM_OF: Record<SessionType, EnergySystem | null> = {
   anaerobic: 'anaerobic',
   sprint: 'anaerobic',
   openers: null,
+  ftp_test: null,
 };
 
 export const START_LEVEL: Record<Experience, number> = { novice: 3, intermediate: 4, advanced: 6 };

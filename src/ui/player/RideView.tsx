@@ -12,7 +12,9 @@ export function RideView() {
   if (!pos) return null;
   const ftp = recording.ftp;
   const power3s = recentPower.length ? Math.round(recentPower.reduce((a, b) => a + b, 0) / recentPower.length) : undefined;
-  const target = session.erg ? sentTarget ?? E.targetWatts(session, ftp, guard) : undefined;
+  const free = !!pos.segment.free;
+  const target = E.ergActive(session) ? sentTarget ?? E.targetWatts(session, ftp, guard) : undefined;
+  const guide = free ? E.targetWatts(session, ftp, guard) : undefined;
   const nextTarget = pos.next ? Math.round(pos.next.from * session.intensity * ftp) : undefined;
   const running = session.status === 'running';
   const off = target && power3s !== undefined ? power3s - target : 0;
@@ -36,8 +38,8 @@ export function RideView() {
           <span className="tile-value">{power3s ?? '–'}<small>W</small></span>
         </div>
         <div className="tile big target">
-          <span className="tile-label">{session.erg ? 'Target' : 'ERG off'}</span>
-          <span className="tile-value">{target ?? '–'}{target !== undefined && <small>W</small>}</span>
+          <span className="tile-label">{free ? 'Free · aim for' : session.erg ? 'Target' : 'ERG off'}</span>
+          <span className="tile-value">{target ?? guide ?? '–'}{(target ?? guide) !== undefined && <small>W</small>}</span>
         </div>
         <div className="tile big interval">
           <span className="tile-label">Interval left</span>

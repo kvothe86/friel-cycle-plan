@@ -2,6 +2,18 @@ import type { DayPlan } from '../../engine/week';
 import { weekdayShort } from '../../lib/dates';
 import { WorkoutDetail } from './WorkoutDetail';
 import type { Compliance } from '../../engine/compliance';
+import type { Workout } from '../../engine/workout';
+import { toZwo } from '../../engine/zwo';
+
+function downloadZwo(workout: Workout, date: string) {
+  const url = URL.createObjectURL(new Blob([toZwo(workout)], { type: 'application/xml' }));
+  const name = workout.name.replace(/×/g, 'x').replace(/[^A-Za-z0-9 ._-]/g, '').trim();
+  const a = Object.assign(document.createElement('a'), { href: url, download: `${date} ${name}.zwo` });
+  document.body.append(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 10_000);
+}
 
 const PHASE = { base: 'Base', build: 'Build', peak: 'Peak', race: 'Race' } as const;
 
@@ -30,6 +42,11 @@ export function DayDetail({ day, ftp, compliance }: Props) {
         {day.reason}
       </p>
       {day.workout && <WorkoutDetail workout={day.workout} ftp={ftp} />}
+      {day.workout && !day.workout.outdoor && (
+        <div className="actions">
+          <button type="button" className="small-btn" onClick={() => downloadZwo(day.workout!, day.date)}>Download for Zwift (.zwo)</button>
+        </div>
+      )}
       {compliance && (
         <p className={`compliance ${compliance.status}`}>
           {COMPLIANCE_TEXT[compliance.status]}{compliance.over ? ', and harder than planned' : ''}: {Math.round(compliance.loadRatio * 100)}% of the planned load,{' '}

@@ -1,8 +1,10 @@
-import { rideSettings, useActivities, useAthlete, useCredentials, usePlanHorizon, usePmc, useReadiness, useToday, useTodayPlannedEvent, useWellness } from '../../store/hooks';
+import { useActivities, useFtp, useCredentials, usePlanHorizon, usePmc, useReadiness, useToday, useTodayPlannedEvent, useWellness } from '../../store/hooks';
 import { compliance } from '../../engine/compliance';
 import { isCycling } from '../../engine/sports';
 import { DayDetail } from '../workout/DayDetail';
 import { HealthCard } from '../health/HealthCard';
+import { FtpTestReminder } from '../health/FtpTestReminder';
+import { GettingStarted } from '../components/GettingStarted';
 import { DayActions } from '../health/DayActions';
 import { useHealthStore } from '../../store/health';
 import type { SignalKey } from '../../engine/readiness';
@@ -22,14 +24,14 @@ const LABEL_TEXT = { low: 'Low', reduced: 'Reduced', normal: 'Normal', high: 'Hi
 export function TodayScreen() {
   const today = useToday();
   const creds = useCredentials();
-  const athlete = useAthlete();
   const readiness = useReadiness(today);
   const pmc = usePmc(today, 8);
   const [wellness] = useWellness(today, today);
   const now = pmc.at(-1);
   const weekAgo = pmc[0];
-  const ftp = rideSettings(athlete?.sportSettings)?.ftp ?? undefined;
-  const todayPlan = usePlanHorizon(today)?.[0];
+  const ftp = useFtp();
+  const horizon = usePlanHorizon(today);
+  const todayPlan = horizon?.[0];
   const markSick = useHealthStore((s) => s.markSick);
   const planned = useTodayPlannedEvent(today);
   const rides = useActivities(today, today).filter((a) => isCycling(a.type));
@@ -47,6 +49,7 @@ export function TodayScreen() {
   return (
     <section>
       <h1>Today</h1>
+      <GettingStarted />
       {!creds ? (
         <NotConnected />
       ) : (
@@ -117,6 +120,7 @@ export function TodayScreen() {
             <HealthCard />
           </div>
 
+          {horizon && <FtpTestReminder days={horizon} />}
           {todayPlan && (
             <>
               <h2 className="section-title">Today's session</h2>

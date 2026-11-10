@@ -29,6 +29,17 @@ interface MetaMap {
   planSettings: PlanSettings;
   pushSettings: PushSettings;
   lastPush: PushSummary;
+  ftp: FtpSetting;
+  /** Hide the FTP-test reminder until this date. */
+  ftpTestSnoozedUntil: IsoDate;
+  onboardingDismissed: boolean;
+}
+
+/** FTP set in the app (from a test or by hand); wins over the intervals.icu value. */
+export interface FtpSetting {
+  watts: number;
+  date: IsoDate;
+  source: 'ramp' | 'ftp20' | 'manual';
 }
 
 export interface PushSettings {

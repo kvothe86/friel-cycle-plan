@@ -34,7 +34,7 @@ export const RECOVERY_DAY_MAX_MINUTES = 45;
 export const HARD_TYPES: readonly SessionType[] = ['threshold', 'overunder', 'vo2', 'anaerobic', 'race_sim', 'sprint'];
 
 /** Day-level adjustments from health, readiness or the user (PLAN §3.6). */
-export type DayLimit = 'recovery' | 'no-hard' | 'reentry' | 'reload' | 'easier';
+export type DayLimit = 'recovery' | 'no-hard' | 'reentry' | 'reload' | 'easier' | 'test';
 export type DayStatus = { kind: 'rest'; reason: string } | { kind: 'limit'; limit: DayLimit; reason: string };
 
 /** A completed activity, reduced to what planning needs. */
@@ -87,6 +87,8 @@ export interface WeekPlanInput {
   dayStatus?: ReadonlyMap<IsoDate, DayStatus>;
   /** Progression levels per energy system; without them levels follow the phase. */
   levels?: Levels;
+  /** Protocol for scheduled FTP tests. */
+  ftpTest?: 'ramp' | 'ftp20';
 }
 
 /** Hard-day rule for completed activities (cycling and other sports). */
@@ -188,7 +190,7 @@ export function planWeek(input: WeekPlanInput): DayPlan[] {
   /** Whether a key session of this type may go on the day, given its limit. */
   const allowsKey = (date: IsoDate, type: SessionType) => {
     const limit = limitOf(date);
-    if (limit === 'recovery' || limit === 'reentry') return false;
+    if (limit === 'recovery' || limit === 'reentry' || limit === 'test') return false;
     if ((limit === 'no-hard' || limit === 'reload') && HARD_TYPES.includes(type)) return false;
     return true;
   };
@@ -204,6 +206,18 @@ export function planWeek(input: WeekPlanInput): DayPlan[] {
       plans.set(d.date, { ...base(d), kind: 'workout', workout: w, key: false, reason: `Openers: ${e.name} is tomorrow.` });
       remaining = Math.max(0, remaining - w.tss);
     }
+  }
+
+  // 2b. Scheduled FTP tests (a hard session; the 20-min test needs an hour, else it's a ramp test).
+  for (const d of candidates.filter((c) => isFree(c) && limitOf(c.date) === 'test')) {
+    const want20 = input.ftpTest === 'ftp20' && d.minutes >= minMinutesFor('ftp_test') + 25;
+    if (d.minutes < minMinutesFor('ftp_test')) continue;
+    // Tests need the trainer (ERG and power), so they're indoor even on an outdoor day.
+    const w = buildWorkout('ftp_test', d.minutes, { ...ctx(d, 'ftp_test', true), outdoor: false }, want20 ? 1 : 0);
+    // No adjustment banner: the reason already says the user chose this.
+    plans.set(d.date, { ...base(d), kind: 'workout', workout: w, key: true, reason: 'FTP test scheduled by you. Go in rested: the result sets all your training zones.' });
+    hardDates.add(d.date);
+    remaining = Math.max(0, remaining - w.tss);
   }
 
   // 3. Key sessions on the longest suitable days.
@@ -331,10 +345,11 @@ export interface HorizonInput {
   fixed?: readonly FixedWorkout[];
   dayStatus?: ReadonlyMap<IsoDate, DayStatus>;
   levels?: Levels;
+  ftpTest?: 'ramp' | 'ftp20';
 }
 
 /** Plans each week overlapping the horizon (PLAN §3.6: re-run on every change). */
-export function planHorizon({ today, plan, days, done, experience, fixed = [], dayStatus, levels }: HorizonInput): DayPlan[] {
+export function planHorizon({ today, plan, days, done, experience, fixed = [], dayStatus, levels, ftpTest }: HorizonInput): DayPlan[] {
   const out: DayPlan[] = [];
   for (const week of plan.weeks) {
     const weekEnd = addDays(week.start, 6);
@@ -349,6 +364,7 @@ export function planHorizon({ today, plan, days, done, experience, fixed = [], d
       fixed: fixed.filter((f) => f.date >= week.start && f.date <= weekEnd),
       dayStatus,
       levels,
+      ftpTest,
     }));
   }
   return out;

@@ -10,7 +10,7 @@ import type { DayStatus } from './week';
  * easier/endurance → readiness (today only).
  */
 
-export type DayAction = 'skip' | 'easier' | 'endurance';
+export type DayAction = 'skip' | 'easier' | 'endurance' | 'test';
 
 export interface DayActionRecord {
   date: IsoDate;
@@ -68,6 +68,10 @@ export function dayStatuses(input: {
 
     if (action === 'easier') {
       out.set(date, { kind: 'limit', limit: 'easier', reason: 'Made easier by you: lower level, shorter.' });
+      continue;
+    }
+    if (action === 'test') {
+      out.set(date, { kind: 'limit', limit: 'test', reason: 'FTP test scheduled by you.' });
       continue;
     }
     if (action === 'endurance') {

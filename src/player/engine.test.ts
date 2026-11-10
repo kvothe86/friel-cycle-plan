@@ -76,3 +76,18 @@ describe('player engine', () => {
     expect(z.active).toBe(false);
   });
 });
+
+describe('free (ERG-off) test blocks', () => {
+  it('turns ERG off during the 20-minute test block only', async () => {
+    const { ergActive, buildSegments } = await import('./engine');
+    const w = buildWorkout('ftp_test', 75, { level: 4, specialty: 'allround', outdoor: false }, 1);
+    const segs = buildSegments(w);
+    const test = segs.find((s) => s.free)!;
+    let s = start(newSession(w));
+    expect(ergActive(s)).toBe(true);
+    s = { ...s, elapsed: test.start + 10 };
+    expect(ergActive(s)).toBe(false);
+    s = { ...s, elapsed: test.end + 10 };
+    expect(ergActive(s)).toBe(true);
+  });
+});
