@@ -9,6 +9,8 @@ See **[PLAN.md](PLAN.md)** for the full product and architecture plan.
 
 ## Status
 
+**✅ Complete: v1.1.0, live at [kvothe86.github.io/friel-cycle-plan](https://kvothe86.github.io/friel-cycle-plan/).**
+
 | Milestone | Status |
 |-----------|--------|
 | M0 Scaffold (Vite + React + TS, lint, tests, CI, Pages deploy) | ✅ |
@@ -19,6 +21,7 @@ See **[PLAN.md](PLAN.md)** for the full product and architecture plan.
 | M5 Dynamic: readiness adjustments, skip/easier/swap, no cramming, sickness mode, progression levels | ✅ |
 | M6 Bluetooth ERG player (FTMS trainer, HR, power meter, demo), FIT recording + upload | ✅ |
 | M7 Polish: FTP tests, Zwift export, backup, getting started, guide, crash screen | ✅ |
+| Redesign: pro-cycling instrument panel look | ✅ |
 
 ## Development
 
