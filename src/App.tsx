@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { NavLink, Navigate, Route, Routes } from 'react-router-dom';
 import { useSyncStore } from './store/sync';
 import { SyncBar } from './ui/components/SyncBar';
+import { AutoPush } from './ui/components/AutoPush';
 import { HistoryScreen } from './ui/screens/HistoryScreen';
 import { TodayScreen } from './ui/screens/TodayScreen';
 import { PlanScreen } from './ui/screens/PlanScreen';
@@ -28,6 +29,7 @@ export function App() {
 
   return (
     <div className="shell">
+      <AutoPush />
       <aside className="sidebar">
         <div className="brand">
           <img src="./favicon.svg" alt="" width={28} height={28} />

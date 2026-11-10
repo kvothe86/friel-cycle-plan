@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import { IntervalsClient, IntervalsError, type IntervalsCredentials } from '../integrations/intervals/client';
 import { syncIntervals, type SyncResult } from '../integrations/intervals/sync';
+import { pushPlan } from '../integrations/intervals/pushPlan';
+import type { DayPlan } from '../engine/week';
 import { toIsoDate } from '../lib/dates';
 import { db } from './db';
 
@@ -16,6 +18,10 @@ interface SyncState {
   sync: () => Promise<void>;
   autoSync: () => Promise<void>;
   disconnect: () => Promise<void>;
+  pushStatus: 'idle' | 'pushing' | 'error';
+  pushError: string | null;
+  /** Sends the plan to intervals.icu (only what changed). */
+  push: (days: readonly DayPlan[]) => Promise<void>;
 }
 
 const message = (err: unknown) => (err instanceof Error ? err.message : String(err));
@@ -24,6 +30,8 @@ export const useSyncStore = create<SyncState>((set, get) => ({
   status: 'idle',
   error: null,
   lastResult: null,
+  pushStatus: 'idle',
+  pushError: null,
 
   async connect(creds) {
     set({ status: 'syncing', error: null });
@@ -65,8 +73,21 @@ export const useSyncStore = create<SyncState>((set, get) => ({
     if (!(age < AUTO_SYNC_AFTER_MS)) await get().sync();
   },
 
+  async push(days) {
+    if (get().pushStatus === 'pushing') return;
+    const creds = await db.getMeta('credentials');
+    if (!creds) return;
+    set({ pushStatus: 'pushing', pushError: null });
+    try {
+      await pushPlan(db, new IntervalsClient(creds), days);
+      set({ pushStatus: 'idle' });
+    } catch (err) {
+      set({ pushStatus: 'error', pushError: message(err) });
+    }
+  },
+
   async disconnect() {
     await db.clearSynced();
-    set({ status: 'idle', error: null, lastResult: null });
+    set({ status: 'idle', error: null, lastResult: null, pushStatus: 'idle', pushError: null });
   },
 }));

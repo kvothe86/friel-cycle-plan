@@ -81,4 +81,19 @@ export interface IcuEvent {
   type?: string | null;
   description?: string | null;
   external_id?: string | null;
+  moving_time?: number | null;
+  icu_training_load?: number | null;
+  icu_intensity?: number | null;
+}
+
+/** Body for creating/updating a planned workout (POST /events/bulk). */
+export interface IcuEventInput {
+  category: 'WORKOUT';
+  start_date_local: string;
+  type: string;
+  name: string;
+  description: string;
+  external_id: string;
+  moving_time: number;
+  icu_training_load: number;
 }

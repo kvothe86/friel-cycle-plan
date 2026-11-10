@@ -15,7 +15,8 @@ See **[PLAN.md](PLAN.md)** for the full product and architecture plan.
 | M1 Connect & data (intervals.icu: profile, wellness, activities, PMC, readiness) | ✅ |
 | M2 Goals, availability, season plan (Base/Build/Peak, target CTL) | ✅ |
 | M3 Sessions: workout library, week planner, 14-day view with reasons | ✅ |
-| M4–M7 | ❌ |
+| M4 Push/pull planned workouts with intervals.icu, fixed days, compliance | ✅ |
+| M5–M7 | ❌ |
 
 ## Development
 

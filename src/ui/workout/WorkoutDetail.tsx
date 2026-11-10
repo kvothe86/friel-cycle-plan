@@ -1,4 +1,5 @@
 import { POWER_ZONES, ZONE_FLOOR, timeInZones, type Step, type Workout } from '../../engine/workout';
+import { compressSteps } from '../../engine/workoutText';
 import { formatDuration } from '../format';
 import { WorkoutProfile } from './WorkoutProfile';
 
@@ -9,25 +10,6 @@ function stepText(s: Step, ftp?: number): string {
   const dur = formatDuration(s.seconds);
   if (s.kind === 'ramp') return `${dur} ramp ${pct(s.from)} → ${pct(s.to)}${ftp ? ` · ${Math.round(s.from * ftp)}→${Math.round(s.to * ftp)} W` : ''}`;
   return `${dur} @ ${pct(s.power)}${watts(s.power, ftp)}${s.cadence ? ` · ${s.cadence} rpm` : ''}`;
-}
-
-/** Collapses identical consecutive work/rest pairs into "N ×" rows for readability. */
-function stepRows(steps: readonly Step[]): { count: number; steps: Step[] }[] {
-  const rows: { count: number; steps: Step[] }[] = [];
-  let i = 0;
-  while (i < steps.length) {
-    const pair = steps.slice(i, i + 2);
-    let count = 1;
-    while (pair.length === 2 && JSON.stringify(steps.slice(i + count * 2, i + count * 2 + 2)) === JSON.stringify(pair)) count++;
-    if (count > 1) {
-      rows.push({ count, steps: pair });
-      i += count * 2;
-    } else {
-      rows.push({ count: 1, steps: [steps[i]!] });
-      i++;
-    }
-  }
-  return rows;
 }
 
 function zoneRange(zone: number, ftp?: number): string {
@@ -67,7 +49,7 @@ export function WorkoutDetail({ workout, ftp }: { workout: Workout; ftp?: number
               <li key={bi}>
                 <span className="block-label">{b.label}</span>
                 <ul>
-                  {stepRows(b.steps).map((r, ri) => (
+                  {compressSteps(b.steps).map((r, ri) => (
                     <li key={ri}>
                       {r.count > 1 && <strong>{r.count} × </strong>}
                       {r.steps.map((s) => stepText(s, ftp)).join(r.count > 1 ? ', then ' : '')}

@@ -5,6 +5,7 @@ import { buildWorkout, canRideOutdoor, enduranceTssPerHour, MAX_ENDURANCE_POWER,
 import type { PlanWeek, SeasonPlan } from './macro';
 import type { Experience, RideMode, Specialty } from './types';
 import { isHard, type Workout } from './workout';
+import type { FixedWorkout } from './push';
 
 /**
  * Week planner + day allocator (PLAN §3.3–3.4): turns a week's load target
@@ -31,7 +32,7 @@ export interface DoneActivity {
   cycling: boolean;
 }
 
-export type DayKind = 'workout' | 'rest' | 'event' | 'done';
+export type DayKind = 'workout' | 'rest' | 'event' | 'done' | 'fixed';
 
 export interface DayPlan {
   date: IsoDate;
@@ -45,6 +46,8 @@ export interface DayPlan {
   tentative: boolean;
   event?: { name: string; priority: 'A' | 'B' | 'C' };
   done?: DoneActivity[];
+  /** The user's own workout in intervals.icu, planned around. */
+  fixed?: FixedWorkout;
   phase: PlanWeek['phase'];
   recoveryWeek: boolean;
 }
@@ -60,6 +63,8 @@ export interface WeekPlanInput {
   done: readonly DoneActivity[];
   /** Weeks since the current phase started (drives progression in M3). */
   weeksIntoPhase: number;
+  /** Workouts in intervals.icu the plan must respect. */
+  fixed?: readonly FixedWorkout[];
 }
 
 /** Hard-day rule for completed activities (cycling and other sports). */
@@ -94,8 +99,12 @@ export function planWeek(input: WeekPlanInput): DayPlan[] {
   const eventsByDate = new Map(week.events.map((e) => [e.date, e]));
   for (const e of week.events) hardDates.add(e.date); // racing is hard
 
+  const fixedByDate = new Map((input.fixed ?? []).filter((f) => f.date >= today).map((f) => [f.date, f]));
+  for (const f of fixedByDate.values()) if (f.hard) hardDates.add(f.date);
+
   const doneLoad = doneInWeek.reduce((s, d) => s + d.load, 0);
-  let remaining = Math.max(0, week.targetTss - doneLoad);
+  const fixedLoad = days.reduce((s, d) => s + (fixedByDate.get(d.date)?.load ?? 0), 0);
+  let remaining = Math.max(0, week.targetTss - doneLoad - fixedLoad);
 
   const plans = new Map<IsoDate, DayPlan>();
   const base = (d: ResolvedDay): Omit<DayPlan, 'kind' | 'reason' | 'key'> => ({
@@ -109,6 +118,12 @@ export function planWeek(input: WeekPlanInput): DayPlan[] {
     const doneToday = d.date === today ? doneByDate.get(d.date) : undefined;
     if (doneToday?.some((a) => a.cycling)) {
       plans.set(d.date, { ...base(d), kind: 'done', key: false, done: doneToday, reason: 'Already ridden today.' });
+    } else if (fixedByDate.has(d.date)) {
+      const f = fixedByDate.get(d.date)!;
+      plans.set(d.date, {
+        ...base(d), kind: 'fixed', key: f.hard, fixed: f,
+        reason: `Your own workout in intervals.icu (${f.name}${f.load ? `, ${Math.round(f.load)} TSS` : ''}). The plan works around it.`,
+      });
     } else if (ev) {
       plans.set(d.date, { ...base(d), kind: 'event', key: true, event: { name: ev.name, priority: ev.priority }, reason: `${ev.priority} event: ${ev.name}.` });
     } else if (d.minutes < MIN_SESSION_MINUTES) {
@@ -136,7 +151,8 @@ export function planWeek(input: WeekPlanInput): DayPlan[] {
 
   // 3. Key sessions on the longest suitable days.
   const focus = phaseFocus(week.phase, specialty);
-  const hardDone = doneInWeek.filter((d) => d.hard).length;
+  // Hard rides already done and the user's own hard workouts count as key sessions.
+  const hardDone = doneInWeek.filter((d) => d.hard).length + [...fixedByDate.values()].filter((f) => f.hard).length;
   const keys: SessionType[] = week.recovery
     ? focus.keySessions.filter((t) => t !== 'long').slice(0, 1)
     : focus.keySessions.slice(0, KEY_SESSIONS[week.phase]);
@@ -236,10 +252,11 @@ export interface HorizonInput {
   /** Completed activities from the Monday before today's week up to today. */
   done: readonly DoneActivity[];
   experience: Experience;
+  fixed?: readonly FixedWorkout[];
 }
 
 /** Plans each week overlapping the horizon (PLAN §3.6: re-run on every change). */
-export function planHorizon({ today, plan, days, done, experience }: HorizonInput): DayPlan[] {
+export function planHorizon({ today, plan, days, done, experience, fixed = [] }: HorizonInput): DayPlan[] {
   const out: DayPlan[] = [];
   for (const week of plan.weeks) {
     const weekEnd = addDays(week.start, 6);
@@ -251,6 +268,7 @@ export function planHorizon({ today, plan, days, done, experience }: HorizonInpu
       week, days: weekDays, today, specialty: plan.specialty, experience,
       done: done.filter((d) => d.date >= addDays(week.start, -1) && d.date <= weekEnd),
       weeksIntoPhase,
+      fixed: fixed.filter((f) => f.date >= week.start && f.date <= weekEnd),
     }));
   }
   return out;
