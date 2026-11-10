@@ -31,3 +31,14 @@ describe('dates', () => {
     expect(daysBetween('2026-11-23', '2026-11-10')).toBe(-13);
   });
 });
+
+describe('weeks', () => {
+  it('uses Monday as the first day of the week', async () => {
+    const { startOfWeek, weekdayIndex } = await import('./dates');
+    expect(weekdayIndex('2026-11-09')).toBe(0); // Monday
+    expect(weekdayIndex('2026-11-15')).toBe(6); // Sunday
+    expect(startOfWeek('2026-11-15')).toBe('2026-11-09');
+    expect(startOfWeek('2026-11-09')).toBe('2026-11-09');
+    expect(startOfWeek('2027-01-01')).toBe('2026-12-28');
+  });
+});

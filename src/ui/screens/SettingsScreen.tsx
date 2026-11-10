@@ -17,7 +17,7 @@ export function SettingsScreen() {
   };
 
   const onDisconnect = async () => {
-    if (window.confirm('Disconnect and delete all locally cached data?')) await disconnect();
+    if (window.confirm('Disconnect intervals.icu and delete synced data? Your goals and availability are kept.')) await disconnect();
   };
 
   const ride = rideSettings(athlete?.sportSettings);

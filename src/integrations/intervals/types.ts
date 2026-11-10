@@ -66,3 +66,19 @@ export interface IcuActivity {
   paired_event_id?: number | null;
   source?: string | null;
 }
+
+export type IcuEventCategory =
+  | 'WORKOUT' | 'RACE_A' | 'RACE_B' | 'RACE_C' | 'NOTE' | 'PLAN'
+  | 'HOLIDAY' | 'SICK' | 'INJURED' | 'SET_EFTP' | 'FITNESS_DAYS' | 'SEASON_START' | 'TARGET' | 'SET_FITNESS'
+  | (string & {});
+
+export interface IcuEvent {
+  id: number;
+  category: IcuEventCategory;
+  start_date_local: string; // "2027-04-18T00:00:00"
+  end_date_local?: string | null;
+  name?: string | null;
+  type?: string | null;
+  description?: string | null;
+  external_id?: string | null;
+}

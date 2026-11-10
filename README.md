@@ -13,7 +13,8 @@ See **[PLAN.md](PLAN.md)** for the full product and architecture plan.
 |-----------|--------|
 | M0 Scaffold (Vite + React + TS, lint, tests, CI, Pages deploy) | ✅ |
 | M1 Connect & data (intervals.icu: profile, wellness, activities, PMC, readiness) | ✅ |
-| M2–M7 | ❌ |
+| M2 Goals, availability, season plan (Base/Build/Peak, target CTL) | ✅ |
+| M3–M7 | ❌ |
 
 ## Development
 

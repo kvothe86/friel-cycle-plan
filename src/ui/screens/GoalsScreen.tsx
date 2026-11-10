@@ -1,9 +1,20 @@
-import { Placeholder } from '../Placeholder';
+import { AvailabilityCard } from '../goals/AvailabilityCard';
+import { GoalsCard } from '../goals/GoalsCard';
+import { OverridesCard } from '../goals/OverridesCard';
+import { PlanSettingsCard } from '../goals/PlanSettingsCard';
 
 export function GoalsScreen() {
   return (
-    <Placeholder title="Goals & availability" milestone="M2">
-      <p>Event, specialty or target-metric goals, plus the weekly availability template and per-date overrides.</p>
-    </Placeholder>
+    <section>
+      <h1>Goals & availability</h1>
+      <GoalsCard />
+      <div className="two-col">
+        <AvailabilityCard />
+        <div>
+          <OverridesCard />
+          <PlanSettingsCard />
+        </div>
+      </div>
+    </section>
   );
 }

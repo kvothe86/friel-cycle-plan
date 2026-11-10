@@ -19,7 +19,9 @@ function mockIntervals(status = 200) {
   return vi.fn(async (input: RequestInfo | URL) => {
     const url = new URL(String(input));
     if (status !== 200) return new Response('{}', { status });
-    const body = url.pathname.endsWith('/wellness')
+    const body = url.pathname.endsWith('/events')
+      ? []
+      : url.pathname.endsWith('/wellness')
       ? wellness
       : url.pathname.endsWith('/activities')
         ? [{ id: 'r1', start_date_local: `${today}T07:00:00`, type: 'Run', name: 'Morning run', icu_training_load: 35, moving_time: 2400 }]

@@ -32,7 +32,7 @@ export const useSyncStore = create<SyncState>((set, get) => ({
       const athlete = await client.getAthlete();
       // A clean slate when switching athlete.
       const previous = await db.getMeta('credentials');
-      if (previous && previous.athleteId !== athlete.id) await db.clearAll();
+      if (previous && previous.athleteId !== athlete.id) await db.clearSynced();
       await db.setMeta('credentials', { athleteId: athlete.id, apiKey: creds.apiKey.trim() });
       set({ status: 'idle' });
       await get().sync();
@@ -66,7 +66,7 @@ export const useSyncStore = create<SyncState>((set, get) => ({
   },
 
   async disconnect() {
-    await db.clearAll();
+    await db.clearSynced();
     set({ status: 'idle', error: null, lastResult: null });
   },
 }));

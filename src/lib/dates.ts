@@ -47,3 +47,13 @@ function utcParts(iso: IsoDate): [number, number, number] {
 export function weekdayShort(iso: IsoDate): string {
   return parseIsoDate(iso).toLocaleDateString('en-GB', { weekday: 'short' });
 }
+
+/** 0 = Monday … 6 = Sunday (training weeks start on Monday). */
+export function weekdayIndex(iso: IsoDate): number {
+  return (parseIsoDate(iso).getDay() + 6) % 7;
+}
+
+/** Monday of the week containing `iso`. */
+export function startOfWeek(iso: IsoDate): IsoDate {
+  return addDays(iso, -weekdayIndex(iso));
+}
